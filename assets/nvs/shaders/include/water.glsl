@@ -255,7 +255,7 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     vec3 below = baseColor * transmittance * deepWaterTint;
 
     vec3 reflected = reflect(-V, N);
-    vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, horizon);
+    vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, nvs_zenithFromHorizon(horizon), horizon);
 
     // Above the surface, Fresnel blends the water column with the sky.
     // Below the surface, the same geometric normal faces away from the viewer:
