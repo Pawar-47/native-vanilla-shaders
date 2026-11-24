@@ -77,14 +77,14 @@
       "pack_file": "assets/minecraft/shaders/core/clouds.vsh",
       "vanilla_source": "Vanilla-stock /core/clouds.vsh",
       "reason": "Passes world-anchored cloud coordinates and face orientation to the fragment stage.",
-      "pack_sha256": "8d33bc95faa28656633c2e5a0e09c65d3b938a96ce21da63be57360ce8a4057d",
+      "pack_sha256": "4863083fbef2792d1cdaa06252d8e4a11a1db75255f202c36e458403764c13e6",
       "vanilla_sha256": "8bdfe295d20d11c9c8136ecc4b0269ddf28e8ce2423b019b4f121feb9704f234"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
       "vanilla_source": "Vanilla-stock /core/clouds.fsh",
       "reason": "Adds procedural density carving and top/underside/side shading; preserves OIT branches and protects the reserved data-bus column.",
-      "pack_sha256": "c76847a812ea347e7c9f5985cdc06df4f3bb33401efe0b30324771f5ff5a3317",
+      "pack_sha256": "abea74ff57b2653f913dbd4144e0f76b65263b9edac932770153133d2a410b44",
       "vanilla_sha256": "98ed038991d16691b4fda45a82436025fa54d90f11840dd6ce42b8359bf76588"
     },
     {
@@ -256,7 +256,7 @@
       "pack_file": "assets/nvs/shaders/include/clouds.glsl",
       "vanilla_source": null,
       "reason": "Shared procedural cloud density, shading and cloud-shadow functions.",
-      "pack_sha256": "357110f440c03ce0566cc2faffb0517131047bdaf4053c145645061ca42f7d6d"
+      "pack_sha256": "501eebcf21b7c343c6b8010b1bd578ad7cd3e16ae02241a5df3c5b679808c067"
     },
     {
       "pack_file": "assets/nvs/shaders/include/common.glsl",
@@ -268,13 +268,13 @@
       "pack_file": "assets/nvs/shaders/include/config.glsl",
       "vanilla_source": null,
       "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
-      "pack_sha256": "ad4abcac12b17301c34a09a9cf2412da491372d66a068c9e726b3c52cccaf795"
+      "pack_sha256": "4172cab8339fc227172708dc1f388e41a9936886ab6fc39c76dc101eebcb9675"
     },
     {
       "pack_file": "assets/nvs/shaders/include/noise.glsl",
       "vanilla_source": null,
       "reason": "Shared value-noise and fractal-noise functions.",
-      "pack_sha256": "05a837e12653cb530b2c52bfb7e9f52cc831f569c7ec170af2a0b68fdda9f89b"
+      "pack_sha256": "cf8da4f5897931baefb4c56b74e5a182d8bc428686549bd1819411e19b49ffa5"
     },
     {
       "pack_file": "assets/nvs/shaders/include/sky.glsl",
