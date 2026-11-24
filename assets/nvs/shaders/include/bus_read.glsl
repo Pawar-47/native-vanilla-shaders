@@ -100,9 +100,9 @@ float nvs_linearFog(float distanceValue, float startValue, float endValue) {
     return clamp((distanceValue - startValue) / max(endValue - startValue, 1e-3), 0.0, 1.0);
 }
 
-float nvs_vanillaFog(NvsBus bus, vec3 viewPosition) {
-    float spherical = length(viewPosition);
-    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
+float nvs_vanillaFog(NvsBus bus, vec3 worldRelativePosition) {
+    float spherical = length(worldRelativePosition);
+    float cylindrical = max(length(worldRelativePosition.xz), abs(worldRelativePosition.y));
     float fogValue = max(nvs_linearFog(spherical, bus.fogEnvironmentalStart, bus.fogEnvironmentalEnd),
                           nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
     // Match the smoothstep curve used by the pack's replacement fog.glsl;
@@ -110,11 +110,11 @@ float nvs_vanillaFog(NvsBus bus, vec3 viewPosition) {
     return fogValue * fogValue * (3.0 - 2.0 * fogValue);
 }
 
-float nvs_atmosphereFog(NvsBus bus, vec3 viewPosition, float vanillaFog) {
-    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
+float nvs_atmosphereFog(NvsBus bus, vec3 worldRelativePosition, float vanillaFog) {
+    float cylindrical = max(length(worldRelativePosition.xz), abs(worldRelativePosition.y));
     float renderEnd = max(bus.fogRenderDistanceEnd, 1.0);
     float edge = smoothstep(0.50, 0.95, cylindrical / renderEnd);
-    float haze = 1.0 - exp(-length(viewPosition) / max(NVS_ATMOSPHERE_HAZE_DISTANCE, 1.0));
+    float haze = 1.0 - exp(-length(worldRelativePosition) / max(NVS_ATMOSPHERE_HAZE_DISTANCE, 1.0));
     return 1.0 - (1.0 - max(vanillaFog, edge)) * (1.0 - haze);
 }
 

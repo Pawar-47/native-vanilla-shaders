@@ -76,8 +76,8 @@ void main() {
             } else {
                 // Remove vanilla's fog contribution, then add the stronger
                 // aerial perspective and loaded-world edge fade.
-                float vanillaFog = nvs_vanillaFog(bus, viewPosition);
-                float amount = nvs_atmosphereFog(bus, viewPosition, vanillaFog);
+                float vanillaFog = nvs_vanillaFog(bus, worldRelative);
+                float amount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
                 vec3 surface = scene.rgb - (1.0 - alpha) * bus.fogColor
                              - alpha * vanillaFog * bus.fogColor;
                 float keep = (1.0 - amount) / max(1.0 - vanillaFog, 1e-4);

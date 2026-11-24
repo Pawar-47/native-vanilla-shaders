@@ -131,8 +131,8 @@ void main() {
         }
     }
 
-    float vanillaFog = nvs_vanillaFog(bus, viewPosition);
-    float fogAmount = nvs_atmosphereFog(bus, viewPosition, vanillaFog);
+    float vanillaFog = nvs_vanillaFog(bus, worldRelative);
+    float fogAmount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
     vec3 distantSky = nvs_skyGradient(viewWorld, bus.skyColor, bus.fogColor);
     reflection = mix(reflection, distantSky, fogAmount);
 
