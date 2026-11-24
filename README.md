@@ -12,6 +12,8 @@ architecture — see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly which progra
 are replaced and why, and [LIMITATIONS.md](LIMITATIONS.md) for what that
 architecture genuinely cannot do.
 
+Phase 1 implementation is complete and the installable Minecraft Java 26.3 pack is ready for in-game validation. See [TESTING.md](TESTING.md) for the Phase 2 visual checklist and [LIMITATIONS.md](LIMITATIONS.md) for known native-pipeline constraints.
+
 ## What it does
 
 | | |
