@@ -43,8 +43,9 @@ concluding it works:
    keeps vanilla's `#ifdef` structure deliberately, and the declaration check
    covers the conditional uniforms, but a variant-specific mistake cannot be
    disproved without the compiler.
-3. **Any framerate figure.** The performance tuning is reasoned (no ray marching,
-   fixed small bloom target, bounded octaves) but unmeasured.
+3. **Any framerate figure.** The water pass uses a bounded 24-step screen-space ray
+   march plus four refinements; cloud shadows use reduced octaves and bloom uses a
+   fixed small target. None of this has been measured on the Intel HD 5500 target.
 4. **That it looks right.** Every colour decision is a judgement.
 
 ## What to check in game, in this order
@@ -67,10 +68,12 @@ If something is wrong, this order finds it fastest.
    zenith than the horizon, and the game's own stars still visible on top.
 6. **Clouds, at noon**: torn edges instead of rectangular cells, bright tops and
    darker undersides, no visible grid as the camera moves.
-7. **Water**: waves visible as moving highlights, strong reflection at a grazing
-   angle and clear water when looking down, and a distinctly different look from
-   under the surface. Check a seashore for no gaps at chunk borders and no
-   sparkling at block seams.
+7. **Water**: first check that the surface is continuous and not striped. Look for
+   reflected islands/shoreline geometry, the sun disc and cloud shapes; rotate the
+   camera to check that screen-space reflections fade cleanly at screen edges.
+   Look down into the water for distorted refraction and a blue-green depth tint;
+   check distant water against the horizon for dark bands, aliasing or a black edge.
+   Check wave highlights and foam for temporal jumps at `/time set 0`.
 8. **Underwater** (`/execute as @s run tp @s ~ ~ ~` into an ocean, then look
    around): water fog, and the surface reading as a surface rather than a mirror.
 9. **A cave with a torch**: warm light that falls off, and dark that is dark but
@@ -87,10 +90,12 @@ If something is wrong, this order finds it fastest.
 
 ## If it is too slow
 
-Delete `assets/minecraft/post_effect/end_of_frame.json` first. It removes three
-full-screen passes and no visual feature except bloom, the grade and the vignette.
-Then lower `NVS_CLOUD_OCTAVES` to 3 and set `NVS_CLOUD_CUTOFF` to `0.38`. The
-full order is in [INSTALLATION.md](INSTALLATION.md).
+Delete `assets/minecraft/post_effect/end_of_frame.json` only as a last-resort
+compatibility/performance fallback: it disables the data-bus sky/fog reconstruction,
+water reflections/refraction, bloom and the final grade together. First lower
+`NVS_WATER_SSR_STEPS` to 16 and `NVS_WATER_SSR_REFINE_STEPS` to 3, then lower
+`NVS_CLOUD_OCTAVES` to 3 and `NVS_CLOUD_SHADOW_OCTAVES` to 2. The full order is
+in [INSTALLATION.md](INSTALLATION.md).
 
 ## Regression discipline
 
