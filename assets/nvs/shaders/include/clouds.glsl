@@ -64,8 +64,18 @@ float nvs_cloudShade(float density, float upward) {
 // and the shape it keeps is the same one `core/clouds` carves with.
 float nvs_cloudShadow(vec2 worldXZ) {
     vec2 p = worldXZ / NVS_CLOUD_SCALE;
-    float d = (nvs_fbm(p, 3) - 0.5) * 1.55 + 0.5;
-    float cover = smoothstep(0.32, 0.78, d);
+
+    // Match the broad mass and torn edge structure used by the visible cloud
+    // volume. Use fewer octaves than the cloud pass because this runs for every
+    // lit terrain fragment on the low-end target.
+    float mass = nvs_fbm(p, 3);
+    float wisp = nvs_fbmRidged(p * 2.6 + vec2(11.0, 3.0), 2);
+    float d = (mass - 0.5) * 1.55 + 0.5;
+    d = mix(d, d * 0.72 + wisp * 0.42, 0.45);
+
+    // A slightly broader penumbra keeps the reduced-frequency shadow field
+    // from flickering while retaining the same cloud silhouettes.
+    float cover = smoothstep(0.30, 0.76, d);
     return 1.0 - cover * NVS_CLOUD_SHADOW_STRENGTH;
 }
 
