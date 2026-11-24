@@ -16,9 +16,10 @@ void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);
     vec4 scene = texelFetch(InSampler, pixel, 0);
-    NvsBus bus = nvs_readBus(InSampler);
-
     float depth = texelFetch(DepthSampler, pixel, 0).r;
+    // Opaque terrain only needs projection, view, sky and fog data. The four
+    // sun rows are decoded only for sky pixels and translucent cloud layers.
+    NvsBus bus = nvs_readBus(InSampler, depth <= 0.0 || scene.a < 0.99);
     float waterData = 0.0;
     bool drawn = depth > 0.0;
     if (drawn && nvs_isWaterMarker(scene, pixel.x)) {

@@ -32,7 +32,7 @@ bool nvs_busIsMarker(vec4 value) {
     return all(lessThan(abs(value.rgb - vec3(1.0, 0.0, 1.0)), vec3(0.01)));
 }
 
-NvsBus nvs_readBus(sampler2D source) {
+NvsBus nvs_readBus(sampler2D source, bool readSun) {
     NvsBus bus;
     int height = textureSize(source, 0).y;
     bool fromBottom = nvs_busIsMarker(texelFetch(source, ivec2(0, 0), 0));
@@ -68,15 +68,24 @@ NvsBus nvs_readBus(sampler2D source) {
     bus.fogSkyEnd = fog[4];
     bus.fogCloudsEnd = fog[5];
 
-    vec3 sunView = vec3(
-        nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN, fromBottom)),
-        nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN + 1, fromBottom)),
-        nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN + 2, fromBottom))
-    );
-    bus.sunDirection = normalize(bus.viewToWorld * sunView);
-    bus.rainBrightness = nvs_bus_unpackSigned(
-        nvs_busTexel(source, NVS_BUS_ROW_SUN + 3, fromBottom)) * 0.5 + 0.5;
+    if (readSun) {
+        vec3 sunView = vec3(
+            nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN, fromBottom)),
+            nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN + 1, fromBottom)),
+            nvs_bus_unpackSigned(nvs_busTexel(source, NVS_BUS_ROW_SUN + 2, fromBottom))
+        );
+        bus.sunDirection = normalize(bus.viewToWorld * sunView);
+        bus.rainBrightness = nvs_bus_unpackSigned(
+            nvs_busTexel(source, NVS_BUS_ROW_SUN + 3, fromBottom)) * 0.5 + 0.5;
+    } else {
+        bus.sunDirection = vec3(0.0, 1.0, 0.0);
+        bus.rainBrightness = 1.0;
+    }
     return bus;
+}
+
+NvsBus nvs_readBus(sampler2D source) {
+    return nvs_readBus(source, true);
 }
 
 // Reconstruct a camera-relative view-space point from screen UV and depth.
