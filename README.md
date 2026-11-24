@@ -12,7 +12,7 @@ architecture — see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly which progra
 are replaced and why, and [LIMITATIONS.md](LIMITATIONS.md) for what that
 architecture genuinely cannot do.
 
-Phase 1 source work is in final review. CI builds an installable Minecraft Java 26.3 pack, but no in-game rendering or performance result is claimed yet. Phase 2 is the Minecraft runtime and visual-validation stage; see [TESTING.md](TESTING.md) for its checklist.
+**Phase 1 source implementation is complete.** The installable Minecraft Java 26.3 pack has passed the static pipeline checks, GLSL syntax/type compilation for 159 shader-stage variants, and clean ZIP packaging. Phase 2 is now ready: load the pack in Minecraft 26.3 and complete the visual/performance checklist in [TESTING.md](TESTING.md). Minecraft's exact ShaderC and in-game rendering are not claimed as verified by CI.
 
 ## What it does
 

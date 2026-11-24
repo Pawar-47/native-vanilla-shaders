@@ -2,7 +2,7 @@
 
 All notable changes to this pack. The pack version is independent of the Minecraft version.
 
-## Unreleased — Phase 1 development
+## Phase 1 complete — 2026-11-24
 
 ### Added and expanded
 
