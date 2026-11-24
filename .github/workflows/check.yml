@@ -48,13 +48,26 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add MANIFEST/vanilla-hashes.json MANIFEST/modified-files.json
-          if git diff --cached --quiet; then
-            echo "Manifests are already current."
-            exit 0
-          fi
-          git commit -m "Refresh shader manifests"
-          git push origin HEAD:main
+          # Multiple quick pushes can finish their checks at the same time.
+          # Rebase the generated metadata onto the latest main and regenerate
+          # against that exact tree before pushing, retrying if main moves again.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 tools/manifest.py --write
+            git add MANIFEST/vanilla-hashes.json MANIFEST/modified-files.json
+            if git diff --cached --quiet; then
+              echo "Manifests are already current."
+              exit 0
+            fi
+            git commit -m "Refresh shader manifests"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "main moved during manifest push; retrying."
+          done
+          echo "Could not push manifest refresh after three attempts."
+          exit 1
 
       - name: Build the installable pack
         run: python3 tools/package.py --zip
