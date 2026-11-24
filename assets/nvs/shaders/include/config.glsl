@@ -105,6 +105,14 @@
 #ifndef NVS_WATER_FOAM_THRESHOLD
 #define NVS_WATER_FOAM_THRESHOLD 0.72
 #endif
+// Screen-space reflection ray budget. 24 coarse steps plus four refinements
+// keeps the water pass viable on Intel HD 5500-class integrated graphics.
+#ifndef NVS_WATER_SSR_STEPS
+#define NVS_WATER_SSR_STEPS 24
+#endif
+#ifndef NVS_WATER_SSR_REFINE_STEPS
+#define NVS_WATER_SSR_REFINE_STEPS 4
+#endif
 
 // ------------------------------------------------------------- lighting ----
 // Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.

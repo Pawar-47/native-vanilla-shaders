@@ -12,14 +12,12 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
-#define NVS_SSR_STEPS 28
-#define NVS_SSR_REFINE_STEPS 4
 
 vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
     float stepLength = 0.3 + 0.01 * length(origin);
     vec3 previous = origin;
     vec3 position = origin;
-    for (int i = 0; i < NVS_SSR_STEPS; ++i) {
+    for (int i = 0; i < NVS_WATER_SSR_STEPS; ++i) {
         position += direction * stepLength;
         vec4 clip = bus.projection * vec4(position, 1.0);
         if (clip.w <= 0.0) break;
@@ -31,7 +29,7 @@ vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
             if (behind > 0.12 && behind < stepLength * 3.0 + 0.5) {
                 vec3 a = previous;
                 vec3 b = position;
-                for (int j = 0; j < NVS_SSR_REFINE_STEPS; ++j) {
+                for (int j = 0; j < NVS_WATER_SSR_REFINE_STEPS; ++j) {
                     vec3 middle = 0.5 * (a + b);
                     vec4 projected = bus.projection * vec4(middle, 1.0);
                     vec2 muv = projected.xy / projected.w * 0.5 + 0.5;
@@ -42,7 +40,7 @@ vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
                     } else a = middle;
                 }
                 vec2 edge = smoothstep(vec2(0.0), vec2(0.08), min(uv, 1.0 - uv));
-                return vec3(uv, edge.x * edge.y * (1.0 - float(i) / float(NVS_SSR_STEPS)));
+                return vec3(uv, edge.x * edge.y * (1.0 - float(i) / float(NVS_WATER_SSR_STEPS)));
             }
         }
         previous = position;
