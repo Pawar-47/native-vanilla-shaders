@@ -56,7 +56,7 @@ float nvs_waveHeight(vec2 p, float t) {
 // Analytic derivative of nvs_waveHeight, plus a small circularly drifting
 // noise ripple. The circular drift also closes after an integer number of
 // revolutions when GameTime wraps.
-vec2 nvs_waveGradient(vec2 p, float t, float strength) {
+vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     const vec2 d0 = vec2(0.94, 0.34);
     const vec2 d1 = vec2(-0.42, 0.91);
     const vec2 d2 = vec2(0.68, -0.73);
@@ -67,13 +67,21 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength) {
     const float k2 = 2.31;
     const float k3 = 0.86;
     const float k4 = 1.72;
+    // A wave shorter than roughly two pixels aliases; fade it out before
+    // it reaches that point, as in the reference water implementation.
+    float pixelScale = max(footprint, 1e-4);
+    float f0 = smoothstep(2.0, 6.0, 6.2831853 / (k0 * pixelScale));
+    float f1 = smoothstep(2.0, 6.0, 6.2831853 / (k1 * pixelScale));
+    float f2 = smoothstep(2.0, 6.0, 6.2831853 / (k2 * pixelScale));
+    float f3 = smoothstep(2.0, 6.0, 6.2831853 / (k3 * pixelScale));
+    float f4 = smoothstep(2.0, 6.0, 6.2831853 / (k4 * pixelScale));
 
     vec2 grad = vec2(0.0);
-    grad += (0.050 * k0) * cos(dot(p, d0) * k0 + t) * d0;
-    grad += (0.026 * k1) * cos(dot(p, d1) * k1 + t * 2.0) * d1;
-    grad += (0.012 * k2) * cos(dot(p, d2) * k2 + t * 3.0) * d2;
-    grad += (0.018 * k3) * cos(dot(p, d3) * k3 + t * 5.0) * d3;
-    grad += (0.009 * k4) * cos(dot(p, d4) * k4 + t * 7.0) * d4;
+    grad += (0.050 * k0) * cos(dot(p, d0) * k0 + t) * d0 * f0;
+    grad += (0.026 * k1) * cos(dot(p, d1) * k1 + t * 2.0) * d1 * f1;
+    grad += (0.012 * k2) * cos(dot(p, d2) * k2 + t * 3.0) * d2 * f2;
+    grad += (0.018 * k3) * cos(dot(p, d3) * k3 + t * 5.0) * d3 * f3;
+    grad += (0.009 * k4) * cos(dot(p, d4) * k4 + t * 7.0) * d4 * f4;
 
     vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
     vec2 rp = p * 0.55 + orbit;
@@ -81,14 +89,19 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength) {
     float n0 = nvs_valueNoise(rp);
     float nx = nvs_valueNoise(rp + vec2(e, 0.0));
     float nz = nvs_valueNoise(rp + vec2(0.0, e));
-    grad += NVS_WATER_RIPPLE * vec2(nx - n0, nz - n0) / e * 0.10;
+    float rippleFade = smoothstep(2.0, 6.0, 2.0 / pixelScale);
+    grad += NVS_WATER_RIPPLE * vec2(nx - n0, nz - n0) / e * 0.10 * rippleFade;
 
     return grad * strength;
 }
 
-vec3 nvs_waterNormal(vec2 p, float t, float strength) {
-    vec2 g = nvs_waveGradient(p, t, strength);
+vec3 nvs_waterNormal(vec2 p, float t, float strength, float footprint) {
+    vec2 g = nvs_waveGradient(p, t, strength, footprint);
     return normalize(vec3(-g.x, 1.0, -g.y));
+}
+
+vec3 nvs_waterNormal(vec2 p, float t, float strength) {
+    return nvs_waterNormal(p, t, strength, 1.0);
 }
 
 // Foam follows the actual combined wave height, so its crests coincide with

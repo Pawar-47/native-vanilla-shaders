@@ -70,7 +70,10 @@ void main() {
     vec3 viewPosition = nvs_busViewPosition(bus, texCoord, max(depth, 1e-6));
     vec3 worldRelative = bus.viewToWorld * viewPosition;
     // Evaluate derivatives uniformly across the frame before testing the water tag.
-    vec3 normalRaw = cross(dFdx(worldRelative), dFdy(worldRelative));
+    vec3 worldDx = dFdx(worldRelative);
+    vec3 worldDy = dFdy(worldRelative);
+    vec3 normalRaw = cross(worldDx, worldDy);
+    float pixelFootprint = max(length(worldDx.xz), length(worldDy.xz));
     float normalLength = length(normalRaw);
     vec3 faceNormal = normalLength > 1e-5 ? normalRaw / normalLength : vec3(0.0, 1.0, 0.0);
     if (tagged.a > 0.9 || depth <= 0.0) return;
@@ -88,7 +91,7 @@ void main() {
     float grazingFade = mix(0.15, 1.0, smoothstep(0.02, 0.25, abs(viewWorld.y)));
     float waveStrength = NVS_WATER_WAVE_STRENGTH * mix(0.42, 1.0, farWaveFade) * grazingFade;
     if (top) {
-        normal = nvs_waterNormal(worldPosition.xz, t, waveStrength);
+        normal = nvs_waterNormal(worldPosition.xz, t, waveStrength, pixelFootprint);
         if (faceNormal.y < 0.0) normal.y = -normal.y;
     }
 
@@ -144,5 +147,16 @@ void main() {
 
     float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - clamp(dot(normalize(mix(faceNormal, normal, 0.25)), -viewWorld), 0.0, 1.0), 5.0);
     if (!top) fresnel *= 0.55;
-    fragColor = vec4(mix(refraction, reflection, fresnel), 1.0);
+    vec3 finalColor = mix(refraction, reflection, fresnel);
+
+    // Whitecaps are drawn in the post water pass (the above-water terrain
+    // pass deliberately leaves the vanilla surface untouched for SSR).
+    if (top && NVS_WATER_FOAM > 0.0) {
+        float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0,
+                                 nvs_waterCrest(worldPosition.xz, t));
+        float broken = nvs_valueNoise(worldPosition.xz * 1.9 + vec2(t * 0.25));
+        float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, farWaveFade);
+        finalColor += vec3(NVS_WATER_FOAM) * foam;
+    }
+    fragColor = vec4(finalColor, 1.0);
 }
