@@ -161,9 +161,9 @@ REQUIRED_FILES = [
 # Files that belong to a loader-based pack and must never appear here: if one of
 # these exists the pack is not a pure vanilla resource pack any more.
 FORBIDDEN_NAMES = re.compile(
-    r"^(shaders\.properties|.*\.properties|gbuffers_.*|shadowcomp.*|"
-    r"deferred.*|composite\d*\.[a-z]+|final\.[a-z]+|prepare\.[a-z]+|"
-    r"dh_terrain\..*|dh_water\..*|voxy.*|clrwl_.*)$"
+    r"^(gbuffers_.*|shadowcomp.*|deferred.*|composite\d*\.[a-z]+|"
+    r"final\.[a-z]+|prepare\.[a-z]+|dh_terrain\..*|dh_water\..*|"
+    r"voxy.*|clrwl_.*)$"
 )
 FORBIDDEN_DIR_HINTS = ("/world0/", "/world-1/", "/world1/", "/dimension/")
 
@@ -242,8 +242,18 @@ def check_structure(root, report):
     for path in pack_files(root):
         rel = os.path.relpath(path, root).replace(os.sep, "/")
         name = os.path.basename(path)
-        if FORBIDDEN_NAMES.match(name):
-            report.fail("structure", rel, "this file belongs to a loader-based pack, not to vanilla")
+        # Loader stages are only forbidden at the root of a shaderpack's
+        # shaders/ tree. A namespaced native post shader such as
+        # assets/nvs/shaders/post/composite.fsh is valid and must not be
+        # confused with Iris' root-level composite.fsh stage.
+        parts = rel.split("/")
+        shader_positions = [i for i, part in enumerate(parts) if part == "shaders"]
+        if shader_positions:
+            tail = parts[shader_positions[-1] + 1:]
+            if name.endswith(".properties"):
+                report.fail("structure", rel, "shaderpack .properties configuration is not a vanilla resource-pack feature")
+            elif len(tail) == 1 and FORBIDDEN_NAMES.match(name):
+                report.fail("structure", rel, "this root-level stage belongs to a loader-based shaderpack, not vanilla")
         for hint in FORBIDDEN_DIR_HINTS:
             if hint in "/" + rel:
                 report.fail("structure", rel, "dimension/world shader folders are a loader feature")
@@ -396,6 +406,12 @@ def check_includes(root, vanilla, report):
             for spec in INCLUDE_RE.findall(strip_comments(text)):
                 where = resolve_include(spec, root, vanilla)
                 if where is None:
+                    # Vanilla-owned includes are supplied by Minecraft at runtime.
+                    # The repository intentionally does not redistribute Mojang's
+                    # shader tree, so their existence can only be checked when the
+                    # developer has supplied a local Vanilla-stock reference.
+                    if spec.startswith("minecraft:") and vanilla is None:
+                        continue
                     report.fail("include", rel, "#include <%s> does not resolve" % spec)
 
     # The replaced fog.glsl must keep every name the vanilla one declares.
@@ -413,13 +429,15 @@ def check_includes(root, vanilla, report):
 # --------------------------------------------------------------------------
 # 4. varyings
 # --------------------------------------------------------------------------
-def parse_io(text):
+def parse_io(text, wanted_stage=None):
     result = {}
     for number, line in enumerate(text.splitlines(), 1):
         match = DECL_RE.match(line)
         if not match:
             continue
         qualifiers, stage, vtype, name = match.groups()
+        if wanted_stage is not None and stage != wanted_stage:
+            continue
         before = line[:match.start(3)]
         location = LOC_RE.search(before) or LOC_RE.search(line)
         if location is None:
@@ -448,10 +466,15 @@ def check_varyings(root, vanilla, report):
     for fsh in sorted(FRAGMENT_PARTNERS):
         fsh_path = find_program_file(root, vanilla, fsh)
         if fsh_path is None:
+            if vanilla is None:
+                # Some partner fragments are vanilla-owned and are not copied
+                # into this repository. Their pairing is checked when the local
+                # vanilla reference tree is supplied.
+                continue
             report.fail("varyings", fsh, "fragment program not found")
             continue
         fsh_text = read(fsh_path)
-        fsh_io = parse_io(fsh_text)
+        fsh_io = parse_io(fsh_text, "in")
         rel_fsh = os.path.relpath(fsh_path, root).replace(os.sep, "/")
         if "__nolayout__" in fsh_io:
             for number, stage, vtype, name in fsh_io["__nolayout__"]:
@@ -462,9 +485,11 @@ def check_varyings(root, vanilla, report):
         for vsh in FRAGMENT_PARTNERS[fsh]:
             vsh_path = find_program_file(root, vanilla, vsh)
             if vsh_path is None:
+                if vanilla is None:
+                    continue
                 report.fail("varyings", vsh, "vertex program not found")
                 continue
-            vsh_io = parse_io(read(vsh_path))
+            vsh_io = parse_io(read(vsh_path), "out")
             rel_vsh = os.path.relpath(vsh_path, root).replace(os.sep, "/")
             for location, (vtype, flat, name, number) in sorted(fsh_io.items()):
                 if location == "__nolayout__":
