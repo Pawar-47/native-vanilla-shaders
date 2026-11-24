@@ -84,7 +84,7 @@
       "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
       "vanilla_source": "Vanilla-stock /core/clouds.fsh",
       "reason": "Adds procedural density carving and top/underside/side shading; preserves OIT branches and protects the reserved data-bus column.",
-      "pack_sha256": "f81ae0bda5db1141cbe98a7dbe3069e22637e46e3f061f82a1742eac2c7d0df4",
+      "pack_sha256": "3577225f4be910609afe086040a84f4809c578bfd1ebf56e1797be2cdee088d5",
       "vanilla_sha256": "98ed038991d16691b4fda45a82436025fa54d90f11840dd6ce42b8359bf76588"
     },
     {
@@ -298,7 +298,7 @@
       "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
       "vanilla_source": null,
       "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
-      "pack_sha256": "ccb85d662f28b9b084c1d2b081b32a377e21f3faeb28191b77106ae5ad562a66"
+      "pack_sha256": "a410197b8aa3e3388d0ae1c5b9675375a0dd48ad93a84ad3835cb29aba096477"
     },
     {
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
