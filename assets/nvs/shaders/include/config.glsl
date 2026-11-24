@@ -53,6 +53,14 @@
 #ifndef NVS_CLOUD_SHADOW_STRENGTH
 #define NVS_CLOUD_SHADOW_STRENGTH 0.18
 #endif
+// Cloud-shadow octave budget. Keep below visible-cloud quality to limit
+// per-fragment cost across large terrain surfaces.
+#ifndef NVS_CLOUD_SHADOW_OCTAVES
+#define NVS_CLOUD_SHADOW_OCTAVES 3
+#endif
+#ifndef NVS_CLOUD_SHADOW_DETAIL_OCTAVES
+#define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 2
+#endif
 // Height of the cloud layer, in blocks, as used for the shadow gradient.
 #ifndef NVS_CLOUD_HEIGHT
 #define NVS_CLOUD_HEIGHT 192.0

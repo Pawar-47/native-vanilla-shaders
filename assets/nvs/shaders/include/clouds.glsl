@@ -16,20 +16,20 @@
 // gives the cumulus blocks, and a ridged detail, which gives the torn, wispy
 // edges. Nothing repeats: there is no texture and no lookup table.
 
-float nvs_cloudField(vec2 worldXZ) {
+// Shared density function. Visible clouds use the configured detail level;
+// terrain shadows use fewer octaves for the integrated-GPU target, but retain
+// exactly the same mass/detail shaping so the silhouettes stay related.
+float nvs_cloudDensity(vec2 worldXZ, int massOctaves, int detailOctaves) {
     vec2 p = worldXZ / NVS_CLOUD_SCALE;
-
-    float mass = nvs_fbm(p, NVS_CLOUD_OCTAVES);
-    float wisp = nvs_fbmRidged(p * 2.6 + vec2(11.0, 3.0), NVS_CLOUD_OCTAVES - 1);
-
-    // Centre the mass on 0.5 and open its contrast, so that a cutoff carves
-    // recognisable shapes instead of nibbling at a flat grey.
+    float mass = nvs_fbm(p, massOctaves);
+    float wisp = nvs_fbmRidged(p * 2.6 + vec2(11.0, 3.0), detailOctaves);
     float d = (mass - 0.5) * 1.55 + 0.5;
-
-    // Pull the detail into the mass: dense areas stay dense, thin areas tear.
     d = mix(d, d * 0.72 + wisp * 0.42, 0.45);
-
     return clamp(d, 0.0, 1.0);
+}
+
+float nvs_cloudField(vec2 worldXZ) {
+    return nvs_cloudDensity(worldXZ, NVS_CLOUD_OCTAVES, max(NVS_CLOUD_OCTAVES - 1, 1));
 }
 
 // Vertical shading. `upward` is 1 for a top face, 0 for a bottom face.
@@ -63,19 +63,10 @@ float nvs_cloudShade(float density, float upward) {
 // channel only. The shadow is soft enough that the detail it drops is invisible,
 // and the shape it keeps is the same one `core/clouds` carves with.
 float nvs_cloudShadow(vec2 worldXZ) {
-    vec2 p = worldXZ / NVS_CLOUD_SCALE;
-
-    // Match the broad mass and torn edge structure used by the visible cloud
-    // volume. Use fewer octaves than the cloud pass because this runs for every
-    // lit terrain fragment on the low-end target.
-    float mass = nvs_fbm(p, 3);
-    float wisp = nvs_fbmRidged(p * 2.6 + vec2(11.0, 3.0), 2);
-    float d = (mass - 0.5) * 1.55 + 0.5;
-    d = mix(d, d * 0.72 + wisp * 0.42, 0.45);
-
-    // A slightly broader penumbra keeps the reduced-frequency shadow field
-    // from flickering while retaining the same cloud silhouettes.
-    float cover = smoothstep(0.30, 0.76, d);
+    float density = nvs_cloudDensity(worldXZ,
+                                      NVS_CLOUD_SHADOW_OCTAVES,
+                                      NVS_CLOUD_SHADOW_DETAIL_OCTAVES);
+    float cover = smoothstep(0.30, 0.76, density);
     return 1.0 - cover * NVS_CLOUD_SHADOW_STRENGTH;
 }
 
