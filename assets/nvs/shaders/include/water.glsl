@@ -39,23 +39,36 @@ float nvs_waveTime(float gameTime) {
 vec2 nvs_waveGradient(vec2 p, float t, float strength) {
     vec2 grad = vec2(0.0);
 
-    float k0 = 0.62;
-    float k1 = 1.17;
-    float k2 = 2.31;
-    float a0 = 0.050;
-    float a1 = 0.026;
-    float a2 = 0.012;
+    // Five incommensurate directions break up the parallel bands produced
+    // by a small set of pure sine waves. Temporal rates are integer multiples
+    // of the daily base frequency, so every wave closes exactly at GameTime's
+    // wrap instead of snapping at dawn.
+    const vec2 d0 = vec2(0.94, 0.34);
+    const vec2 d1 = vec2(-0.42, 0.91);
+    const vec2 d2 = vec2(0.68, -0.73);
+    const vec2 d3 = vec2(-0.91, -0.40);
+    const vec2 d4 = vec2(0.18, -0.98);
+    const float k0 = 0.62;
+    const float k1 = 1.17;
+    const float k2 = 2.31;
+    const float k3 = 0.86;
+    const float k4 = 1.72;
+    const float a0 = 0.050;
+    const float a1 = 0.026;
+    const float a2 = 0.012;
+    const float a3 = 0.018;
+    const float a4 = 0.009;
 
-    float ph0 = dot(p, vec2(0.94, 0.34)) * k0 + t;
-    grad += (a0 * k0) * cos(ph0) * vec2(0.94, 0.34);
-
-    // 1.7 and 2.9 times the base rate are 204 and 348 cycles per day: whole
-    // numbers, so these waves also close the loop.
-    float ph1 = dot(p, vec2(-0.42, 0.91)) * k1 + t * 1.7;
-    grad += (a1 * k1) * cos(ph1) * vec2(-0.42, 0.91);
-
-    float ph2 = dot(p, vec2(0.68, -0.73)) * k2 + t * 2.9;
-    grad += (a2 * k2) * cos(ph2) * vec2(0.68, -0.73);
+    float ph0 = dot(p, d0) * k0 + t;
+    float ph1 = dot(p, d1) * k1 + t * 1.7;
+    float ph2 = dot(p, d2) * k2 + t * 2.9;
+    float ph3 = dot(p, d3) * k3 + t * 2.1;
+    float ph4 = dot(p, d4) * k4 + t * 3.3;
+    grad += (a0 * k0) * cos(ph0) * d0;
+    grad += (a1 * k1) * cos(ph1) * d1;
+    grad += (a2 * k2) * cos(ph2) * d2;
+    grad += (a3 * k3) * cos(ph3) * d3;
+    grad += (a4 * k4) * cos(ph4) * d4;
 
     vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
     vec2 rp = p * 0.55 + orbit;
@@ -79,7 +92,9 @@ float nvs_waterCrest(vec2 p, float t) {
     h += 0.5 + 0.5 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
     h += 0.5 + 0.5 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 1.7);
     h += 0.5 + 0.5 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 2.9);
-    return h / 3.0;
+    h += 0.5 + 0.5 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 2.1);
+    h += 0.5 + 0.5 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 3.3);
+    return h / 5.0;
 }
 
 // The sky in the direction of a reflection, including the cloud layer.
