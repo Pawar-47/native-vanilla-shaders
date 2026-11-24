@@ -157,7 +157,9 @@ void main() {
         // That feedback reads as dark patches and unstable recursive mirrors.
         if (directHit.a > 0.9) {
             vec4 shiftedHit = inside ? texture(InSampler, uv) : vec4(0.0);
-            vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedHit.rgb : directHit.rgb;
+            vec3 directColor = nvs_cleanReflectionSample(hit.xy);
+            vec3 shiftedColor = inside ? nvs_cleanReflectionSample(uv) : directColor;
+            vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedColor : directColor;
             reflection = mix(reflection, mirrored, hit.z);
         }
     }
