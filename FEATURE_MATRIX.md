@@ -37,7 +37,7 @@ Statuses used below:
 | Feature | Status | Where |
 |---|---|---|
 | Procedural multiscale cloud shapes | Done | `nvs_cloudField`: a smooth mass plus a ridged detail channel |
-| Real volume and depth | Done | the game's cloud boxes are kept; density and orientation shade them |
+| Depth from native cloud geometry | Done | the game's cloud boxes are kept; density and face orientation shade their top, underside and sides |
 | Cumulus and wispy forms | Done | the two channels, mixed; `NVS_CLOUD_CUTOFF` controls how much is torn away |
 | Motion | Done | `CloudOffset` is already inside the cloud position, so the field travels with the clouds |
 | Altitude and scale | Done | `NVS_CLOUD_SCALE`, `NVS_CLOUD_HEIGHT` |
@@ -118,11 +118,11 @@ Statuses used below:
 
 | Feature | Status | Where |
 |---|---|---|
-| End portal | Preserved, unmodified | vanilla portal shader retained with the reserved bus-column guard |
-| Beacon beam | Preserved, unmodified | vanilla beacon shader retained with the reserved bus-column guard |
-| Lightning | Preserved, unmodified | vanilla lightning shader retained with the reserved bus-column guard |
-| Item and entity glint | Preserved, unmodified | vanilla glint paths retained with the reserved bus-column guard |
-| Emissive entity paths | Preserved, unmodified | vanilla emissive entity paths retained with the reserved bus-column guard |
+| End portal | Preserved | vanilla portal shader retained with the reserved bus-column guard |
+| Beacon beam | Preserved | vanilla beacon shader retained with the reserved bus-column guard |
+| Lightning | Preserved | vanilla lightning shader retained with the reserved bus-column guard |
+| Item and entity glint | Preserved | vanilla glint paths retained with the reserved bus-column guard |
+| Emissive entity paths | Preserved | vanilla emissive entity paths retained with the reserved bus-column guard |
 | Improved Transparency (OIT) | Pipeline-preserved; water SSR unverified | native OIT branches remain intact, but the water marker is written only in the final non-accumulation terrain pass; test water with OIT both on and off |
 | Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
 | Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
