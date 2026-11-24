@@ -118,8 +118,12 @@ vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 horizon) 
         float travel = max(cloudY - worldY, 1.0);
         vec2 cloudXZ = worldXZ + reflected.xz * (travel / reflected.y);
         float d = nvs_cloudField(cloudXZ);
-        float cover = smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.45, d) * 0.55;
-        vec3 cloudTint = horizon * 1.10 + vec3(0.05);
+        float cover = smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.45, d) * 0.62;
+        // Water sees the underside of the cloud layer. Reuse the same
+        // thickness/underside response as the visible cloud volume instead of
+        // reflecting featureless horizon-coloured patches.
+        float underside = nvs_cloudShade(d, 0.0);
+        vec3 cloudTint = (horizon * 1.10 + vec3(0.05)) * underside;
         sky = mix(sky, cloudTint, cover);
     }
 
