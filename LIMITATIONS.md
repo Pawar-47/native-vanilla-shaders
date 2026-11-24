@@ -35,7 +35,7 @@ water tags when Improved Transparency is enabled. The upstream reference also
 lists this path as untested. Runtime testing must compare water with OIT enabled
 and disabled before claiming parity.
 
-## 14. No caustics
+## 3. No caustics
 
 **What is missing.** A caustic needs the normal of the underwater surface, to
 project a light pattern onto it. The terrain vertex format is `Position`, `Color`,
@@ -50,7 +50,7 @@ for every tinted block.
 **Alternative used.** None. Caustics are omitted rather than faked on the wrong
 faces.
 
-## 3. Sun direction is transferred only to post effects
+## 4. Sun direction is transferred only to post effects
 
 **What is available.** The sun's direction exists in the model-view matrix of
 `core/position_tex`, whose translation column is the body's position on the
@@ -70,29 +70,31 @@ safe substitute for the actual celestial transform; deriving the sun from it
 could drift out of step with the game's real sun. The data bus uses the actual
 matrix instead.
 
-## 4. No volumetric, ray-marched or layer-transported clouds
+## 5. No volumetric, ray-marched or layer-transported clouds
 
-**What is missing.** A volume needs either a ray march against a density field
-with a camera (a post effect needs the camera, which it is not given — see 1), or
-layered geometry (there is none: the game builds one box per cloud cell).
+**What is missing.** A volume needs either a ray march against a density field or layered geometry.
+The data bus now makes camera reconstruction available to post effects, but a
+full-screen cloud march would add a large cost on the target integrated GPU, and
+the game still supplies only one box per cloud cell.
 
 **Alternative used.** The game's boxes are kept and carved by a density field, so
 there is real geometry with real depth, lit tops, shaded undersides and torn
 edges. It is a shaped volume, not a marched one.
 
-## 5. No shadow maps, and no screen-space shadows
+## 6. No shadow maps
 
-**What is missing.** There is no shadow pass: no depth-from-the-sun target exists
-to sample. Screen-space shadows would need the camera and the depth buffer in a
-post pass, which is limitation 1 again, and the technique artifacts are famous
-even when it works.
+**What is missing.** There is no shadow pass and no depth-from-the-sun target.
+Screen-space shadows are technically possible now that the data bus supplies the
+camera and the post chain reads depth, but they are not implemented: they can
+produce severe screen-edge and disocclusion artifacts, and add another costly
+full-screen ray-march on the target integrated GPU.
 
 **Alternative used.** The lightmap. Sunlight falls off with sky light and is
 tinted by the game's own sun colour, so caves and north faces darken correctly,
 and cloud shadows add large-scale variation. There are no cast shadows from
 blocks, entities or the player.
 
-## 6. Tonemapping is limited to a highlight shoulder
+## 7. Tonemapping is limited to a highlight shoulder
 
 **What is missing.** A tone map maps a high dynamic range to a display range. The
 frame `end_of_frame` receives is RGBA8: it has already been clamped by the
@@ -103,7 +105,7 @@ lighting code that wrote it. There is no HDR value left to map.
 without crossing it. Headroom is reclaimed at the top without moving the
 midtones, which is what a tone map is for, minus the part that needs HDR.
 
-## 7. Cloud shadows do not drift with the clouds
+## 8. Cloud shadows do not drift with the clouds
 
 **What is missing.** The drift is `CloudInfo.CloudOffset`, which is provided to
 `core/clouds` and to nothing else. Terrain cannot see how far the clouds have
@@ -114,7 +116,7 @@ more than 18% darkening, anchored to the world and not animated. They read as
 large soft patches of shade rather than as a hard shadow that would visibly slide
 against the clouds.
 
-## 8. Foliage wind only reaches plants the vertex data can identify
+## 9. Foliage wind only reaches plants the vertex data can identify
 
 **What is identifiable.** Cutout terrain (the `ALPHA_CUTOUT` 0.5 pipeline) that is
 biome-tinted (its `Color` is not grey) and whose vertices are off the block grid
@@ -130,7 +132,7 @@ on the grid, and are deliberately excluded; guessing would move the wrong things
 bending from the base, and the movement does not affect collision or the baked
 vertex lighting.
 
-## 9. Water geometry is not displaced
+## 10. Water geometry is not displaced
 
 **What is missing.** Water shares the translucent terrain pass with glass, ice and
 stained glass, and the vertex program has no texture to tell them apart. Moving the
@@ -140,7 +142,7 @@ surface would warp every window in the world.
 reflection and refraction come from anyway. The surface stays exactly where the
 game put it, so there are no gaps at chunk borders and no warped glass.
 
-## 10. World-anchored patterns lose precision very far from the origin
+## 11. World-anchored patterns lose precision very far from the origin
 
 The cloud field, the water waves and the cloud shadows are functions of absolute
 world coordinates, because a camera-relative pattern would slide as you walk. At
@@ -149,7 +151,7 @@ Beyond roughly ±1 000 000 blocks the fractional resolution is coarser than the
 pattern and the detail visibly degrades. This is a property of the tools, not of
 the design: there is no double precision in GLSL 330.
 
-## 11. The pack is pinned to one game version
+## 12. The pack is pinned to one game version
 
 `pack.mcmeta` declares `min_format` and `max_format` 97, and the shader files are
 written against 26.3's program set, its `#include` rules and its uniform layouts.
@@ -157,14 +159,14 @@ written against 26.3's program set, its `#include` rules and its uniform layouts
 still use `#moj_import`; a replacement file written for one of them silently reads
 the wrong values in 26.3. See [COMPATIBILITY.md](COMPATIBILITY.md).
 
-## 12. Nothing is graded after the GUI
+## 13. Nothing is graded after the GUI
 
 `end_of_frame` runs after the world and the hand, and before the HUD. The
 composite therefore never touches the hotbar, the chat or menus. That is the
 correct behaviour and worth stating plainly, because it also means a pack cannot
 apply its grade to the UI.
 
-## 13. No supersampling or MSAA under the pack's control
+## 14. No supersampling or MSAA under the pack's control
 
 A resource pack cannot change the framebuffer format or the sample count. The
 only antialiasing available is a filter pass, which is why FXAA ships as an
