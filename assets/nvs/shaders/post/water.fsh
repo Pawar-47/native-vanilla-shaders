@@ -26,6 +26,9 @@ vec3 nvs_cleanReflectionSample(vec2 uv) {
     vec3 down = texture(InSampler, clamp(uv - vec2(0.0, texel.y * 1.5), vec2(0.001), vec2(0.999))).rgb;
     vec3 neighbours = (left + right + up + down) * 0.25;
     float centerChroma = nvs_max3(center) - nvs_min3(center);
+    // Most reflected pixels are neutral; avoid the four neighbour reads unless
+    // the candidate is chromatic enough to plausibly be a coloured rain streak.
+    if (centerChroma < 0.22) return center;
     float neighbourChroma = nvs_max3(neighbours) - nvs_min3(neighbours);
     float chromaOutlier = smoothstep(0.12, 0.30, centerChroma - neighbourChroma);
     float brightOutlier = smoothstep(0.035, 0.16, nvs_luma(center) - nvs_luma(neighbours));
