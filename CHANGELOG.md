@@ -2,7 +2,7 @@
 
 All notable changes to this pack. The pack version is independent of the Minecraft version.
 
-## Unreleased — Phase 1 development
+## Unreleased — Phase 1 complete
 
 ### Added and expanded
 
@@ -30,4 +30,6 @@ All notable changes to this pack. The pack version is independent of the Minecra
 
 ### Verification status
 
-GitHub Actions now runs static pipeline checks, expands includes and compiles pack-owned shader stages with `glslangValidator` (including selected terrain/OIT variants), then builds the installable pack. This is not Minecraft's exact ShaderC pipeline and does not verify in-game rendering. Phase 1 remains in development pending the full implementation review; Minecraft 26.3 runtime validation remains the next phase.
+Phase 1 implementation and packaging review are complete. The current GitHub Actions run passed all static checks, glslang syntax/type compilation for 159 shader-stage variants, manifest generation, installable-pack creation, archive-root verification and artifact upload. The pack is ready for Phase 2: Minecraft 26.3 in-game validation and visual refinement.
+
+The glslang pass is not Minecraft ShaderC, and no in-game rendering or performance result is claimed. Known native-pipeline limitations are recorded in [LIMITATIONS.md](LIMITATIONS.md).
