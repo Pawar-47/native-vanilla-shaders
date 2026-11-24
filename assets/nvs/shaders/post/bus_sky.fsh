@@ -12,25 +12,6 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
-float nvs_linearFog(float distanceValue, float startValue, float endValue) {
-    return clamp((distanceValue - startValue) / max(endValue - startValue, 1e-3), 0.0, 1.0);
-}
-
-float nvs_vanillaFog(NvsBus bus, vec3 viewPosition) {
-    float spherical = length(viewPosition);
-    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
-    return max(nvs_linearFog(spherical, bus.fogEnvironmentalStart, bus.fogEnvironmentalEnd),
-               nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
-}
-
-float nvs_atmosphereFog(NvsBus bus, vec3 viewPosition, float vanillaFog) {
-    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
-    float renderEnd = max(bus.fogRenderDistanceEnd, 1.0);
-    float edge = smoothstep(0.50, 0.95, cylindrical / renderEnd);
-    float haze = 1.0 - exp(-length(viewPosition) / NVS_ATMOSPHERE_HAZE_DISTANCE);
-    return 1.0 - (1.0 - max(vanillaFog, edge)) * (1.0 - haze);
-}
-
 void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);

@@ -131,10 +131,8 @@ void main() {
         }
     }
 
-    float sphericalFog = smoothstep(bus.fogEnvironmentalStart, max(bus.fogEnvironmentalEnd, bus.fogEnvironmentalStart + 1.0), distanceToSurface);
-    float cylindricalDistance = max(length(viewPosition.xz), abs(viewPosition.y));
-    float renderFog = smoothstep(bus.fogRenderDistanceStart, max(bus.fogRenderDistanceEnd, bus.fogRenderDistanceStart + 1.0), cylindricalDistance);
-    float fogAmount = max(sphericalFog, renderFog);
+    float vanillaFog = nvs_vanillaFog(bus, viewPosition);
+    float fogAmount = nvs_atmosphereFog(bus, viewPosition, vanillaFog);
     vec3 distantSky = nvs_skyGradient(viewWorld, bus.skyColor, bus.fogColor);
     reflection = mix(reflection, distantSky, fogAmount);
 
