@@ -280,7 +280,7 @@
       "pack_file": "assets/nvs/shaders/include/sky.glsl",
       "vanilla_source": null,
       "reason": "Shared sky gradient, horizon warmth, night field and reflected-sky functions.",
-      "pack_sha256": "0eaa7f567b725a125e2ca6d3e91c6bd0eb055c7b76ce2f42af7b907192085079"
+      "pack_sha256": "6c2eeb67efa3fedfceeb2a68b79eadaceef1eddfa2f76d54eaa38e52c457084e"
     },
     {
       "pack_file": "assets/nvs/shaders/include/water.glsl",
