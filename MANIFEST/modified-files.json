@@ -286,7 +286,7 @@
       "pack_file": "assets/nvs/shaders/include/water.glsl",
       "vanilla_source": null,
       "reason": "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers.",
-      "pack_sha256": "6f4216cf8423f484a8703a9cbf566f27d146bcfbf6f72d425c729b0292d35d80"
+      "pack_sha256": "d9f2695fbce4bffcbb65359c0cfb581b5f661cada735e9056d337a9173ca4cc9"
     },
     {
       "pack_file": "assets/nvs/shaders/post/bloom.fsh",
