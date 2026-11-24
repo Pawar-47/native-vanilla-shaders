@@ -122,7 +122,7 @@ Statuses used below:
 | Lightning | Preserved, unmodified | `rendertype_lightning` is not replaced |
 | Item and entity glint | Preserved, unmodified | `glint`, and `GLINT` inside `item` and `entity`, are not replaced |
 | Emissive entity paths | Preserved, unmodified | `EMISSIVE` variants of `entity` are not replaced |
-| Improved Transparency (OIT) | Preserved | every replaced program keeps vanilla's OIT branch structure; cloud discards happen before the branches so the three passes agree |
+| Improved Transparency (OIT) | Pipeline-preserved; water SSR unverified | native OIT branches remain intact, but the water marker is written only in the final non-accumulation terrain pass; test water with OIT both on and off |
 | Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
 | Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
 

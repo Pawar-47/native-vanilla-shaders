@@ -25,7 +25,17 @@ because of the alternating marker layout. Absorption is therefore a view-angle
 approximation, not true shallow/deep-water depth. Shoreline foam is not possible
 without a reliable shoreline mask.
 
-## 2. No caustics
+## 2. Water markers and Improved Transparency
+
+Water tagging currently happens in the final non-accumulation terrain colour
+pass. The OIT alpha-only and accumulation variants are deliberately not allowed
+to write marker colours into their intermediate buffers. This preserves the
+native OIT bookkeeping, but means the post water pass may not receive complete
+water tags when Improved Transparency is enabled. The upstream reference also
+lists this path as untested. Runtime testing must compare water with OIT enabled
+and disabled before claiming parity.
+
+## 14. No caustics
 
 **What is missing.** A caustic needs the normal of the underwater surface, to
 project a light pattern onto it. The terrain vertex format is `Position`, `Color`,
