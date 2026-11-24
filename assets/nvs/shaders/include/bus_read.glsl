@@ -13,6 +13,7 @@ struct NvsBus {
     bool zeroToOneDepth;
     vec3 skyColor;
     vec3 fogColor;
+    float fogAlpha;
     float fogEnvironmentalStart;
     float fogEnvironmentalEnd;
     float fogRenderDistanceStart;
@@ -52,7 +53,9 @@ NvsBus nvs_readBus(sampler2D source) {
     bus.viewToWorld = transpose(mat3(view));
     bus.zeroToOneDepth = bus.projection[2][2] < 0.5;
     bus.skyColor = nvs_busTexel(source, NVS_BUS_ROW_SKY, fromBottom).rgb;
-    bus.fogColor = nvs_busTexel(source, NVS_BUS_ROW_FOG, fromBottom).rgb;
+    vec4 fogSample = nvs_busTexel(source, NVS_BUS_ROW_FOG, fromBottom);
+    bus.fogColor = fogSample.rgb;
+    bus.fogAlpha = fogSample.a;
 
     float fog[6];
     for (int i = 0; i < 6; ++i) {
@@ -107,7 +110,7 @@ float nvs_vanillaFog(NvsBus bus, vec3 worldRelativePosition) {
                           nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
     // Match the smoothstep curve used by the pack's replacement fog.glsl;
     // the post pass must remove exactly the fog already mixed by core shaders.
-    return fogValue * fogValue * (3.0 - 2.0 * fogValue);
+    return fogValue * fogValue * (3.0 - 2.0 * fogValue) * bus.fogAlpha;
 }
 
 float nvs_atmosphereFog(NvsBus bus, vec3 worldRelativePosition, float vanillaFog) {

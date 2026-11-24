@@ -28,7 +28,7 @@ void main() {
     } else if (row == NVS_BUS_ROW_SKY) {
         fragColor = vec4(ColorModulator.rgb, 1.0);
     } else if (row == NVS_BUS_ROW_FOG) {
-        fragColor = vec4(FogColor.rgb, 1.0);
+        fragColor = FogColor;
     } else if (row >= NVS_BUS_ROW_FOG_PARAMS && row < NVS_BUS_ROW_SUN) {
         int k = row - NVS_BUS_ROW_FOG_PARAMS;
         float fogValues[6] = float[6](
