@@ -1,10 +1,8 @@
 name: Unpack vanilla stock reference
 
+# Intentionally manual-only. The reference archive is not part of normal CI
+# and this workflow never runs on ordinary pushes.
 on:
-  push:
-    paths:
-      - ".github/workflows/unpack-vanilla-reference.yml"
-      - "reference/vanilla-stock/*.zip"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +14,6 @@ concurrency:
 
 jobs:
   extract-reference:
-    name: Extract reference archive (not a distributable build)
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
@@ -25,93 +22,17 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Safely extract uploaded vanilla archive
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          from zipfile import ZipFile, BadZipFile
-          import stat
+      - name: Run idempotent reference extractor
+        run: python3 tools/extract_vanilla_reference.py
 
-          root = Path("reference/vanilla-stock").resolve()
-          archives = sorted(
-              p for p in root.glob("*.zip")
-              if p.is_file() and p.name.lower().endswith(".zip")
-          )
-
-          if not archives:
-              raise SystemExit("No .zip archive found in reference/vanilla-stock/.")
-          if len(archives) != 1:
-              raise SystemExit(
-                  "Expected exactly one ZIP archive in reference/vanilla-stock/, "
-                  f"found {len(archives)}: {[p.name for p in archives]}"
-              )
-
-          archive = archives[0]
-          print(f"Reference-only extraction: {archive.name}")
-
-          try:
-              with ZipFile(archive) as zf:
-                  entries = zf.infolist()
-                  if len(entries) > 20000:
-                      raise SystemExit("Archive contains too many entries (limit: 20,000).")
-
-                  total_size = sum(info.file_size for info in entries)
-                  if total_size > 500 * 1024 * 1024:
-                      raise SystemExit("Uncompressed archive exceeds 500 MiB safety limit.")
-
-                  for info in entries:
-                      name = info.filename
-                      target = (root / name).resolve()
-
-                      if target != root and root not in target.parents:
-                          raise SystemExit(f"Unsafe path traversal entry: {name}")
-
-                      unix_mode = info.external_attr >> 16
-                      if stat.S_ISLNK(unix_mode):
-                          raise SystemExit(f"Symbolic links are not accepted: {name}")
-
-                      # Do not let an archive overwrite this workflow's guidance.
-                      if target == root / "README.md":
-                          raise SystemExit("Archive attempts to overwrite reference/vanilla-stock/README.md.")
-
-                  zf.extractall(root)
-
-          except BadZipFile as exc:
-              raise SystemExit(f"Uploaded file is not a valid ZIP archive: {exc}")
-
-          extracted = [
-              p for p in root.rglob("*")
-              if p.is_file() and p != archive and p.name != "README.md"
-          ]
-          print(f"Extracted {len(extracted)} reference files.")
-          if not extracted:
-              raise SystemExit("Archive extracted no files; refusing an empty reference import.")
-          PY
-
-      - name: Commit extracted reference files
-        shell: bash
+      - name: Commit extracted reference files (reference-only)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add reference/vanilla-stock
           if git diff --cached --quiet; then
-            echo "No new reference files to commit."
+            echo "No reference changes to commit."
           else
-            git commit -m "Extract vanilla stock shader reference archive"
+            git commit -m "Extract vanilla stock reference archive"
             git push origin HEAD:main
           fi
-
-      - name: Confirm reference remains excluded from distributable pack
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import sys
-
-          # The packager uses an explicit allow-list; this assertion guards
-          # against accidentally adding the reference directory to that list.
-          source = Path("tools/package.py").read_text()
-          if '"reference/vanilla-stock"' in source or "'reference/vanilla-stock'" in source:
-              sys.exit("Reference directory must not be added to the distributable pack.")
-          print("Confirmed: reference/vanilla-stock is reference-only and is not a pack input.")
-          PY
