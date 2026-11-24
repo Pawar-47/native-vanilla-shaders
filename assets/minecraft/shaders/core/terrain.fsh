@@ -42,7 +42,15 @@ void main() {
     NVS_BUS_PROTECT
     // Sampled first and unconditionally: sampleNearest and sampleRGSS take
     // screen-space derivatives, which are undefined inside a branch.
+    // Alpha-cutout foliage is especially vulnerable to coloured RGSS/mipmap
+    // fringes: neighbouring transparent atlas texels bleed into leaf edges and
+    // shimmer as the camera moves. Keep cutout texels stable; retain RGSS for
+    // opaque terrain and translucent non-cutout geometry.
+    #ifdef ALPHA_CUTOUT
+    vec4 texel = sampleNearest(Sampler0, texCoord0, 1.0f / TextureSize);
+    #else
     vec4 texel = (UseRgss == 1 ? sampleRGSS(Sampler0, texCoord0, 1.0f / TextureSize) : sampleNearest(Sampler0, texCoord0, 1.0f / TextureSize));
+    #endif
     float waterData = nvs_waterData(nvsWorldPos);
     #if !defined(OIT_ALPHA_ONLY) && !defined(OIT_ACCUMULATE)
     if (nvs_waterMarkersOn(FogEnvironmentalEnd) && (int(gl_FragCoord.x) & 1) == 0

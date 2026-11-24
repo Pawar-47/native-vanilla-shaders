@@ -68,7 +68,9 @@ void main() {
     c *= 1.0 - NVS_POST_VIGNETTE * smoothstep(0.35, 1.0, r);
 
     // Dither, so the grading does not band an 8-bit target.
-    c += nvs_dither(gl_FragCoord.xy);
+    // A quarter-strength ordered dither avoids coloured crawling specks on
+    // fine alpha-cutout foliage when the camera moves.
+    c += nvs_dither(gl_FragCoord.xy) * 0.25;
 
     // Alpha 1: this pass consumes the world's alpha, and everything downstream
     // expects the frame to be opaque.

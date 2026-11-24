@@ -98,7 +98,7 @@
       "pack_file": "assets/minecraft/shaders/core/terrain.fsh",
       "vanilla_source": "Vanilla-stock /core/terrain.fsh",
       "reason": "Tags above-water surfaces for the post reflection/refraction pass, retains underwater Fresnel/absorption shading, adds cloud shadows and protects the data-bus column.",
-      "pack_sha256": "219defeec966965ee6f50363892f774f1f7b946f94ba0292ba3de95893364eda",
+      "pack_sha256": "f644d56b0f4faff564b1ff16496adc33f3fea4b343420102a21a14c30ce0fa7d",
       "vanilla_sha256": "e440d13f0c3c3aa0ae584a7e006410e4318922c5bc3c94a7a1be28b89b221bf9"
     },
     {
@@ -268,7 +268,7 @@
       "pack_file": "assets/nvs/shaders/include/config.glsl",
       "vanilla_source": null,
       "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
-      "pack_sha256": "354c9190a1e7948569e0e649bc16dcc627be359c3fa44bad06c21709a306ae26"
+      "pack_sha256": "cf9cf75e8d542c314b81c2e7858065e02775aedaed1d1b836617623e8274a22a"
     },
     {
       "pack_file": "assets/nvs/shaders/include/noise.glsl",
@@ -286,7 +286,7 @@
       "pack_file": "assets/nvs/shaders/include/water.glsl",
       "vanilla_source": null,
       "reason": "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers.",
-      "pack_sha256": "25792d94726df933ed70c6fb8229310d21ccb5e4d8c0cf84ed1ba13a2a5bbbfa"
+      "pack_sha256": "27d4756039b8d816a38fa2c397d3831db8672e24252043718949f216af9e5d31"
     },
     {
       "pack_file": "assets/nvs/shaders/post/bloom.fsh",
@@ -304,7 +304,7 @@
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
       "vanilla_source": null,
       "reason": "Combines scene and bloom with final colour grading, sharpen, vignette and dither.",
-      "pack_sha256": "56bddc866de4c4d4e154cfe85d9974b956085aaeae113ceba446f46b82b5bfd2"
+      "pack_sha256": "0008b7f9a5042bcd11ba7d924c4df7dfc56b387c0efc41bd91dbe52fbf9262c0"
     },
     {
       "pack_file": "assets/nvs/shaders/post/copy.fsh",
@@ -328,7 +328,7 @@
       "pack_file": "assets/nvs/shaders/post/water.fsh",
       "vanilla_source": null,
       "reason": "Water-only post stage for screen-space reflections, refraction, Fresnel, absorption, foam and sun glint.",
-      "pack_sha256": "8aad1b29f50cfff428fe8c69afd30eb08ee3ae36ea3327ca31957b1a90e5c9d4"
+      "pack_sha256": "b623becf6d4b4ce9148ca3fc596937e3711c11ab6736fb5c17f7e8e119d42485"
     }
   ]
 }

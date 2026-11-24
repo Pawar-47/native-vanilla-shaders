@@ -199,11 +199,15 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     // Use a stable artistic water-column estimate instead, with a little more
     // absorption at grazing angles. This keeps the far field bright and blue-
     // green while still giving the surface real depth and color separation.
-    float pathLength = mix(8.0, 24.0, smoothstep(0.15, 0.90, 1.0 - NoV));
-    vec3 absorption = vec3(0.34, 0.13, 0.085) * NVS_WATER_ABSORB;
+    float pathLength = mix(18.0, 42.0, smoothstep(0.15, 0.90, 1.0 - NoV));
+    vec3 absorption = vec3(0.62, 0.24, 0.12) * (NVS_WATER_ABSORB * 1.65);
     vec3 transmittance = exp(-absorption * pathLength);
-    vec3 deepWaterTint = vec3(0.78, 0.94, 1.06);
+    vec3 deepWaterTint = vec3(0.34, 0.66, 0.78);
     vec3 below = baseColor * transmittance * deepWaterTint;
+    // The native terrain pass has no water-column depth buffer. A modest
+    // depth veil therefore suppresses high-contrast seabed detail without
+    // pretending camera distance is actual liquid depth.
+    below = mix(below, deepWaterTint * 0.42, NVS_WATER_DEPTH_VEIL * 0.35);
 
     vec3 reflected = reflect(-V, N);
     vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, nvs_zenithFromHorizon(horizon), horizon);
