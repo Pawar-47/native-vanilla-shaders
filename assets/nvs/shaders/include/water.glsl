@@ -61,9 +61,15 @@ float nvs_waveVariation(vec2 p, float wavelength, float index) {
     return 0.3 + 1.4 * nvs_valueNoise(p * (0.6 / wavelength / 8.0) + index * 17.3);
 }
 
-float nvs_waveHeight(vec2 p, float t, float footprint) {
+// Evaluate height, analytic slope and normalisation amplitude together.
+// The water post pass needs both the normal and crest for whitecaps; sharing
+// this loop avoids sampling the per-wave noise field twice per water pixel.
+vec4 nvs_waterSurface(vec2 p, float t, float strength, float footprint) {
     vec2 warp = nvs_waveWarp(p);
     float height = 0.0;
+    float totalAmplitude = 0.0;
+    vec2 gradient = vec2(0.0);
+
     for (int i = 0; i < NVS_WAVE_COUNT; ++i) {
         float wavelength = NVS_WAVE_LENGTHS[i];
         float waveNumber = 6.2831853 / wavelength;
@@ -74,26 +80,8 @@ float nvs_waveHeight(vec2 p, float t, float footprint) {
         float phase = waveNumber * dot(direction, warpedPosition)
                     - t * (NVS_WAVE_CYCLES[i] / NVS_WAVE_CYCLES_PER_DAY);
         height += amplitude * sin(phase);
-    }
-    return height;
-}
-
-// Analytic slope of the same eight-wave height field. As in the reference,
-// derivatives of the low-frequency domain warp and amplitude noise are omitted:
-// they add substantial cost but little visible change at the target scale.
-vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
-    vec2 warp = nvs_waveWarp(p);
-    vec2 gradient = vec2(0.0);
-    for (int i = 0; i < NVS_WAVE_COUNT; ++i) {
-        float wavelength = NVS_WAVE_LENGTHS[i];
-        float waveNumber = 6.2831853 / wavelength;
-        vec2 direction = normalize(NVS_WAVE_DIRECTIONS[i]);
-        float variation = nvs_waveVariation(p, wavelength, float(i));
-        float amplitude = 0.017 * wavelength * variation * nvs_waveFade(waveNumber, footprint);
-        vec2 warpedPosition = p + warp * (0.5 + 0.1 * float(i));
-        float phase = waveNumber * dot(direction, warpedPosition)
-                    - t * (NVS_WAVE_CYCLES[i] / NVS_WAVE_CYCLES_PER_DAY);
         gradient += amplitude * waveNumber * cos(phase) * direction;
+        totalAmplitude += amplitude;
     }
 
     // A small circularly drifting ripple adds local surface breakup and loops
@@ -108,12 +96,20 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     gradient += NVS_WATER_RIPPLE * vec2(dx - center, dz - center)
               / epsilon * 0.10 * rippleFade;
 
-    return gradient * strength;
+    return vec4(height, gradient * strength, totalAmplitude);
+}
+
+float nvs_waveHeight(vec2 p, float t, float footprint) {
+    return nvs_waterSurface(p, t, 0.0, footprint).x;
+}
+
+vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
+    return nvs_waterSurface(p, t, strength, footprint).yz;
 }
 
 vec3 nvs_waterNormal(vec2 p, float t, float strength, float footprint) {
-    vec2 gradient = nvs_waveGradient(p, t, strength, footprint);
-    return normalize(vec3(-gradient.x, 1.0, -gradient.y));
+    vec4 surface = nvs_waterSurface(p, t, strength, footprint);
+    return normalize(vec3(-surface.y, 1.0, -surface.z));
 }
 
 vec3 nvs_waterNormal(vec2 p, float t, float strength) {
@@ -122,16 +118,8 @@ vec3 nvs_waterNormal(vec2 p, float t, float strength) {
 
 // Foam follows the crest of the exact filtered height spectrum used for normals.
 float nvs_waterCrest(vec2 p, float t, float footprint) {
-    float totalAmplitude = 0.0;
-    for (int i = 0; i < NVS_WAVE_COUNT; ++i) {
-        float wavelength = NVS_WAVE_LENGTHS[i];
-        float waveNumber = 6.2831853 / wavelength;
-        totalAmplitude += 0.017 * wavelength
-                        * nvs_waveVariation(p, wavelength, float(i))
-                        * nvs_waveFade(waveNumber, footprint);
-    }
-    return clamp(0.5 + 0.5 * nvs_waveHeight(p, t, footprint)
-                 / max(totalAmplitude, 1e-5), 0.0, 1.0);
+    vec4 surface = nvs_waterSurface(p, t, 1.0, footprint);
+    return clamp(0.5 + 0.5 * surface.x / max(surface.w, 1e-5), 0.0, 1.0);
 }
 
 float nvs_waterCrest(vec2 p, float t) {

@@ -102,8 +102,10 @@ void main() {
     float distanceFade = 1.0 / (1.0 + distanceToSurface / NVS_WATER_FLATTEN_DISTANCE);
     float grazingFade = mix(0.15, 1.0, smoothstep(0.02, 0.25, abs(viewWorld.y)));
     float waveStrength = NVS_WATER_WAVE_STRENGTH * distanceFade * grazingFade;
+    vec4 waveSurface = vec4(0.0);
     if (top) {
-        normal = nvs_waterNormal(worldPosition.xz, t, waveStrength, pixelFootprint);
+        waveSurface = nvs_waterSurface(worldPosition.xz, t, waveStrength, pixelFootprint);
+        normal = normalize(vec3(-waveSurface.y, 1.0, -waveSurface.z));
         if (faceNormal.y < 0.0) normal.y = -normal.y;
     }
 
@@ -172,8 +174,9 @@ void main() {
     // Whitecaps are drawn in the post water pass (the above-water terrain
     // pass deliberately leaves the vanilla surface untouched for SSR).
     if (top && NVS_WATER_FOAM > 0.0) {
-        float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0,
-                                 nvs_waterCrest(worldPosition.xz, t, pixelFootprint));
+        float crestValue = clamp(0.5 + 0.5 * waveSurface.x
+                                  / max(waveSurface.w, 1e-5), 0.0, 1.0);
+        float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0, crestValue);
         vec2 foamDrift = vec2(cos(t * 0.5), sin(t * 0.5)) * 2.5;
         float broken = nvs_valueNoise(worldPosition.xz * 1.9 + foamDrift);
         float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, distanceFade);
