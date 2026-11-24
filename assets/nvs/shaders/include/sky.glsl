@@ -31,7 +31,7 @@ vec3 nvs_sunGlow(vec3 direction, vec3 sunDirection, float rainBrightness) {
     // Subtle radial atmospheric rays. Their angular modulation is fixed in
     // world space around the sun, so the rays do not crawl with the camera.
     float azimuth = atan(direction.z - sunDirection.z,
-                         direction.x - sunDirection.x);
+                         direction.x - sunDirection.x + 1e-6);
     float rayShape = 0.5 + 0.5 * cos(azimuth * 10.0 + angle * 175.0);
     float rays = pow(rayShape, 13.0) * exp(-angle * 17.0) * 0.15;
     float visibility = smoothstep(-0.10, 0.08, sunDirection.y);
