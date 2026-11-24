@@ -204,9 +204,10 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     vec3 transmittance = exp(-absorption * pathLength);
     vec3 deepWaterTint = vec3(0.34, 0.66, 0.78);
     vec3 below = baseColor * transmittance * deepWaterTint;
-    // Suppress bright seabed/riverbed detail beneath the surface. The native
-    // pass exposes no true water-column depth, so this stable artistic veil
-    // gives the view a deeper, more continuous body of water.
+    // The native terrain pass has no water-column depth buffer. A modest
+    // depth veil therefore suppresses high-contrast seabed detail without
+    // pretending camera distance is actual liquid depth.
+    below = mix(below, deepWaterTint * 0.42, NVS_WATER_DEPTH_VEIL * 0.35);
 
     vec3 reflected = reflect(-V, N);
     vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, nvs_zenithFromHorizon(horizon), horizon);

@@ -160,7 +160,7 @@ void main() {
     // Dark teal water column: blend away bright bottom textures and the
     // stock-looking luminous patterns while preserving some near-shore detail.
     vec3 deepWater = vec3(0.018, 0.105, 0.135);
-    float depthVeil = mix(0.42, 0.72, smoothstep(0.12, 0.92, path));
+    float depthVeil = mix(0.42, NVS_WATER_DEPTH_VEIL, smoothstep(0.12, 0.92, path));
     refraction = mix(refraction, deepWater, depthVeil * (1.0 - fogAmount));
 
     float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - clamp(dot(normalize(mix(faceNormal, normal, 0.25)), -viewWorld), 0.0, 1.0), 5.0);
