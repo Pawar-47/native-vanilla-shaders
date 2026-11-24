@@ -84,7 +84,7 @@
       "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
       "vanilla_source": "Vanilla-stock /core/clouds.fsh",
       "reason": "Adds procedural density carving and top/underside/side shading; preserves OIT branches and protects the reserved data-bus column.",
-      "pack_sha256": "abea74ff57b2653f913dbd4144e0f76b65263b9edac932770153133d2a410b44",
+      "pack_sha256": "71cdc50c1fd86244fc656a353d87a728e0c9aab1a16e56000522ee1902882054",
       "vanilla_sha256": "98ed038991d16691b4fda45a82436025fa54d90f11840dd6ce42b8359bf76588"
     },
     {
@@ -256,7 +256,7 @@
       "pack_file": "assets/nvs/shaders/include/clouds.glsl",
       "vanilla_source": null,
       "reason": "Shared procedural cloud density, shading and cloud-shadow functions.",
-      "pack_sha256": "501eebcf21b7c343c6b8010b1bd578ad7cd3e16ae02241a5df3c5b679808c067"
+      "pack_sha256": "f090e054a5123d3491e74d00592a70ed54da523e0a28ddf9b237a1b8f74aef20"
     },
     {
       "pack_file": "assets/nvs/shaders/include/common.glsl",
@@ -298,7 +298,7 @@
       "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
       "vanilla_source": null,
       "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
-      "pack_sha256": "b1bc78a93fe5d8c3fb550df24c74b5dfed710aa2aa38719ce335f0744d8b7b65"
+      "pack_sha256": "ccb85d662f28b9b084c1d2b081b32a377e21f3faeb28191b77106ae5ad562a66"
     },
     {
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
@@ -328,7 +328,7 @@
       "pack_file": "assets/nvs/shaders/post/water.fsh",
       "vanilla_source": null,
       "reason": "Water-only post stage for screen-space reflections, refraction, Fresnel, absorption, foam and sun glint.",
-      "pack_sha256": "1ba6370991afb8f853743d4b0dd5c1265f7cb209f96b43aecef03bb9bb27c363"
+      "pack_sha256": "8aad1b29f50cfff428fe8c69afd30eb08ee3ae36ea3327ca31957b1a90e5c9d4"
     }
   ]
 }
