@@ -21,9 +21,12 @@ screen fall back to the procedural reflected sky and cloud deck.
 **Remaining limits.** Screen-space reflections can only show geometry present
 in the current frame; off-screen and occluded objects cannot be reflected.
 Refraction uses the available screen colour and is horizontally half-resolution
-because of the alternating marker layout. Absorption is therefore a view-angle
-approximation, not true shallow/deep-water depth. Shoreline foam is not possible
-without a reliable shoreline mask.
+because of the alternating marker layout. Clouds drawn over water can cover the
+marker columns; neighbour reconstruction reduces striping but cannot restore
+every hidden water tag, so reflection coverage directly beneath clouds may be
+incomplete. Absorption is therefore a view-angle approximation, not true
+shallow/deep-water depth. Shoreline foam is not possible without a reliable
+shoreline mask.
 
 ## 2. Water markers and Improved Transparency
 
