@@ -36,13 +36,27 @@ float nvs_waveTime(float gameTime) {
 // Surface slope: the gradient of a sum of directional waves, plus a ripple
 // channel made of value noise. The ripple drifts around a circle rather than
 // along a line, so it loops exactly when the day does.
-vec2 nvs_waveGradient(vec2 p, float t, float strength) {
-    vec2 grad = vec2(0.0);
+// The five directional wave components share one height field. Keeping the
+// height, analytic slope and crest mask derived from the same amplitudes avoids
+// the old mismatch where foam peaks did not line up with the reflected normals.
+//
+// Every temporal multiplier is an integer. GameTime wraps after one day, so
+// integer harmonics close exactly at the wrap; fractional rates (1.7, 2.9,
+// etc.) caused a visible phase discontinuity at midnight.
+float nvs_waveHeight(vec2 p, float t) {
+    float h = 0.0;
+    h += 0.050 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
+    h += 0.026 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 2.0);
+    h += 0.012 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 3.0);
+    h += 0.018 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
+    h += 0.009 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
+    return h;
+}
 
-    // Five incommensurate directions break up the parallel bands produced
-    // by a small set of pure sine waves. Temporal rates are integer multiples
-    // of the daily base frequency, so every wave closes exactly at GameTime's
-    // wrap instead of snapping at dawn.
+// Analytic derivative of nvs_waveHeight, plus a small circularly drifting
+// noise ripple. The circular drift also closes after an integer number of
+// revolutions when GameTime wraps.
+vec2 nvs_waveGradient(vec2 p, float t, float strength) {
     const vec2 d0 = vec2(0.94, 0.34);
     const vec2 d1 = vec2(-0.42, 0.91);
     const vec2 d2 = vec2(0.68, -0.73);
@@ -53,22 +67,13 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength) {
     const float k2 = 2.31;
     const float k3 = 0.86;
     const float k4 = 1.72;
-    const float a0 = 0.050;
-    const float a1 = 0.026;
-    const float a2 = 0.012;
-    const float a3 = 0.018;
-    const float a4 = 0.009;
 
-    float ph0 = dot(p, d0) * k0 + t;
-    float ph1 = dot(p, d1) * k1 + t * 1.7;
-    float ph2 = dot(p, d2) * k2 + t * 2.9;
-    float ph3 = dot(p, d3) * k3 + t * 2.1;
-    float ph4 = dot(p, d4) * k4 + t * 3.3;
-    grad += (a0 * k0) * cos(ph0) * d0;
-    grad += (a1 * k1) * cos(ph1) * d1;
-    grad += (a2 * k2) * cos(ph2) * d2;
-    grad += (a3 * k3) * cos(ph3) * d3;
-    grad += (a4 * k4) * cos(ph4) * d4;
+    vec2 grad = vec2(0.0);
+    grad += (0.050 * k0) * cos(dot(p, d0) * k0 + t) * d0;
+    grad += (0.026 * k1) * cos(dot(p, d1) * k1 + t * 2.0) * d1;
+    grad += (0.012 * k2) * cos(dot(p, d2) * k2 + t * 3.0) * d2;
+    grad += (0.018 * k3) * cos(dot(p, d3) * k3 + t * 5.0) * d3;
+    grad += (0.009 * k4) * cos(dot(p, d4) * k4 + t * 7.0) * d4;
 
     vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
     vec2 rp = p * 0.55 + orbit;
@@ -86,15 +91,11 @@ vec3 nvs_waterNormal(vec2 p, float t, float strength) {
     return normalize(vec3(-g.x, 1.0, -g.y));
 }
 
-// Foam on the crests of the wave sum. 0 in the troughs, 1 on the peaks.
+// Foam follows the actual combined wave height, so its crests coincide with
+// the normal field rather than using five equally weighted, mismatched waves.
 float nvs_waterCrest(vec2 p, float t) {
-    float h = 0.0;
-    h += 0.5 + 0.5 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
-    h += 0.5 + 0.5 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 1.7);
-    h += 0.5 + 0.5 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 2.9);
-    h += 0.5 + 0.5 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 2.1);
-    h += 0.5 + 0.5 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 3.3);
-    return h / 5.0;
+    const float totalAmplitude = 0.115;
+    return clamp(0.5 + 0.5 * nvs_waveHeight(p, t) / totalAmplitude, 0.0, 1.0);
 }
 
 // The sky in the direction of a reflection, including the cloud layer.
