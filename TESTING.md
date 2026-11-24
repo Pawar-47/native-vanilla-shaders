@@ -67,14 +67,16 @@ If something is wrong, this order finds it fastest.
    a hard disc, and a corona around the sun that fades smoothly to nothing.
 5. **Night** (`/time set 18000`): a nebula and a star field, brighter toward the
    zenith than the horizon, and the game's own stars still visible on top.
-6. **Clouds, at noon**: torn edges instead of rectangular cells, bright tops and
-   darker undersides, no visible grid as the camera moves.
+6. **Clouds, at noon**: torn edges instead of rectangular cells, different
+   billow detail across top/side/underside faces, bright tops and darker
+   undersides, no visible grid as the camera moves.
 7. **Water**: first check that the surface is continuous and not striped. Look for
    reflected islands/shoreline geometry, the sun disc and cloud shapes; rotate the
    camera to check that screen-space reflections fade cleanly at screen edges.
    Look down into the water for distorted refraction and a blue-green depth tint;
-   check distant water against the horizon for dark bands, aliasing or a black edge.
-   Check wave highlights and foam for temporal jumps at `/time set 0`.
+   check near, mid-distance and horizon water for visible wave scale changes,
+   dark bands, aliasing or a black edge. Check wave highlights and foam for
+   temporal jumps at `/time set 0`.
 8. **Underwater** (`/execute as @s run tp @s ~ ~ ~` into an ocean, then look
    around): water fog, and the surface reading as a surface rather than a mirror.
 9. **A cave with a torch**: warm light that falls off, and dark that is dark but
