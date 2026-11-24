@@ -55,16 +55,18 @@ void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);
     vec4 tagged = texelFetch(InSampler, pixel, 0);
+    fragColor = vec4(tagged.rgb, 1.0);
     NvsBus bus = nvs_readBus(MainSampler);
+    if (!bus.present || !nvs_busCameraInAir(bus)) return;
+
     float depth = texelFetch(DepthSampler, pixel, 0).r;
     vec3 viewPosition = nvs_busViewPosition(bus, texCoord, max(depth, 1e-6));
     vec3 worldRelative = bus.viewToWorld * viewPosition;
+    // Evaluate derivatives uniformly across the frame before testing the water tag.
     vec3 normalRaw = cross(dFdx(worldRelative), dFdy(worldRelative));
     float normalLength = length(normalRaw);
     vec3 faceNormal = normalLength > 1e-5 ? normalRaw / normalLength : vec3(0.0, 1.0, 0.0);
-
-    fragColor = vec4(tagged.rgb, 1.0);
-    if (!bus.present || !nvs_busCameraInAir(bus) || tagged.a > 0.9 || depth <= 0.0) return;
+    if (tagged.a > 0.9 || depth <= 0.0) return;
 
     bool top = tagged.a > 0.375;
     vec3 cameraPosition = vec3(CameraBlockPos) - CameraOffset;
