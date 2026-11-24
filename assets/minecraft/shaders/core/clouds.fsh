@@ -33,7 +33,14 @@ void main() {
     // This happens before every OIT branch so that the three Improved
     // Transparency passes discard exactly the same fragments and their
     // transmittance stays consistent with the colour pass.
-    float density = nvs_cloudVolumeField(nvsCloudXZ, nvsCloudHeight);
+    float baseDensity = nvs_cloudField(nvsCloudXZ);
+    // The vertical field can move density by at most half its configured
+    // strength. Reject fragments that cannot reach the cutoff before paying
+    // for the extra 3D noise octaves.
+    if (baseDensity < NVS_CLOUD_CUTOFF - 0.5 * NVS_CLOUD_VOLUME_STRENGTH) {
+        discard;
+    }
+    float density = nvs_cloudVolumeField(nvsCloudXZ, nvsCloudHeight, baseDensity);
     if (density < NVS_CLOUD_CUTOFF) {
         discard;
     }

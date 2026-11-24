@@ -37,15 +37,18 @@ float nvs_cloudField(vec2 worldXZ) {
 // sides and underside different billows instead of extruding the same flat
 // silhouette through the whole volume. Ground shadows and reflected-sky
 // fallback keep the cheaper 2D projection of this field.
-float nvs_cloudVolumeField(vec2 worldXZ, float heightFraction) {
-    float base = nvs_cloudField(worldXZ);
+float nvs_cloudVolumeField(vec2 worldXZ, float heightFraction, float baseDensity) {
     vec2 p = worldXZ / NVS_CLOUD_SCALE;
     float vertical = clamp(heightFraction, 0.0, 1.0);
     float volume = nvs_fbm3(vec3(p * 2.1 + vec2(7.3, 11.9), vertical * 2.0 + 0.17),
                             NVS_CLOUD_VOLUME_OCTAVES);
     float verticalProfile = 0.94 + 0.06 * sin(vertical * 3.14159265);
-    float density = base + (volume - 0.5) * NVS_CLOUD_VOLUME_STRENGTH;
+    float density = baseDensity + (volume - 0.5) * NVS_CLOUD_VOLUME_STRENGTH;
     return clamp(density * verticalProfile, 0.0, 1.0);
+}
+
+float nvs_cloudVolumeField(vec2 worldXZ, float heightFraction) {
+    return nvs_cloudVolumeField(worldXZ, heightFraction, nvs_cloudField(worldXZ));
 }
 
 // Vertical shading. `upward` is 1 for a top face, 0 for a bottom face.
