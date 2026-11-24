@@ -10,17 +10,18 @@ All notable changes to this pack. The pack version is independent of the Minecra
 - Reconstructed the sky in a post pass using the game's sky/fog colours and world direction.
 - Added distance-aware aerial perspective and a soft loaded-world edge fade, matching the core shader's smoothstep fog curve and fog alpha.
 - Added a 38-row screen data bus carrying projection, the 3×3 view rotation, sky/fog values, fog distances, sun direction and rain brightness.
-- Preserved the moon, stars and vanilla sunrise glow over the reconstructed sky; added the solar disc/corona to the reflected sky path.
+- Preserved the moon, stars and vanilla sunrise glow over the reconstructed sky; shared a rain-aware solar disc, corona and aureole between sky and water reflections.
+- Replaced the full per-fragment 4×4 projection inverse with analytic perspective unprojection; opaque atmosphere pixels skip the four sun-data bus fetches.
 
 **Water**
 - Added water surface markers, top/side classification and quantized side-face orientation.
 - Added screen-space reflections with a 24-step ray budget and four refinement steps, edge fading and procedural sky/cloud/sun fallback.
 - Added wave-driven refraction, Fresnel, distance fog, absorption and post-pass whitecaps.
-- Added an eight-direction gravity-dispersed wave spectrum, stable spatial domain warping, screen-footprint filtering and seamless day-wrap animation.
+- Added an eight-direction gravity-dispersed wave spectrum, stable spatial domain warping, screen-footprint filtering and seamless day-wrap animation; wave slope and foam share the same filtered height field.
 - Reduced reflected-cloud noise octaves for the integrated-GPU target and limited the water pass's expensive bus decode to tagged water pixels.
 
 **Clouds, lighting and post**
-- Added 3D vertical density breakup to the native cloud shell while retaining the shared 2D mass field for water reflections.
+- Added 3D vertical density breakup to the native cloud shell while retaining the shared 2D mass field for shadows/reflections; empty fragments are rejected before the extra 3D noise sampling.
 - Retained cloud-shadow, lightmap, plant-sway, bloom, grading, sharpen, vignette and optional FXAA work.
 - Added tunable controls for SSR steps/growth, reflection/refraction distortion, reflected-cloud detail and atmosphere haze.
 
