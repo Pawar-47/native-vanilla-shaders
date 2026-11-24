@@ -95,8 +95,15 @@ void main() {
     vec3 reflectedWorld = reflect(viewWorld, normal);
     if (top && reflectedWorld.y * normal.y < 0.0) reflectedWorld.y = -reflectedWorld.y;
     vec3 reflection = nvs_reflectedSky(reflectedWorld, worldPosition.xz, worldPosition.y, bus.fogColor);
+    // The fallback sky needs the actual solar disc as well as the narrow
+    // wave glint; otherwise off-screen sun reflections disappear at the
+    // horizon and leave a flat patch where the sun should be.
+    float sunAngle = acos(clamp(dot(reflectedWorld, bus.sunDirection), -1.0, 1.0));
+    float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
+    float sunCorona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
     float sunGlint = pow(max(dot(reflectedWorld, bus.sunDirection), 0.0), 320.0) * 0.45;
-    reflection += vec3(1.0, 0.88, 0.68) * sunGlint * bus.rainBrightness;
+    reflection += vec3(1.0, 0.82, 0.58)
+                * (sunDisc * 1.8 + sunCorona + sunGlint) * bus.rainBrightness;
 
     mat3 worldToView = transpose(bus.viewToWorld);
     vec3 viewFace = worldToView * faceNormal;
@@ -123,7 +130,8 @@ void main() {
     float cylindricalDistance = max(length(viewPosition.xz), abs(viewPosition.y));
     float renderFog = smoothstep(bus.fogRenderDistanceStart, max(bus.fogRenderDistanceEnd, bus.fogRenderDistanceStart + 1.0), cylindricalDistance);
     float fogAmount = max(sphericalFog, renderFog);
-    reflection = mix(reflection, bus.fogColor, fogAmount * 0.65);
+    vec3 distantSky = nvs_skyGradient(viewWorld, bus.skyColor, bus.fogColor);
+    reflection = mix(reflection, distantSky, fogAmount);
 
     vec2 distortion = (viewNormal.xy - viewFace.xy) * 0.018;
     vec2 shiftedUV = clamp(texCoord + distortion, vec2(0.001), vec2(0.999));
