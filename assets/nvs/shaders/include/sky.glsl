@@ -17,7 +17,11 @@
 // Solar disc and atmospheric aureole shared by the visible sky and water
 // reflections. The game supplies the actual sun direction and rain dimmer.
 vec3 nvs_sunGlow(vec3 direction, vec3 sunDirection, float rainBrightness) {
-    float angle = acos(clamp(dot(normalize(direction), normalize(sunDirection)), -1.0, 1.0));
+    // All callers provide normalized directions. Chord distance closely
+    // approximates angular distance over the solar disc and aureole, avoiding
+    // an expensive acos in the full-resolution sky/water passes.
+    float cosine = clamp(dot(direction, sunDirection), -1.0, 1.0);
+    float angle = sqrt(max(2.0 * (1.0 - cosine), 0.0));
     float disc = 1.0 - smoothstep(0.0042, 0.0052, angle);
     float corona = exp(-angle * 42.0) * 0.24 + exp(-angle * 13.0) * 0.075;
     float aureole = exp(-angle * 3.5) * 0.045;
