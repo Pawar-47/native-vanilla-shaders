@@ -30,6 +30,6 @@ All notable changes to this pack. The pack version is independent of the Minecra
 
 ### Verification status
 
-Phase 1 implementation and packaging review are complete. The current GitHub Actions run passed all static checks, glslang syntax/type compilation for 159 shader-stage variants, manifest generation, installable-pack creation, archive-root verification and artifact upload. The pack is ready for Phase 2: Minecraft 26.3 in-game validation and visual refinement.
+Phase 1 remains in development. The current GitHub Actions pipeline passes static checks, glslang syntax/type compilation for the supported shader variants, manifest generation, installable-pack creation, archive-root verification and artifact upload. The recent eight-wave water spectrum and shallow 3D cloud-density changes are compiled and packaged, but still need the remaining source review before the pack is handed over for Phase 2.
 
 The glslang pass is not Minecraft ShaderC, and no in-game rendering or performance result is claimed. Known native-pipeline limitations are recorded in [LIMITATIONS.md](LIMITATIONS.md).

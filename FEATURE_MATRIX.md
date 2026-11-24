@@ -36,9 +36,9 @@ Statuses used below:
 
 | Feature | Status | Where |
 |---|---|---|
-| Procedural multiscale cloud shapes | Done | `nvs_cloudField`: a smooth mass plus a ridged detail channel |
+| Procedural multiscale cloud shapes | Done | smooth mass and ridged detail, with a shallow 3D density slice through the native cloud boxes |
 | Depth from native cloud geometry | Done | the game's cloud boxes are kept; a 3D vertical density slice breaks up the top, underside and side faces |
-| Cumulus and wispy forms | Done | the two channels, mixed; `NVS_CLOUD_CUTOFF` controls how much is torn away |
+| Cumulus and wispy forms | Done | multiscale mass/ridge shaping plus vertical noise breakup; `NVS_CLOUD_CUTOFF` controls how much is torn away |
 | Motion | Done | `CloudOffset` is already inside the cloud position, so the field travels with the clouds |
 | Altitude and scale | Done | `NVS_CLOUD_SCALE`, `NVS_CLOUD_HEIGHT` |
 | Sun-facing illumination and shading | Approximated | lit tops, shaded undersides and darker creases, from face orientation and density. The clouds program is not given the sun's direction, so this is a key light from above, not a true sun-facing term |

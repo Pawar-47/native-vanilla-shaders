@@ -75,10 +75,11 @@ matrix instead.
 
 ## 5. No volumetric, ray-marched or layer-transported clouds
 
-**What is missing.** A volume needs either a ray march against a density field or layered geometry.
-The data bus now makes camera reconstruction available to post effects, but a
-full-screen cloud march would add a large cost on the target integrated GPU, and
-the game still supplies only one box per cloud cell.
+**What is missing.** The visible native cloud boxes now use a shallow 3D density
+field through their thickness, so the top, side and underside no longer share one
+extruded 2D silhouette. This is still not a true ray-marched volume: the game
+supplies one box per cloud cell, and a full-screen cloud march would add a large
+cost on the target integrated GPU.
 
 **Alternative used.** The game's boxes are kept and carved by a density field, so
 there is real geometry with real depth, lit tops, shaded undersides and torn
