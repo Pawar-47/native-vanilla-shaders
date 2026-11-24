@@ -67,7 +67,7 @@
 #endif
 // Depth of the cloud shadows on the ground, 0 = none, 0.18 = 18% darkening.
 #ifndef NVS_CLOUD_SHADOW_STRENGTH
-#define NVS_CLOUD_SHADOW_STRENGTH 0.18
+#define NVS_CLOUD_SHADOW_STRENGTH 0.12
 #endif
 // Cloud-shadow octave budget. Keep below visible-cloud quality to limit
 // per-fragment cost across large terrain surfaces.
@@ -148,7 +148,7 @@
 // ------------------------------------------------------------- lighting ----
 // Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.
 #ifndef NVS_SKYLIGHT_CURVE
-#define NVS_SKYLIGHT_CURVE 1.15
+#define NVS_SKYLIGHT_CURVE 0.92
 #endif
 #ifndef NVS_BLOCKLIGHT_CURVE
 #define NVS_BLOCKLIGHT_CURVE 0.92
@@ -166,16 +166,16 @@
 // These are compile-time only in the sense that they affect the post programs;
 // they are constants in the shader, not in the JSON, so they need no rebuild.
 #ifndef NVS_POST_BLOOM
-#define NVS_POST_BLOOM 0.55
+#define NVS_POST_BLOOM 0.38
 #endif
 #ifndef NVS_POST_EXPOSURE
-#define NVS_POST_EXPOSURE 1.0
+#define NVS_POST_EXPOSURE 1.03
 #endif
 #ifndef NVS_POST_CONTRAST
-#define NVS_POST_CONTRAST 0.12
+#define NVS_POST_CONTRAST 0.17
 #endif
 #ifndef NVS_POST_SATURATION
-#define NVS_POST_SATURATION 1.06
+#define NVS_POST_SATURATION 1.08
 #endif
 #ifndef NVS_POST_VIGNETTE
 #define NVS_POST_VIGNETTE 0.10
