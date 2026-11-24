@@ -62,9 +62,12 @@ the reserved screen data bus. Post effects can therefore use it for the sky disc
 water reflection disc/corona and wave glint.
 
 **What remains unavailable.** The core cloud and terrain programs do not receive
-the decoded bus values. Cloud shading is still a key light from above plus a
-thickness term, not a true sun-facing term; cloud shadows are not stretched along
-the sun. The water post pass can use the sun direction, but the cloud field's
+the decoded bus values. The end-of-frame sky pass now uses the transferred sun
+direction with depth-reconstructed screen-space normals to add approximate
+directional shading to opaque terrain and vegetation. This is a screen-space
+lighting response, not a per-block normal or a true shadow map. Cloud shading is
+still a key light from above plus a thickness term; cloud shadows are not stretched
+along the sun. The water post pass can use the sun direction, but the cloud field's
 `CloudOffset` is only provided to `core/clouds`, so reflected clouds do not
 share the exact moving offset of the visible cloud geometry.
 
@@ -88,15 +91,15 @@ edges. It is a shaped volume, not a marched one.
 ## 6. No shadow maps
 
 **What is missing.** There is no shadow pass and no depth-from-the-sun target.
-Screen-space shadows are technically possible now that the data bus supplies the
-camera and the post chain reads depth, but they are not implemented: they can
-produce severe screen-edge and disocclusion artifacts, and add another costly
-full-screen ray-march on the target integrated GPU.
+The post chain now reconstructs approximate surface normals from neighbouring
+depth samples and applies a directional sunlight response. It does not trace
+light rays through the scene, so it cannot determine whether a block, tree or
+entity casts a shadow onto another surface.
 
-**Alternative used.** The lightmap. Sunlight falls off with sky light and is
-tinted by the game's own sun colour, so caves and north faces darken correctly,
-and cloud shadows add large-scale variation. There are no cast shadows from
-blocks, entities or the player.
+**Alternative used.** The lightmap plus screen-space directional shading.
+Sunlight remains tinted by the game's own lightmap colour, while reconstructed
+normals add face orientation and form. Cloud shadows add large-scale variation.
+There are still no true block-, entity- or player-cast shadows.
 
 ## 7. Tonemapping is limited to a highlight shoulder
 
