@@ -76,7 +76,20 @@ void main() {
     sphericalVertexDistance = fog_spherical_distance(pos);
     cylindricalVertexDistance = fog_cylindrical_distance(pos);
     #ifndef OIT_ALPHA_ONLY
-    vertexColor = Color * sample_lightmap(Sampler2, UV2);
+    vec4 lightmap = sample_lightmap(Sampler2, UV2);
+    #ifdef ALPHA_CUTOUT
+    // Biome-tinted cutout foliage is especially prone to tiny chromatic
+    // lightmap speckles at night, where the sky-light channels diverge.
+    // Preserve the light level and most natural tint, but suppress unstable
+    // per-channel colour noise only on identifiable tinted cutout geometry.
+    float foliageTintSpread = max(max(Color.r, Color.g), Color.b)
+                            - min(min(Color.r, Color.g), Color.b);
+    if (ALPHA_CUTOUT > 0.4 && foliageTintSpread > 0.035) {
+        float neutralLight = dot(lightmap.rgb, vec3(0.2126, 0.7152, 0.0722));
+        lightmap.rgb = mix(vec3(neutralLight), lightmap.rgb, 0.18);
+    }
+    #endif
+    vertexColor = Color * lightmap;
     #else
     vertexColor = Color;
     #endif

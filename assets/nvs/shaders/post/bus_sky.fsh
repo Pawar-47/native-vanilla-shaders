@@ -56,7 +56,7 @@ void main() {
     float depth = texelFetch(DepthSampler, pixel, 0).r;
     // Opaque terrain only needs projection, view, sky and fog data. The four
     // sun rows are decoded only for sky pixels and translucent cloud layers.
-    NvsBus bus = nvs_readBus(InSampler, depth <= 0.0 || scene.a < 0.99);
+    NvsBus bus = nvs_readBus(InSampler, true);
     float waterData = 0.0;
     bool drawn = depth > 0.0;
     if (drawn && nvs_isWaterMarker(scene, pixel.x)) {
@@ -140,6 +140,28 @@ void main() {
             nvs_drawCloudLayer(color, worldDirection, cameraWorld.xz, cameraY,
                                326.0, 214.0, vec2(83.1, 47.9), 0.43,
                                bus.sunDirection);
+        }
+
+        // Reconstruct a view-space face normal from the depth buffer. The
+        // native terrain vertex format has no normal attribute, but adjacent
+        // depth samples provide a useful screen-space approximation for block
+        // faces and flat vegetation cards. This adds directional form without
+        // a shadow map or another render target.
+        if (depth > 0.0 && alpha >= 0.99 && waterData == 0.0) {
+            // Derivatives are evaluated in the uniform in-air branch, before
+            // the per-pixel material condition, avoiding undefined derivatives
+            // and four extra depth/position samples on the integrated GPU.
+            vec3 normalView = normalize(cross(dFdx(viewPosition), dFdy(viewPosition)));
+            if (dot(normalView, -viewPosition) < 0.0) normalView = -normalView;
+            vec3 normalWorld = normalize(bus.viewToWorld * normalView);
+
+            float sunAboveHorizon = smoothstep(-0.10, 0.18, bus.sunDirection.y);
+            float directLight = max(dot(normalWorld, bus.sunDirection), 0.0) * sunAboveHorizon;
+            float skyFill = 0.5 + 0.5 * max(normalWorld.y, 0.0);
+            float nightFill = 1.0 - sunAboveHorizon;
+            float directional = 0.70 + directLight * 0.38 + skyFill * 0.10
+                              + nightFill * skyFill * 0.06;
+            color *= clamp(directional, 0.66, 1.16);
         }
     }
 

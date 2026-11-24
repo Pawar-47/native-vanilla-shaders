@@ -17,18 +17,26 @@
 // Solar disc and atmospheric aureole shared by the visible sky and water
 // reflections. The game supplies the actual sun direction and rain dimmer.
 vec3 nvs_sunGlow(vec3 direction, vec3 sunDirection, float rainBrightness) {
-    // All callers provide normalized directions. Chord distance closely
-    // approximates angular distance over the solar disc and aureole, avoiding
-    // an expensive acos in the full-resolution sky/water passes.
+    // Chord distance is a stable angular metric and avoids acos in the
+    // full-resolution sky and water passes.
     float cosine = clamp(dot(direction, sunDirection), -1.0, 1.0);
     float angle = sqrt(max(2.0 * (1.0 - cosine), 0.0));
-    // A slightly generous angular disc remains legible at ordinary render
-    // distances and on low-resolution displays, without becoming a giant flare.
-    float disc = 1.0 - smoothstep(0.0058, 0.0072, angle);
-    float corona = exp(-angle * 38.0) * 0.30 + exp(-angle * 12.0) * 0.085;
-    float aureole = exp(-angle * 3.2) * 0.055;
+
+    // A clearly readable solar disc, slightly larger than the physical
+    // apparent diameter so it survives the game's low-resolution sky target.
+    float disc = 1.0 - smoothstep(0.0105, 0.0135, angle);
+    float corona = exp(-angle * 34.0) * 0.42 + exp(-angle * 10.0) * 0.11;
+    float aureole = exp(-angle * 2.8) * 0.075;
+
+    // Subtle radial atmospheric rays. Their angular modulation is fixed in
+    // world space around the sun, so the rays do not crawl with the camera.
+    float azimuth = atan(direction.z - sunDirection.z,
+                         direction.x - sunDirection.x + 1e-6);
+    float rayShape = 0.5 + 0.5 * cos(azimuth * 10.0 + angle * 175.0);
+    float rays = pow(rayShape, 13.0) * exp(-angle * 17.0) * 0.15;
     float visibility = smoothstep(-0.10, 0.08, sunDirection.y);
-    return vec3(1.0, 0.82, 0.58) * (disc * 1.8 + corona + aureole)
+    vec3 solar = vec3(1.0, 0.84, 0.64);
+    return solar * (disc * 2.35 + corona + aureole + rays)
          * rainBrightness * visibility;
 }
 

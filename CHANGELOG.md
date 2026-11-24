@@ -54,3 +54,12 @@ The glslang pass is not Minecraft ShaderC, and no in-game rendering or performan
 - Added a reflection-sample cleanup filter for isolated high-chroma highlights, targeting thin coloured rain-particle streaks mirrored across the water.
 - Refined the global grade with brighter exposure, stronger midtone contrast, richer saturation, a gentler highlight shoulder and subtle cool-shadow / warm-highlight film toning.
 - Preserved the existing cloud design and low-end-oriented shader budgets.
+
+
+## Beta 2 development batch — 2026-11-24
+
+- Enlarged and brightened the reconstructed solar disc, strengthened its corona and added subtle radial atmospheric rays.
+- Added depth-reconstructed screen-space surface normals in the sky/atmosphere pass, giving opaque terrain, block faces and vegetation cards directional sunlight and ambient form without requiring unsupported terrain normals or a shadow-map target.
+- Reduced unstable RGB variation in the lightmap contribution on biome-tinted alpha-cutout foliage while preserving its luminance and most of its natural colour.
+- Kept the Beta 1 water, wave, cloud and colour-grade work intact.
+- This batch is subject to GLSL/pack CI and still requires in-game visual confirmation; screen-space lighting is an approximation, not true block-cast shadows.
