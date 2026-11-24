@@ -84,7 +84,7 @@
       "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
       "vanilla_source": "Vanilla-stock /core/clouds.fsh",
       "reason": "Adds procedural density carving and top/underside/side shading; preserves OIT branches and protects the reserved data-bus column.",
-      "pack_sha256": "4d521f819ea6c7182a329bb5f12ac3d7a81f636db98eaef6f3a27de3de6e657e",
+      "pack_sha256": "f81ae0bda5db1141cbe98a7dbe3069e22637e46e3f061f82a1742eac2c7d0df4",
       "vanilla_sha256": "98ed038991d16691b4fda45a82436025fa54d90f11840dd6ce42b8359bf76588"
     },
     {
@@ -256,7 +256,7 @@
       "pack_file": "assets/nvs/shaders/include/clouds.glsl",
       "vanilla_source": null,
       "reason": "Shared procedural cloud density, shading and cloud-shadow functions.",
-      "pack_sha256": "a7ef88f980590587bf48e63b06f7a4bfd7a144cf90eff14f34ab1a79b7831867"
+      "pack_sha256": "49d5d9a91f50b4d3626aec0a461296189f05b8c81821821b95b6867fd8bbf398"
     },
     {
       "pack_file": "assets/nvs/shaders/include/common.glsl",
@@ -268,7 +268,7 @@
       "pack_file": "assets/nvs/shaders/include/config.glsl",
       "vanilla_source": null,
       "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
-      "pack_sha256": "e4fe620d3425765ec644ad9e963a1a0df664376bc04a438a5a7670c277297bd1"
+      "pack_sha256": "354c9190a1e7948569e0e649bc16dcc627be359c3fa44bad06c21709a306ae26"
     },
     {
       "pack_file": "assets/nvs/shaders/include/noise.glsl",
@@ -286,7 +286,7 @@
       "pack_file": "assets/nvs/shaders/include/water.glsl",
       "vanilla_source": null,
       "reason": "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers.",
-      "pack_sha256": "228d0f818a594d3f15d0f8eb5a4488cfa6d6a433344adf0d643f174ec6de1d39"
+      "pack_sha256": "25792d94726df933ed70c6fb8229310d21ccb5e4d8c0cf84ed1ba13a2a5bbbfa"
     },
     {
       "pack_file": "assets/nvs/shaders/post/bloom.fsh",
@@ -304,7 +304,7 @@
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
       "vanilla_source": null,
       "reason": "Combines scene and bloom with final colour grading, sharpen, vignette and dither.",
-      "pack_sha256": "9339bd89378e7eeffb7154d48bc5a5c360b8056ddea6e57da72b5c85701e9718"
+      "pack_sha256": "56bddc866de4c4d4e154cfe85d9974b956085aaeae113ceba446f46b82b5bfd2"
     },
     {
       "pack_file": "assets/nvs/shaders/post/copy.fsh",
