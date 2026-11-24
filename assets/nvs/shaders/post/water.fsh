@@ -155,8 +155,13 @@ void main() {
     vec3 refraction = under.a < 0.9 ? under.rgb : tagged.rgb;
     float NoV = clamp(dot(normal, -viewWorld), 0.0, 1.0);
     float path = 1.0 / max(NoV, 0.15);
-    vec3 absorption = vec3(0.30, 0.12, 0.08) * (0.55 + NVS_WATER_ABSORB * 8.0);
+    vec3 absorption = vec3(0.72, 0.28, 0.14) * (0.72 + NVS_WATER_ABSORB * 12.0);
     refraction *= mix(exp(-absorption * path), vec3(1.0), fogAmount);
+    // Dark teal water column: blend away bright bottom textures and the
+    // stock-looking luminous patterns while preserving some near-shore detail.
+    vec3 deepWater = vec3(0.018, 0.105, 0.135);
+    float depthVeil = mix(0.42, 0.72, smoothstep(0.12, 0.92, path));
+    refraction = mix(refraction, deepWater, depthVeil * (1.0 - fogAmount));
 
     float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - clamp(dot(normalize(mix(faceNormal, normal, 0.25)), -viewWorld), 0.0, 1.0), 5.0);
     if (!top) fresnel *= 0.55;

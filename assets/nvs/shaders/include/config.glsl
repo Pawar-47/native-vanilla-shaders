@@ -96,7 +96,12 @@
 #endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
-#define NVS_WATER_ABSORB 0.022
+#define NVS_WATER_ABSORB 0.030
+#endif
+// How strongly the post water pass veils bright riverbeds and seabeds.
+// Higher values make water read as deeper and less transparent.
+#ifndef NVS_WATER_DEPTH_VEIL
+#define NVS_WATER_DEPTH_VEIL 0.72
 #endif
 // Fresnel floor: the reflectance of water seen straight down.
 #ifndef NVS_WATER_F0
@@ -180,7 +185,7 @@
 #define NVS_POST_VIGNETTE 0.075
 #endif
 #ifndef NVS_POST_SHARPEN
-#define NVS_POST_SHARPEN 0.18
+#define NVS_POST_SHARPEN 0.06
 #endif
 // Luminance above which the highlight shoulder starts compressing.
 #ifndef NVS_POST_SHOULDER
