@@ -186,7 +186,14 @@ float nvs_waterData(vec3 worldPosition) {
     vec3 n = cross(dFdx(worldPosition), dFdy(worldPosition));
     float l = length(n);
     n = l > 1e-5 ? n / l : vec3(0.0, 1.0, 0.0);
-    return abs(n.y) > 0.7 ? 1.0 : (128.0 / 255.0);
+    if (abs(n.y) > 0.7) return 1.0;
+
+    // Side faces are axis-aligned in vanilla water geometry. Encode their
+    // dominant horizontal normal in four exact byte values so the post pass
+    // does not need full-screen derivatives to recover it.
+    float direction = abs(n.x) > abs(n.z) ? (n.x >= 0.0 ? 0.0 : 1.0)
+                                           : (n.z >= 0.0 ? 2.0 : 3.0);
+    return 0.25 + direction * 0.125;
 }
 vec4 nvs_waterMarker(int x, float data) {
     return vec4(float((x * 73 + 11) & 255) / 255.0,
@@ -194,9 +201,12 @@ vec4 nvs_waterMarker(int x, float data) {
 }
 bool nvs_isWaterMarker(vec4 c, int x) {
     vec4 m = nvs_waterMarker(x, 0.0);
-    bool data = abs(c.b - 1.0) < 0.5 / 255.0 || abs(c.b - 128.0 / 255.0) < 1.0 / 255.0;
+    float sideIndex = round((c.b - 0.25) * 8.0);
+    bool topData = abs(c.b - 1.0) < 0.5 / 255.0;
+    bool sideData = sideIndex >= 0.0 && sideIndex <= 3.0
+                 && abs(c.b - (0.25 + sideIndex * 0.125)) < 0.5 / 255.0;
     return (x & 1) == 0 && abs(c.r - m.r) < 0.5 / 255.0
-        && abs(c.g - m.g) < 0.5 / 255.0 && c.a > 254.5 / 255.0 && data;
+        && abs(c.g - m.g) < 0.5 / 255.0 && c.a > 254.5 / 255.0 && (topData || sideData);
 }
 
 // Shade one water fragment.

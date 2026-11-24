@@ -63,27 +63,39 @@ void main() {
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);
     vec4 tagged = texelFetch(InSampler, pixel, 0);
     fragColor = vec4(tagged.rgb, 1.0);
+    // Non-water pixels need neither the data bus nor a depth reconstruction.
+    // This keeps the expensive 45-row bus decode limited to water fragments.
+    if (tagged.a > 0.9) return;
+
     NvsBus bus = nvs_readBus(MainSampler);
     if (!bus.present || !nvs_busCameraInAir(bus)) return;
 
     float depth = texelFetch(DepthSampler, pixel, 0).r;
-    vec3 viewPosition = nvs_busViewPosition(bus, texCoord, max(depth, 1e-6));
+    if (depth <= 0.0) return;
+    vec3 viewPosition = nvs_busViewPosition(bus, texCoord, depth);
     vec3 worldRelative = bus.viewToWorld * viewPosition;
-    // Evaluate derivatives uniformly across the frame before testing the water tag.
-    vec3 worldDx = dFdx(worldRelative);
-    vec3 worldDy = dFdy(worldRelative);
-    vec3 normalRaw = cross(worldDx, worldDy);
-    float pixelFootprint = max(length(worldDx.xz), length(worldDy.xz));
-    float normalLength = length(normalRaw);
-    vec3 faceNormal = normalLength > 1e-5 ? normalRaw / normalLength : vec3(0.0, 1.0, 0.0);
-    if (tagged.a > 0.9 || depth <= 0.0) return;
-
-    bool top = tagged.a > 0.375;
-    vec3 cameraPosition = vec3(CameraBlockPos) - CameraOffset;
-    vec3 worldPosition = worldRelative + cameraPosition;
+    bool top = tagged.a > 0.7;
+    vec3 faceNormal;
+    if (top) {
+        faceNormal = vec3(0.0, 1.0, 0.0);
+    } else {
+        float sideIndex = clamp(round((tagged.a - 0.25) * 8.0), 0.0, 3.0);
+        faceNormal = sideIndex < 0.5 ? vec3(1.0, 0.0, 0.0)
+                   : sideIndex < 1.5 ? vec3(-1.0, 0.0, 0.0)
+                   : sideIndex < 2.5 ? vec3(0.0, 0.0, 1.0)
+                                     : vec3(0.0, 0.0, -1.0);
+    }
+    if (dot(faceNormal, worldRelative) > 0.0) faceNormal = -faceNormal;
     vec3 viewWorld = normalize(worldRelative);
     float distanceToSurface = length(viewPosition);
-    if (dot(faceNormal, worldRelative) > 0.0) faceNormal = -faceNormal;
+    // Angular pixel size projected onto the water plane, expanded at grazing
+    // angles. This avoids derivatives in a water-only branch and matches the
+    // reference footprint model.
+    float pixelFootprint = distanceToSurface * 2.0
+                         / max(bus.projection[1][1] * ScreenSize.y, 1e-4)
+                         / max(abs(viewWorld.y), 0.05);
+    vec3 cameraPosition = vec3(CameraBlockPos) - CameraOffset;
+    vec3 worldPosition = worldRelative + cameraPosition;
 
     vec3 normal = faceNormal;
     float t = nvs_waveTime(GameTime);

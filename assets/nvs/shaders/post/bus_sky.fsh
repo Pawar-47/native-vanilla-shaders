@@ -91,6 +91,6 @@ void main() {
         color = texelFetch(InSampler, ivec2(min(1, size.x - 1), pixel.y), 0).rgb;
         waterData = 0.0;
     }
-    float tag = waterData == 0.0 ? 1.0 : waterData > 0.75 ? 0.5 : 0.25;
+    float tag = waterData == 0.0 ? 1.0 : waterData > 0.75 ? 0.75 : waterData;
     fragColor = vec4(clamp(color, 0.0, 1.0), tag);
 }
