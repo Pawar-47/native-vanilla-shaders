@@ -17,48 +17,27 @@ layout(location = 0) out vec4 fragColor;
 
 void main() {
     int row = int(floor(nvsBusRow));
-    if (row == NVS_BUS_ROW_MARKER) fragColor = vec4(1.0, 0.0, 1.0, 1.0);
-    else if (row >= NVS_BUS_ROW_PROJ && row < NVS_BUS_ROW_VIEW) {
+    if (row == NVS_BUS_ROW_MARKER) {
+        fragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    } else if (row >= NVS_BUS_ROW_PROJ && row < NVS_BUS_ROW_VIEW) {
         int k = row - NVS_BUS_ROW_PROJ;
         fragColor = nvs_bus_packFloat(ProjMat[k / 4][k % 4]);
     } else if (row >= NVS_BUS_ROW_VIEW && row < NVS_BUS_ROW_SKY) {
         int k = row - NVS_BUS_ROW_VIEW;
         fragColor = nvs_bus_packFloat(ModelViewMat[k / 4][k % 4]);
-    } else if (row == NVS_BUS_ROW_SKY) fragColor = vec4(ColorModulator.rgb, 1.0);
-    else if (row == NVS_BUS_ROW_FOG) fragColor = vec4(FogColor.rgb, 1.0);
-    else if (row >= NVS_BUS_ROW_FOG_PARAMS && row < NVS_BUS_ROW_SUN) {
+    } else if (row == NVS_BUS_ROW_SKY) {
+        fragColor = vec4(ColorModulator.rgb, 1.0);
+    } else if (row == NVS_BUS_ROW_FOG) {
+        fragColor = vec4(FogColor.rgb, 1.0);
+    } else if (row >= NVS_BUS_ROW_FOG_PARAMS && row < NVS_BUS_ROW_SUN) {
         int k = row - NVS_BUS_ROW_FOG_PARAMS;
-        float fogValues[6] = float[6](FogEnvironmentalStart, FogEnvironmentalEnd,
-            FogRenderDistanceStart, FogRenderDistanceEnd, FogSkyEnd, FogCloudsEnd);
+        float fogValues[6] = float[6](
+            FogEnvironmentalStart, FogEnvironmentalEnd,
+            FogRenderDistanceStart, FogRenderDistanceEnd,
+            FogSkyEnd, FogCloudsEnd
+        );
         fragColor = nvs_bus_packFloat(fogValues[k]);
-    } else fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    // The disc under the horizon keeps vanilla's look: it exists to hide the
-    // void, not to be looked at.
-    if (nvsLowerDisc > 0.5) {
-        fragColor = apply_fog(ColorModulator, sphericalVertexDistance, cylindricalVertexDistance,
-                              0.0, FogSkyEnd, FogSkyEnd, FogSkyEnd, FogColor);
-        return;
+    } else {
+        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
-
-    // Both colours are the game's own, already correct for the hour, the
-    // weather, the biome and the dimension.
-    vec3 zenith = ColorModulator.rgb;
-    vec3 horizon = FogColor.rgb;
-
-    vec3 sky = nvs_skyGradient(nvsSkyDirection, zenith, horizon);
-
-    // Night: how dark the game's sky colour is, which needs no clock and stays
-    // right for every dimension and for datapacks that move the time.
-    float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(zenith));
-    sky += nvs_nightSky(nvsSkyDirection, night);
-
-    // The target is 8-bit: a gradient this smooth bands without dithering.
-    sky += nvs_dither(gl_FragCoord.xy);
-    sky = max(sky, 0.0);
-
-    // Vanilla's call, with vanilla's arguments: under blindness, or under
-    // water, FogSkyEnd collapses and the sky becomes the fog colour. Keeping
-    // this is what makes those effects keep working.
-    fragColor = apply_fog(vec4(sky, ColorModulator.a), sphericalVertexDistance, cylindricalVertexDistance,
-                          0.0, FogSkyEnd, FogSkyEnd, FogSkyEnd, FogColor);
 }
