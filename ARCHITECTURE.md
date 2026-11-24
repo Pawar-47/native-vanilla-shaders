@@ -39,7 +39,7 @@ programs. None of it declares a uniform, so it is safe to include anywhere.
 | `common.glsl` | Luminance, dither, warmth, small helpers. |
 | `sky.glsl` | The sky as a function of direction; the night sky; a zenith colour inferred from the horizon for programs that do not get the sky colour. |
 | `clouds.glsl` | The cloud field, the shading, and the shadow the field casts on the ground. |
-| `water.glsl` | Water recognition, eight-wave gravity spectrum, filtered normals, foam, and reflected sky/cloud helpers. |
+| `water.glsl` | Water recognition, five-wave gravity spectrum, filtered normals, foam, and reflected sky/cloud helpers. |
 | `bus.glsl` / `bus_read.glsl` | Screen-column data bus and post-effect decoding of camera, sky, fog and sun values. |
 
 `sky.glsl`, `clouds.glsl` and `water.glsl` are shared deliberately: the shared 2D cloud mass/ridge projection also drives terrain shadows, while the

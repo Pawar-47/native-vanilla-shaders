@@ -94,10 +94,6 @@
 #ifndef NVS_WATER_WAVE_STRENGTH
 #define NVS_WATER_WAVE_STRENGTH 0.36
 #endif
-// Extra small-scale ripple on top of the eight-wave gravity spectrum.
-#ifndef NVS_WATER_RIPPLE
-#define NVS_WATER_RIPPLE 0.0
-#endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
 #define NVS_WATER_ABSORB 0.022
@@ -127,16 +123,16 @@
 #ifndef NVS_WATER_FOAM_THRESHOLD
 #define NVS_WATER_FOAM_THRESHOLD 0.72
 #endif
-// Screen-space reflection ray budget. 24 coarse steps plus four refinements
-// keeps the water pass viable on Intel HD 5500-class integrated graphics.
+// Screen-space reflection ray budget. Sixteen coarse steps plus three refinements
+// reduce full-resolution water cost on Intel HD 5500-class integrated graphics.
 #ifndef NVS_WATER_SSR_STEPS
 #define NVS_WATER_SSR_STEPS 16
 #endif
 #ifndef NVS_WATER_SSR_REFINE_STEPS
 #define NVS_WATER_SSR_REFINE_STEPS 3
 #endif
-// Growth of each screen-space ray step. 1.13 extends the 24-step low-end
-// budget across useful lake distances without doubling the sample count.
+// Growth of each screen-space ray step. A slightly larger step growth preserves
+// useful lake coverage with the reduced low-end sample budget.
 #ifndef NVS_WATER_SSR_STEP_GROWTH
 #define NVS_WATER_SSR_STEP_GROWTH 1.17
 #endif
