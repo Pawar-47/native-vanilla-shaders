@@ -111,7 +111,7 @@ float nvs_atmosphereFog(NvsBus bus, vec3 viewPosition, float vanillaFog) {
     float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
     float renderEnd = max(bus.fogRenderDistanceEnd, 1.0);
     float edge = smoothstep(0.50, 0.95, cylindrical / renderEnd);
-    float haze = 1.0 - exp(-length(viewPosition) / NVS_ATMOSPHERE_HAZE_DISTANCE);
+    float haze = 1.0 - exp(-length(viewPosition) / max(NVS_ATMOSPHERE_HAZE_DISTANCE, 1.0));
     return 1.0 - (1.0 - max(vanillaFog, edge)) * (1.0 - haze);
 }
 
