@@ -268,7 +268,7 @@
       "pack_file": "assets/nvs/shaders/include/config.glsl",
       "vanilla_source": null,
       "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
-      "pack_sha256": "8397bea9a5cc5e28454a12b16a0337d1715d68d54882805c55e10c1edcb67046"
+      "pack_sha256": "02f73a59492efa27c9222a9513134a0c4956dffba49da09f9dffd2075de204cb"
     },
     {
       "pack_file": "assets/nvs/shaders/include/noise.glsl",
@@ -286,7 +286,7 @@
       "pack_file": "assets/nvs/shaders/include/water.glsl",
       "vanilla_source": null,
       "reason": "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers.",
-      "pack_sha256": "96d1c1992b40e0ca55df69746a6cd48257e816c1e26774c7c653b2f951deac2f"
+      "pack_sha256": "6f80c4e65db4ea390dc8bb16fc4d7e5b029b0c28fe2edd6de95b1d14b1182325"
     },
     {
       "pack_file": "assets/nvs/shaders/post/bloom.fsh",
@@ -328,7 +328,7 @@
       "pack_file": "assets/nvs/shaders/post/water.fsh",
       "vanilla_source": null,
       "reason": "Water-only post stage for screen-space reflections, refraction, Fresnel, absorption, foam and sun glint.",
-      "pack_sha256": "535d84e8f9af954c34a1e9dad4eece19a6bbb04980fa1c487f3ea96777b56e1d"
+      "pack_sha256": "d0718c240d753117e8888c39c554f4ee1d034e27be2489b0f42380eaf0bbc059"
     }
   ]
 }
