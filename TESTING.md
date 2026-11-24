@@ -4,8 +4,8 @@
 
 Minecraft and its exact `shaderc` pipeline cannot run in this CI environment.
 However, CI now installs `glslangValidator`, expands the pack's and vanilla 26.3's
-shader includes, and compiles every pack-owned core/post stage plus selected
-terrain and OIT variants with a real GLSL compiler. Run the same check locally with:
+shader includes, and compiles every pack-owned core/post stage plus supported
+multi-draw, OIT and end-portal variants with a real GLSL compiler. Run the same check locally with:
 
 ```sh
 python3 tools/check_pack.py
@@ -108,6 +108,10 @@ Any change to a shader should be followed by:
 python3 tools/check_pack.py        # must print PASS
 python3 tools/manifest.py --write  # refresh the hashes
 python3 tools/manifest.py --check  # must print PASS
+python3 tools/compile_glsl.py      # supported GLSL variants must compile
 ```
 
-and by the numbered in-game checks above for the features the change touches.
+On pushes to `main`, CI refreshes and commits the two manifest JSON files
+automatically after the checks. Pull requests run `manifest.py --check` and fail
+if their hashes or reason entries are stale. The numbered in-game checks remain
+necessary for the features a change touches.
