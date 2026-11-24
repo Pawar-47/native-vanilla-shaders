@@ -103,8 +103,11 @@ float nvs_linearFog(float distanceValue, float startValue, float endValue) {
 float nvs_vanillaFog(NvsBus bus, vec3 viewPosition) {
     float spherical = length(viewPosition);
     float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
-    return max(nvs_linearFog(spherical, bus.fogEnvironmentalStart, bus.fogEnvironmentalEnd),
-               nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
+    float fogValue = max(nvs_linearFog(spherical, bus.fogEnvironmentalStart, bus.fogEnvironmentalEnd),
+                          nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
+    // Match the smoothstep curve used by the pack's replacement fog.glsl;
+    // the post pass must remove exactly the fog already mixed by core shaders.
+    return fogValue * fogValue * (3.0 - 2.0 * fogValue);
 }
 
 float nvs_atmosphereFog(NvsBus bus, vec3 viewPosition, float vanillaFog) {
