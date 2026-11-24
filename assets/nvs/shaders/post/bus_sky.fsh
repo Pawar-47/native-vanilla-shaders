@@ -12,6 +12,25 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
+float nvs_linearFog(float distanceValue, float startValue, float endValue) {
+    return clamp((distanceValue - startValue) / max(endValue - startValue, 1e-3), 0.0, 1.0);
+}
+
+float nvs_vanillaFog(NvsBus bus, vec3 viewPosition) {
+    float spherical = length(viewPosition);
+    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
+    return max(nvs_linearFog(spherical, bus.fogEnvironmentalStart, bus.fogEnvironmentalEnd),
+               nvs_linearFog(cylindrical, bus.fogRenderDistanceStart, bus.fogRenderDistanceEnd));
+}
+
+float nvs_atmosphereFog(NvsBus bus, vec3 viewPosition, float vanillaFog) {
+    float cylindrical = max(length(viewPosition.xz), abs(viewPosition.y));
+    float renderEnd = max(bus.fogRenderDistanceEnd, 1.0);
+    float edge = smoothstep(0.50, 0.95, cylindrical / renderEnd);
+    float haze = 1.0 - exp(-length(viewPosition) / NVS_ATMOSPHERE_HAZE_DISTANCE);
+    return 1.0 - (1.0 - max(vanillaFog, edge)) * (1.0 - haze);
+}
+
 void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);
@@ -34,44 +53,63 @@ void main() {
     }
 
     bool inAir = bus.present && nvs_busCameraInAir(bus);
+    vec3 color = scene.rgb;
 
-    // Clouds are drawn after translucent water. On even columns their blending
-    // can cover the marker before this pass sees it, producing alternating
-    // reflection stripes. Recover the vanilla water colour from the two odd
-    // neighbours, exactly where the native cloud layer sits above the water.
-    if (inAir && drawn && waterData == 0.0 && (pixel.x & 1) == 0
-            && scene.a > 252.5 / 255.0) {
-        vec3 viewPosition = nvs_busViewPosition(bus, texCoord, depth);
+    if (inAir) {
+        vec3 viewPosition = nvs_busViewPosition(bus, texCoord, depth > 0.0 ? depth : 1e-6);
+        vec3 worldRelative = bus.viewToWorld * viewPosition;
+        vec3 worldDirection = normalize(worldRelative);
         float cameraY = float(CameraBlockPos.y) - CameraOffset.y;
-        float worldY = (bus.viewToWorld * viewPosition).y + cameraY;
-        if (worldY > NVS_CLOUD_HEIGHT - 2.0) {
+        float worldY = worldRelative.y + cameraY;
+
+        // Clouds cover the even-column water markers because they are blended
+        // after translucent terrain. Reconstruct the cloud-over-water sample
+        // from the two odd neighbours before the atmosphere is applied.
+        if (depth > 0.0 && waterData == 0.0 && (pixel.x & 1) == 0
+                && scene.a > 252.5 / 255.0 && worldY > NVS_CLOUD_HEIGHT - 2.0) {
             vec4 left = texelFetch(InSampler, ivec2(max(pixel.x - 1, 0), pixel.y), 0);
             vec4 right = texelFetch(InSampler, ivec2(min(pixel.x + 1, size.x - 1), pixel.y), 0);
             scene.rgb = 0.5 * (left.rgb + right.rgb);
+            color = scene.rgb;
         }
-    }
 
-    if (inAir && depth <= 0.0) {
-        vec3 worldDir = nvs_busWorldDirection(bus, texCoord);
-        vec3 sky = nvs_skyGradient(worldDir, bus.skyColor, bus.fogColor);
+        vec3 sky = nvs_skyGradient(worldDirection, bus.skyColor, bus.fogColor);
         float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(bus.skyColor));
-        sky += nvs_nightSky(worldDir, night);
-
-        float sunAngle = acos(clamp(dot(worldDir, bus.sunDirection), -1.0, 1.0));
+        sky += nvs_nightSky(worldDirection, night);
+        float sunAngle = acos(clamp(dot(worldDirection, bus.sunDirection), -1.0, 1.0));
         float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
         float corona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
-        sky += vec3(1.0, 0.82, 0.58) * (sunDisc * 1.8 + corona) * bus.rainBrightness;
+        vec3 skyWithSun = sky + vec3(1.0, 0.82, 0.58)
+                              * (sunDisc * 1.8 + corona) * bus.rainBrightness;
 
-        sky += nvs_dither(gl_FragCoord.xy);
-        sky += max(scene.rgb - bus.fogColor, vec3(0.0));
-        scene = vec4(max(sky, 0.0), 1.0);
+        if (depth <= 0.0) {
+            // The cleared frame is FogColor; preserve the vanilla moon, stars
+            // and sunrise glow already drawn over it.
+            color = skyWithSun + max(scene.rgb - bus.fogColor, vec3(0.0));
+        } else {
+            float alpha = scene.a;
+            if (alpha < 0.99 && worldY > NVS_CLOUD_HEIGHT - 2.0) {
+                // Clouds are translucent over the clear colour. Replace only
+                // the uncovered part with the same sky that the post pass drew.
+                color = scene.rgb + (1.0 - alpha) * (skyWithSun - bus.fogColor);
+            } else {
+                // Remove vanilla's fog contribution, then add the stronger
+                // aerial perspective and loaded-world edge fade.
+                float vanillaFog = nvs_vanillaFog(bus, viewPosition);
+                float amount = nvs_atmosphereFog(bus, viewPosition, vanillaFog);
+                vec3 surface = scene.rgb - (1.0 - alpha) * bus.fogColor
+                             - alpha * vanillaFog * bus.fogColor;
+                float keep = (1.0 - amount) / max(1.0 - vanillaFog, 1e-4);
+                color = surface * keep + alpha * amount * sky + (1.0 - alpha) * skyWithSun;
+            }
+        }
     }
 
     // The bus is transport data, not a visible one-pixel stripe.
     if (pixel.x == 0) {
-        scene = texelFetch(InSampler, ivec2(min(1, size.x - 1), pixel.y), 0);
+        color = texelFetch(InSampler, ivec2(min(1, size.x - 1), pixel.y), 0).rgb;
         waterData = 0.0;
     }
     float tag = waterData == 0.0 ? 1.0 : waterData > 0.75 ? 0.5 : 0.25;
-    fragColor = vec4(scene.rgb, tag);
+    fragColor = vec4(clamp(color, 0.0, 1.0), tag);
 }

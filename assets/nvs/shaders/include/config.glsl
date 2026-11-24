@@ -118,6 +118,10 @@
 #ifndef NVS_WATER_SSR_STEP_GROWTH
 #define NVS_WATER_SSR_STEP_GROWTH 1.13
 #endif
+// Additional aerial perspective beyond the game's vanilla fog start/end.
+#ifndef NVS_ATMOSPHERE_HAZE_DISTANCE
+#define NVS_ATMOSPHERE_HAZE_DISTANCE 900.0
+#endif
 
 // ------------------------------------------------------------- lighting ----
 // Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.
