@@ -84,7 +84,7 @@
 // -------------------------------------------------------------- water ------
 // Overall wave slope. 0 = mirror, 1 = noticeably choppy.
 #ifndef NVS_WATER_WAVE_STRENGTH
-#define NVS_WATER_WAVE_STRENGTH 0.55
+#define NVS_WATER_WAVE_STRENGTH 0.60
 #endif
 // Extra small-scale ripple on top of the five directional waves.
 #ifndef NVS_WATER_RIPPLE
@@ -110,12 +110,10 @@
 #ifndef NVS_WATER_FOAM
 #define NVS_WATER_FOAM 0.07
 #endif
-// Fade high-frequency surface detail before it becomes sub-pixel noise.
-#ifndef NVS_WATER_FAR_FADE_START
-#define NVS_WATER_FAR_FADE_START 22.0
-#endif
-#ifndef NVS_WATER_FAR_FADE_END
-#define NVS_WATER_FAR_FADE_END 88.0
+// Flatten the wave spectrum with camera distance, as the projected wave
+// height becomes less visible; the per-wave footprint filter handles aliasing.
+#ifndef NVS_WATER_FLATTEN_DISTANCE
+#define NVS_WATER_FLATTEN_DISTANCE 48.0
 #endif
 // Normalised wave-height threshold for whitecap foam.
 #ifndef NVS_WATER_FOAM_THRESHOLD

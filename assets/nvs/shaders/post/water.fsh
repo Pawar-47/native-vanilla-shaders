@@ -99,9 +99,9 @@ void main() {
 
     vec3 normal = faceNormal;
     float t = nvs_waveTime(GameTime);
-    float farWaveFade = 1.0 - smoothstep(NVS_WATER_FAR_FADE_START, NVS_WATER_FAR_FADE_END, distanceToSurface);
+    float distanceFade = 1.0 / (1.0 + distanceToSurface / NVS_WATER_FLATTEN_DISTANCE);
     float grazingFade = mix(0.15, 1.0, smoothstep(0.02, 0.25, abs(viewWorld.y)));
-    float waveStrength = NVS_WATER_WAVE_STRENGTH * mix(0.42, 1.0, farWaveFade) * grazingFade;
+    float waveStrength = NVS_WATER_WAVE_STRENGTH * distanceFade * grazingFade;
     if (top) {
         normal = nvs_waterNormal(worldPosition.xz, t, waveStrength, pixelFootprint);
         if (faceNormal.y < 0.0) normal.y = -normal.y;
@@ -176,7 +176,7 @@ void main() {
                                  nvs_waterCrest(worldPosition.xz, t, pixelFootprint));
         vec2 foamDrift = vec2(cos(t * 0.5), sin(t * 0.5)) * 2.5;
         float broken = nvs_valueNoise(worldPosition.xz * 1.9 + foamDrift);
-        float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, farWaveFade);
+        float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, distanceFade);
         finalColor += vec3(NVS_WATER_FOAM) * foam;
     }
     fragColor = vec4(finalColor, 1.0);
