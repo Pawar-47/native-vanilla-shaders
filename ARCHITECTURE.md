@@ -76,6 +76,10 @@ already drawn over the clear colour. It also replaces vanilla distance fog with
 a shared sky-coloured aerial-perspective curve and a soft loaded-world edge fade.
 The pass does nothing when the bus is absent, so dimensions/effects that do not
 draw the sky writer retain their original scene.
+With the bus present, the same pass also reconstructs approximate surface normals
+from screen-space depth derivatives and applies a restrained sun-facing response
+to opaque scene geometry. This gives block faces and vegetation cards visible
+form without claiming true cast shadows.
 
 ### `core/stars.vsh` / `stars.fsh`
 
