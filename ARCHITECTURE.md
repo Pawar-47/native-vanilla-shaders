@@ -39,7 +39,8 @@ programs. None of it declares a uniform, so it is safe to include anywhere.
 | `common.glsl` | Luminance, dither, warmth, small helpers. |
 | `sky.glsl` | The sky as a function of direction; the night sky; a zenith colour inferred from the horizon for programs that do not get the sky colour. |
 | `clouds.glsl` | The cloud field, the shading, and the shadow the field casts on the ground. |
-| `water.glsl` | Water recognition, filtered/warped wave normals, foam, and reflected sky/cloud helpers. |\n| `bus.glsl` / `bus_read.glsl` | Screen-column data bus and post-effect decoding of camera, sky, fog and sun values. |
+| `water.glsl` | Water recognition, eight-wave gravity spectrum, filtered normals, foam, and reflected sky/cloud helpers. |
+| `bus.glsl` / `bus_read.glsl` | Screen-column data bus and post-effect decoding of camera, sky, fog and sun values. |
 
 `sky.glsl`, `clouds.glsl` and `water.glsl` are shared deliberately: the same
 function that shapes a cloud casts its shadow, and the same sky that is drawn is
@@ -123,12 +124,14 @@ partner. It writes a factor of 1.
 The game builds cloud boxes and hands over the cell coordinates, `CellSize`,
 `CloudOffset` and `CloudColor`. The vertex shader passes the world-anchored XZ of
 each fragment — `CloudOffset` is already in the position, so the procedural field
-travels with the clouds the game moves — and which way the face points.
+travels with the clouds the game moves — the face orientation, and the local
+vertical coordinate through each box.
 
-The fragment shader carves the volume with a field of two channels, a smooth mass
-for the cumulus blocks and a ridged detail for the torn edges, and shades it by
-density and orientation. Fragments below the cutoff are discarded, and **the
-discard happens before every OIT branch**, so the three Improved Transparency
+The fragment shader carves the native boxes with a smooth mass and ridged detail
+field, then adds a shallow 3D noise slice through the box thickness. The top,
+side and underside therefore no longer share one extruded 2D silhouette. It
+shades by density and orientation. Fragments below the cutoff are discarded, and
+**the discard happens before every OIT branch**, so the Improved Transparency
 passes discard identical fragments and their transmittance stays consistent with
 the colour pass.
 
