@@ -1,5 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
+#include <nvs:bus.glsl>
+#include <minecraft:projection.glsl>
 
 #include <minecraft:dynamictransforms.glsl>
 
@@ -8,10 +10,20 @@ uniform sampler2D Sampler0;
 layout(location = 0) in vec2 texCoord0;
 layout(location = 1) in vec2 nvsQuadUV;
 layout(location = 2) flat in float nvsIsSun;
+layout(location = 3) in float nvsBusRow;
+layout(location = 4) flat in vec3 nvsSunDirection;
 
 layout(location = 0) out vec4 fragColor;
 
 void main() {
+    if (nvsIsSun > 0.5) {
+        int row = int(floor(nvsBusRow)) - NVS_BUS_ROW_SUN;
+        float value = row == 0 ? nvsSunDirection.x : row == 1 ? nvsSunDirection.y
+                    : row == 2 ? nvsSunDirection.z : ColorModulator.a * 2.0 - 1.0;
+        fragColor = nvs_bus_packSigned(value);
+        return;
+    }
+    NVS_BUS_PROTECT
     vec4 body = texture(Sampler0, texCoord0);
 
     // A corona inside the quad the sun already occupies. The quad is a fixed

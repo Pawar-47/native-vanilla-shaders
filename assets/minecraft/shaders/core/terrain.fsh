@@ -1,5 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
+#include <nvs:bus.glsl>
+#include <minecraft:projection.glsl>
 
 #include <minecraft:fog.glsl>
 #include <minecraft:globals.glsl>
@@ -37,6 +39,7 @@ vec4 calculateFinalColor(vec4 color) {
 }
 
 void main() {
+    NVS_BUS_PROTECT
     // Sampled first and unconditionally: sampleNearest and sampleRGSS take
     // screen-space derivatives, which are undefined inside a branch.
     vec4 texel = (UseRgss == 1 ? sampleRGSS(Sampler0, texCoord0, 1.0f / TextureSize) : sampleNearest(Sampler0, texCoord0, 1.0f / TextureSize));

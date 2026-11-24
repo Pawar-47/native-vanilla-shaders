@@ -1,14 +1,37 @@
 {
   "targets": {
     "swap": {},
-    "bloom": { "width": 480, "height": 270 }
+    "bloom": {
+      "width": 480,
+      "height": 270
+    },
+    "bus_scene": {}
   },
   "passes": [
     {
       "vertex_shader": "nvs:post/fullscreen",
+      "fragment_shader": "nvs:post/bus_sky",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "minecraft:main"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "bus_scene"
+    },
+    {
+      "vertex_shader": "nvs:post/fullscreen",
       "fragment_shader": "nvs:post/bloom",
       "inputs": [
-        { "sampler_name": "In", "target": "minecraft:main" }
+        {
+          "sampler_name": "In",
+          "target": "bus_scene"
+        }
       ],
       "output": "bloom"
     },
@@ -16,8 +39,14 @@
       "vertex_shader": "nvs:post/fullscreen",
       "fragment_shader": "nvs:post/composite",
       "inputs": [
-        { "sampler_name": "In", "target": "minecraft:main" },
-        { "sampler_name": "Bloom", "target": "bloom" }
+        {
+          "sampler_name": "In",
+          "target": "bus_scene"
+        },
+        {
+          "sampler_name": "Bloom",
+          "target": "bloom"
+        }
       ],
       "output": "swap"
     },
@@ -25,7 +54,10 @@
       "vertex_shader": "nvs:post/fullscreen",
       "fragment_shader": "nvs:post/copy",
       "inputs": [
-        { "sampler_name": "In", "target": "swap" }
+        {
+          "sampler_name": "In",
+          "target": "swap"
+        }
       ],
       "output": "minecraft:main"
     }

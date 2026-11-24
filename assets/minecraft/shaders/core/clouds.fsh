@@ -1,5 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
+#include <nvs:bus.glsl>
+#include <minecraft:projection.glsl>
 
 #include <minecraft:fog.glsl>
 #include <minecraft:oit.glsl>
@@ -22,6 +24,7 @@ vec4 calculateFinalColor(vec4 color) {
 }
 
 void main() {
+    NVS_BUS_PROTECT
     // Carve the volume. The game supplies the cells; the field decides which
     // parts of them survive, which is where the multiscale cumulus forms, the
     // torn wispy edges and the absence of tiling come from.
