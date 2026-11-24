@@ -8,12 +8,13 @@
 #define NVS_BUS_ROW_MARKER 0
 #define NVS_BUS_ROW_PROJ 1
 #define NVS_BUS_ROW_VIEW 17
-#define NVS_BUS_ROW_SKY 33
-#define NVS_BUS_ROW_FOG 34
-#define NVS_BUS_ROW_FOG_PARAMS 35
-#define NVS_BUS_ROW_SUN 41
+// The sky view matrix is a pure rotation, so only its 3x3 basis is carried.
+#define NVS_BUS_ROW_SKY 26
+#define NVS_BUS_ROW_FOG 27
+#define NVS_BUS_ROW_FOG_PARAMS 28
+#define NVS_BUS_ROW_SUN 34
 #define NVS_BUS_SUN_ROWS 4
-#define NVS_BUS_SKY_ROWS 45
+#define NVS_BUS_SKY_ROWS 38
 
 // The bus is valid only in perspective world rendering. Orthographic GUI and
 // item-atlas passes must not discard their first column.

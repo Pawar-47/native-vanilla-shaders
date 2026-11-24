@@ -64,7 +64,7 @@ void main() {
     vec4 tagged = texelFetch(InSampler, pixel, 0);
     fragColor = vec4(tagged.rgb, 1.0);
     // Non-water pixels need neither the data bus nor a depth reconstruction.
-    // This keeps the expensive 45-row bus decode limited to water fragments.
+    // This keeps the expensive 38-row bus decode limited to water fragments.
     if (tagged.a > 0.9) return;
 
     NvsBus bus = nvs_readBus(MainSampler);

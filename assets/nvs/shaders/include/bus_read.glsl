@@ -42,15 +42,17 @@ NvsBus nvs_readBus(sampler2D source) {
         return bus;
     }
 
-    mat4 view;
+    mat3 view;
     for (int i = 0; i < 16; ++i) {
         bus.projection[i / 4][i % 4] =
             nvs_bus_unpackFloat(nvs_busTexel(source, NVS_BUS_ROW_PROJ + i, fromBottom));
-        view[i / 4][i % 4] =
+    }
+    for (int i = 0; i < 9; ++i) {
+        view[i / 3][i % 3] =
             nvs_bus_unpackFloat(nvs_busTexel(source, NVS_BUS_ROW_VIEW + i, fromBottom));
     }
     bus.inverseProjection = inverse(bus.projection);
-    bus.viewToWorld = transpose(mat3(view));
+    bus.viewToWorld = transpose(view);
     bus.zeroToOneDepth = bus.projection[2][2] < 0.5;
     bus.skyColor = nvs_busTexel(source, NVS_BUS_ROW_SKY, fromBottom).rgb;
     vec4 fogSample = nvs_busTexel(source, NVS_BUS_ROW_FOG, fromBottom);

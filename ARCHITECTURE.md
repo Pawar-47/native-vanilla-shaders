@@ -63,8 +63,8 @@ leashes and text all go through it at once.
 ### `core/sky.vsh` / `sky.fsh`
 
 The sky pipeline is the first writer of a reserved one-pixel screen column. Its
-10-vertex triangle fan is moved onto a 45-row strip containing a marker,
-projection and view matrices, sky/fog colours and fog distances. The lower
+10-vertex triangle fan is moved onto a 38-row strip containing a marker,
+projection and the 3×3 view rotation, sky/fog colours and fog distances. The lower
 horizon disc is excluded so it cannot overwrite the bus. The sun's own
 `position_tex` program adds its world-space direction and rain brightness to
 four more rows.

@@ -24,7 +24,7 @@ void main() {
         fragColor = nvs_bus_packFloat(ProjMat[k / 4][k % 4]);
     } else if (row >= NVS_BUS_ROW_VIEW && row < NVS_BUS_ROW_SKY) {
         int k = row - NVS_BUS_ROW_VIEW;
-        fragColor = nvs_bus_packFloat(ModelViewMat[k / 4][k % 4]);
+        fragColor = nvs_bus_packFloat(ModelViewMat[k / 3][k % 3]);
     } else if (row == NVS_BUS_ROW_SKY) {
         fragColor = vec4(ColorModulator.rgb, 1.0);
     } else if (row == NVS_BUS_ROW_FOG) {
