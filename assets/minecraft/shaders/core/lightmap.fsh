@@ -38,6 +38,12 @@ float get_brightness(float level) {
 
 vec3 notGamma(vec3 color) {
     float maxComponent = max(max(color.x, color.y), color.z);
+    // Darkness effects can reduce every channel to exactly zero. Avoid the
+    // 0/0 normalization in vanilla's notGamma curve, which otherwise produces
+    // NaNs that can leak into the lightmap and contaminate the final frame.
+    if (maxComponent <= 1e-5) {
+        return vec3(0.0);
+    }
     float maxInverted = 1.0f - maxComponent;
     float maxScaled = 1.0f - maxInverted * maxInverted * maxInverted * maxInverted;
     return color * (maxScaled / maxComponent);
