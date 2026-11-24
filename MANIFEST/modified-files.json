@@ -1,127 +1,334 @@
 {
-  "generated": false,
-  "generator": "python3 tools/manifest.py --write",
+  "generated_by": "tools/manifest.py --write",
   "minecraft_version": "26.3",
-  "note": "One entry per file the pack places at a path vanilla also uses, plus the files the pack adds. Every reason is hand-written and stays as it is; the two sha256 columns are filled in by the generator, which cannot run in the environment this pack was built in. Run `python3 tools/manifest.py --write` once, then `--check`. Files the pack adds under assets/nvs/ are listed in vanilla-hashes.json's companion and in ARCHITECTURE.md rather than here one by one, because they replace nothing.",
+  "note": "One entry per file the pack places at a path vanilla also uses, plus the files the pack adds. Regenerate the hashes; the reasons are hand-written.",
   "replaced": [
     {
       "pack_file": "assets/minecraft/shaders/include/fog.glsl",
       "vanilla_source": "Vanilla-stock /include/fog.glsl",
-      "reason": "The fog value goes through a smoothstep between the same start and end, so fog fades in instead of starting at a visible line and ending at a wall. Every block, function and signature is kept, and FogColor and FogColor.a are untouched, so underwater fog, blindness, darkness and rain fog keep the game's colours and distances. Widest reach of any change in the pack: terrain, entities, items, particles, glint, clouds, sky, end portal, beacon beam, lightning, leashes and text all include this file.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Matches the game's fog start/end and colour while smoothing the distance transition; the post atmosphere pass uses the same smoothstep curve and captured fog alpha.",
+      "pack_sha256": "9f05fe4a20bb09ae29a38d044a7a53a74e1e28443f9c9a5d6de701eea7dd9556",
+      "vanilla_sha256": "c96edf62b3dca66b2dc314516b0cd74f2e12fbe7514342e28a5440ad8dfc49be"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/sky.vsh",
       "vanilla_source": "Vanilla-stock /core/sky.vsh",
-      "reason": "Adds two varyings: the world-space view direction of the sky vertex (the disc is drawn with the camera rotation alone, so normalize(Position).y is the elevation) and a flag for the below-horizon dark disc, which the same program draws translated 12 blocks down.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Moves the vanilla 10-vertex sky fan onto the 38-row screen data bus; the lower dark disc remains hidden.",
+      "pack_sha256": "6ed0349c1600eaec75f5b124eac0813a5334e03f635b2feb6a9c5164c629e9de",
+      "vanilla_sha256": "3c822e788e0040b19963a04e9d0b21ccdef5fb21de4bbae93d8701a3222c578f"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/sky.fsh",
       "vanilla_source": "Vanilla-stock /core/sky.fsh",
-      "reason": "Replaces the flat sky colour with an elevation gradient built from the game's own ColorModulator and FogColor, which already carry the hour, the weather, the biome and the dimension. Adds a warm sunrise and sunset band driven by how warm FogColor already is, a night nebula and star field gated on how dark the sky colour already is, and a 4x4 ordered dither against 8-bit banding. Vanilla's apply_fog call and arguments are kept, so blindness and underwater still collapse the sky to fog, and the below-horizon disc keeps vanilla's look.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Writes projection, view rotation, sky/fog values and fog parameters into the data bus; the end-of-frame pass reconstructs the visible sky.",
+      "pack_sha256": "424e9244d4d979e0fae60371af5af32d5097a428ca959055a7bcbcddbe133e42",
+      "vanilla_sha256": "e677b2df88e9e697a6aa33800d865e456cf8ea05e16f513628d8e702092d8501"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/stars.vsh",
       "vanilla_source": "Vanilla-stock /core/stars.vsh",
-      "reason": "Derives a per-star magnitude and colour temperature from a hash of the star's direction. The position is the only per-star input the program is given; there is no per-star attribute and no texture.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Adds stable per-star brightness and colour variation from the star's position.",
+      "pack_sha256": "b50723a292253c029024ee6b7f99c868fd15cf0e3a3a9751afe6894a4036d624",
+      "vanilla_sha256": "b25cc87762c7173bd26f307d5c29a863cb9ba24ec37175ed79d8b798f17a233b"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/stars.fsh",
       "vanilla_source": "Vanilla-stock /core/stars.fsh",
-      "reason": "Applies that tint to ColorModulator. Vanilla wrote ColorModulator alone, so every star was identical.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Applies the per-star tint while preserving the native star geometry and blending.",
+      "pack_sha256": "75938c9cc9983a8841476bffcd34eff0477dfd161544f42870bf2496a6af0355",
+      "vanilla_sha256": "ad7e6c01fde66d8fc8468e0cfb1881adf07b89991c346828637fb8f59f6a2539"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/position_tex.vsh",
       "vanilla_source": "Vanilla-stock /core/position_tex.vsh",
-      "reason": "Adds the position within the celestial quad (UV0 recentred to -1..1) and which body it is: the sun's quad is scaled by 30 and the moon's by 20, read from the model-view matrix. This program draws the sun and the moon and nothing else, so no heuristic is needed.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Identifies the sun quad and transfers its world-space direction and rain brightness to the data bus; the moon keeps its native draw path.",
+      "pack_sha256": "4b090f2e5511cfc10c3aa5a5f3f0872582f8c1690e1673f01be28f4553441d84",
+      "vanilla_sha256": "38035f5c225f5d2a1feebbd16c4c2204379ebd555e44306c6481e19a81061761"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/position_tex.fsh",
       "vanilla_source": "Vanilla-stock /core/position_tex.fsh",
-      "reason": "Adds a corona around the sun and the moon inside the quad each body already occupies, where the radial distance is literally an angular distance and the quad edge is about 17 degrees out; it is faded to exactly zero at that edge. The body's own alpha is folded into the colour and alpha 1 is written, which makes the additive blend add exactly what vanilla added for the body while placing the halo beside it. Rain brightness, which arrives in ColorModulator.a, fades both.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Writes sun direction/rain data to the bus and preserves the native moon texture; the post pass draws the solar disc and reflection glint.",
+      "pack_sha256": "fdc7ae4200ea6e5a7bf174f7a5886a8cc96573cadb6f5cea959a105b043fa885",
+      "vanilla_sha256": "33d26139d3b29a9e5cda59733da4d427875081560cd8b27b5d896107a70dc2e1"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/position_color.vsh",
       "vanilla_source": "Vanilla-stock /core/position_color.vsh",
-      "reason": "Computes a radial factor across the sunrise and sunset glow, which vanilla paints in one flat colour. The fan is recognised by geometry (a centre at (0,100,0) and a ring about 120 units out) under a perspective projection within the first 18 vertices; anything else keeps a factor of exactly 1, so the debug shapes this program also draws are untouched.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Passes a radial factor for the sunrise/sunset glow and protects the matching varying.",
+      "pack_sha256": "86507eca1dbde1fb3929c652528fc97ab9de398fd4db58c4351ec5a56b07f00a",
+      "vanilla_sha256": "5b293a25c66ec134caed9cacb6c2c6e9272078cb6f83d0aad0624cb36b20b143"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/position_color.fsh",
       "vanilla_source": "Vanilla-stock /core/position_color.fsh",
-      "reason": "Multiplies the colour by that factor. It must be the colour and not the alpha: the sunrise and sunset pipeline blends with (one, one), where alpha is ignored. Vanilla's OIT branch structure and calculateFinalColor placement are unchanged.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Applies the sunrise/sunset radial colour treatment and discards the reserved bus column.",
+      "pack_sha256": "545daada1788bb695519b12eed614883d3e6b99244f0f192d872bd31628ec5b3",
+      "vanilla_sha256": "9bb40dbfd5ea3f1d3a9f65f68c7f042dede1233481093c62506780a9e9d01ab8"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/debug_point.vsh",
       "vanilla_source": "Vanilla-stock /core/debug_point.vsh",
-      "reason": "Required partner change, not a feature: position_color.fsh is linked with debug_point.vsh as well as position_color.vsh, and every fragment input needs a vertex output at the same location in every partner. This program writes a glow factor of 1. If it were not replaced, the pack would fail to link on four pipelines.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Required partner stage for position_color.fsh; emits the same varying while keeping debug points visually unchanged.",
+      "pack_sha256": "7e8d52544f02ec5044db02e37dceef11c9f6156d42ce68cf62eca260cd129521",
+      "vanilla_sha256": "d542e1c7437181c6b27dd59cc40b7605b4aaf8e4db52edb2ee8e6a4707a92b29"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/clouds.vsh",
       "vanilla_source": "Vanilla-stock /core/clouds.vsh",
-      "reason": "Adds the world-anchored XZ of each cloud fragment and which way its face points. CloudOffset is already inside the position the game computes, so the procedural field travels with the clouds the game moves. The cell unpacking, the packing constants and the CloudFaces reads are unchanged.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Passes world-anchored cloud coordinates and face orientation to the fragment stage.",
+      "pack_sha256": "8d33bc95faa28656633c2e5a0e09c65d3b938a96ce21da63be57360ce8a4057d",
+      "vanilla_sha256": "8bdfe295d20d11c9c8136ecc4b0269ddf28e8ce2423b019b4f121feb9704f234"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
       "vanilla_source": "Vanilla-stock /core/clouds.fsh",
-      "reason": "Carves the cloud volume with a procedural multiscale field (a smooth mass plus a ridged detail channel) and shades it by density and face orientation. The discards happen before every OIT branch, so the three Improved Transparency passes discard identical fragments and their transmittance stays consistent with the colour pass. All time-of-day, weather and dimension colour still comes from CloudColor.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Adds procedural density carving and top/underside/side shading; preserves OIT branches and protects the reserved data-bus column.",
+      "pack_sha256": "c76847a812ea347e7c9f5985cdc06df4f3bb33401efe0b30324771f5ff5a3317",
+      "vanilla_sha256": "98ed038991d16691b4fda45a82436025fa54d90f11840dd6ce42b8359bf76588"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/terrain.vsh",
       "vanilla_source": "Vanilla-stock /core/terrain.vsh",
-      "reason": "Adds three varyings (absolute world position, camera-relative position, raw pre-lighting tint) and sways plants, identified only by the three properties the native vertex data supplies: cutout pipeline, biome tint, and off the block grid. Vanilla's MULTIDRAW_TERRAIN and OIT_ALPHA_ONLY structure is preserved line for line, including the guarded ChunkPosition/ChunkVisibility inputs.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Passes absolute world position, camera-relative position and raw tint; applies conservative sway to identifiable cutout plants.",
+      "pack_sha256": "0a9f7b5572ab48d9f9025267bf2b3f2d5b0d38183db006c6da8ca2bd9397c5bb",
+      "vanilla_sha256": "001120e03dd7b9d690d3c98a1563334497c465f79ce14dc557d3d4caa02299a0"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/terrain.fsh",
       "vanilla_source": "Vanilla-stock /core/terrain.fsh",
-      "reason": "Shades water with wave normals, Fresnel and a reflected sky and cloud layer, and darkens lit ground under cloud cover. Water is recognised by the uniform 180/255 texture alpha plus a biome tint, which the slime block lacks. Only the colour changes and never the alpha, so the surface stays translucent over the bottom and the OIT passes stay consistent. The texture sample is still taken unconditionally at the top, because sampleNearest and sampleRGSS take screen-space derivatives.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Tags above-water surfaces for the post reflection/refraction pass, retains underwater Fresnel/absorption shading, adds cloud shadows and protects the data-bus column.",
+      "pack_sha256": "219defeec966965ee6f50363892f774f1f7b946f94ba0292ba3de95893364eda",
+      "vanilla_sha256": "e440d13f0c3c3aa0ae584a7e006410e4318922c5bc3c94a7a1be28b89b221bf9"
     },
     {
       "pack_file": "assets/minecraft/shaders/core/lightmap.fsh",
       "vanilla_source": "Vanilla-stock /core/lightmap.fsh",
-      "reason": "Reshapes the sky and block light response curves, keeps more of block light's warmth and reach, and lifts absolute black slightly so caves and nights do not crush. Every colour still comes from LightmapInfo, which the game sets from the celestial angle, the weather and the dimension, so sun angle, moonlight, day and night transitions all remain the game's. Vanilla's ordering of the boss overlay darkening, the darkness scale and the gamma blend is preserved.",
-      "pack_sha256": null,
-      "vanilla_sha256": null
+      "reason": "Reshapes block/sky light response and adds a zero-light normalization guard.",
+      "pack_sha256": "28b8c6a3b3a0bd94da1f3dafb8dc9ee801d8f8775d38c198a87a46f959a5b5df",
+      "vanilla_sha256": "360d9dd915b69682e56636b0e1b1d8da2bd5fea315bd081e12117de12600c928"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/blit_screen.fsh",
+      "vanilla_source": "Vanilla-stock /core/blit_screen.fsh",
+      "reason": "Protects the reserved data-bus column from full-screen blits that run before end-of-frame.",
+      "pack_sha256": "a5d18f932c9f09c236e6f4f525c808aa65274c9e2f803c4f699e9bd7d88b6626",
+      "vanilla_sha256": "8d01499c27529b99c95d1fc9f2e5e319ccc144c03992b37745e785e8a91e0e25"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/block.fsh",
+      "vanilla_source": "Vanilla-stock /core/block.fsh",
+      "reason": "Preserves the data-bus column during block rendering; visual shading outside that column remains vanilla.",
+      "pack_sha256": "9bd2d3f808ea062416e739fe83778137cb900ec1eb28fc0727dd561656c0c209",
+      "vanilla_sha256": "bb8c8bbbae9227219e68ea3f0dab4ef6586c1dd4f745cab16c635c1553ed2ca9"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/entity.fsh",
+      "vanilla_source": "Vanilla-stock /core/entity.fsh",
+      "reason": "Preserves the data-bus column during entity rendering; native entity shading remains intact.",
+      "pack_sha256": "ec8e2eafe8d250b0c1f6fd5fabf54c7018db97ae6e0920a250e9ae8a6d0b4de1",
+      "vanilla_sha256": "b349430785b693e8635765b7804034e28c3e6ec0e91f21fb9c224b4e226a90fa"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/glint.fsh",
+      "vanilla_source": "Vanilla-stock /core/glint.fsh",
+      "reason": "Preserves the data-bus column during glint rendering; native glint shading remains intact.",
+      "pack_sha256": "f791d27b5f9f101f4f8030e2983f0731973dad44a5b7a97e4416cfd1abf315fc",
+      "vanilla_sha256": "c15e7d6f86435de757a759a9863b015cd538597f8f00ba6807d70c70a312f942"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/item.fsh",
+      "vanilla_source": "Vanilla-stock /core/item.fsh",
+      "reason": "Preserves the data-bus column during item rendering; native item shading remains intact.",
+      "pack_sha256": "943fe0fd5c5f840640642fee5a92f3fc035cc8930227fe86aaeba93eeb063c61",
+      "vanilla_sha256": "fe75ae09610add034d2578dff26ad4e95e75625253d7f7275d076da15ecc92c4"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/oit_composite.fsh",
+      "vanilla_source": "Vanilla-stock /core/oit_composite.fsh",
+      "reason": "Preserves the data-bus column during the OIT composite so the camera/sky/sun payload survives transparent rendering.",
+      "pack_sha256": "d72341fd986d3d9b31dc818a4da15b00792166a6662cc19687bab99a06b6e53f",
+      "vanilla_sha256": "c58f1d9953aeb26d79deaef9c21bb82d522a386a02d48f0953dfb938459f97ff"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/particle.fsh",
+      "vanilla_source": "Vanilla-stock /core/particle.fsh",
+      "reason": "Preserves the data-bus column during particle rendering; native particle shading remains intact.",
+      "pack_sha256": "83b83ba8aca611de00b292f348cc4cdf92e5670e46f0cc28b1d7b780ea0ab5d4",
+      "vanilla_sha256": "8a5bfb706fea404b739edb982bd3eeabbd7d64fd2c75987f0ef5021d16f1ee1c"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_beacon_beam.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_beacon_beam.fsh",
+      "reason": "Preserves the data-bus column during beacon rendering; native beam visuals remain intact.",
+      "pack_sha256": "c9cdff2c9197fca8e35bd3f3c3b2b872cf267beb195abac6093754e354672fa0",
+      "vanilla_sha256": "91c0c0238bdd6a8fe1fc178e9d05a8730905087a6095e45ed5efd218de9c38a1"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_crumbling.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_crumbling.fsh",
+      "reason": "Preserves the data-bus column during block-breaking overlay rendering.",
+      "pack_sha256": "fbafd41a4f0d53147ddd22ca752a74f586b85e879b083458d403f1d2f4832cf7",
+      "vanilla_sha256": "348aaa9390841fed7f0778bcd1ac3c7389a6bc772abfff42496b862c5b7ab718"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_end_portal.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_end_portal.fsh",
+      "reason": "Preserves the data-bus column during end-portal rendering; portal visuals remain vanilla.",
+      "pack_sha256": "c2d2fa06a1ac6856afeaa197985c263221637d27b23679638b57ee0ee27e6ac3",
+      "vanilla_sha256": "52ca2dfaf15143bb6b78b42b62094d8a851dcd65eb5c47e3eef5fd70be6c2e88"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_entity_shadow.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_entity_shadow.fsh",
+      "reason": "Preserves the data-bus column during entity-shadow rendering.",
+      "pack_sha256": "e0199815144ed7e5c30b9b476ce196e768f4faa4c9281a850b4c3873219c4fb7",
+      "vanilla_sha256": "e541ad16ee697172e0fb05462da459445f9edc1e1b425a24b0607abfbafb7616"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_leash.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_leash.fsh",
+      "reason": "Preserves the data-bus column during leash rendering.",
+      "pack_sha256": "7c26d4fd974314874de7245c841e77dbd0ec694301840f884e147459390e1239",
+      "vanilla_sha256": "d8ac02b41f534622f68060fb2542dca76ab2dee8cce26348825081f1ee473645"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_lightning.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_lightning.fsh",
+      "reason": "Preserves the data-bus column during lightning rendering; native lightning visuals remain intact.",
+      "pack_sha256": "c7b6320227fbe946dc2b4cb901290b4fc115bc59e08c0dd8a0f2c0d869546c19",
+      "vanilla_sha256": "b29fbe7820230ccb4161fa714a4d740dc545faea85ed0b58e1606273a370cb36"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/rendertype_lines.fsh",
+      "vanilla_source": "Vanilla-stock /core/rendertype_lines.fsh",
+      "reason": "Preserves the data-bus column during line rendering.",
+      "pack_sha256": "b2ad77fea2b2f2da51dc0719c2b21cd76f032a96ca1a76f9b7cd279197751131",
+      "vanilla_sha256": "3d93a9bf025790d8417183caef8c40fadbf183c236a8186879a1bdb4b027d5d0"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/text.fsh",
+      "vanilla_source": "Vanilla-stock /core/text.fsh",
+      "reason": "Preserves the data-bus column during world text rendering.",
+      "pack_sha256": "8e5096cc258853c230a6017269caff5a99b73d619a040436a1acf6a88dadc359",
+      "vanilla_sha256": "08a3b585cf52e39b66e2689132b6a996d81446e9cc6ab1eab73bbcca38186d43"
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/world_border.fsh",
+      "vanilla_source": "Vanilla-stock /core/world_border.fsh",
+      "reason": "Preserves the data-bus column during world-border rendering.",
+      "pack_sha256": "4152fc060bc3a491afb18f209ad2f37bb0bfa13a85b6993a40f88dcd5837a8e2",
+      "vanilla_sha256": "6e82c987e5ab909e410971fe6c26941157f89dc54cbe6503e3f3f252615af626"
     }
   ],
   "added": [
     {
+      "pack_file": "pack.mcmeta",
+      "vanilla_source": null,
+      "reason": "Declares the Java 26.3 resource-pack format and metadata.",
+      "pack_sha256": "6c0ebcdd5b4ad5593d8d17670e43d5a4c7310df9b5b95344681e5dd4ef591f41"
+    },
+    {
       "pack_file": "assets/minecraft/post_effect/end_of_frame.json",
       "vanilla_source": null,
-      "reason": "The end-of-frame hook. 26.3 requests minecraft:end_of_frame on every frame in which a world is rendered: it runs after the world, the hand and the glowing-entity outline, and before the GUI. Vanilla ships no such effect, so the log carries a harmless 'Requested post effect does not exist: minecraft:end_of_frame' without a pack. This file is the only way a resource pack can post-process the frame, and it is three passes: a bright-pass ring blur into a fixed 480x270 target, a composite, and a copy back to minecraft:main.",
-      "pack_sha256": null
+      "reason": "Hooks the five-pass end-of-frame chain: sky/atmosphere reconstruction, water SSR/refraction, bloom, composite and copy.",
+      "pack_sha256": "1566629a2c054303505049212c5edd8e9ac2faa247b778cabd29207d964a62aa"
     },
     {
       "pack_file": "assets/nvs/post_effect/fxaa.json",
       "vanilla_source": null,
-      "reason": "Optional antialiasing, not part of the default chain, because it costs a full-resolution pass and softens the block edges. Applied per player with /posteffect add @s nvs:fxaa and removed with /posteffect remove. It reads minecraft:main into a swap target and copies back, rather than reading and writing the same target in one pass.",
-      "pack_sha256": null
+      "reason": "Optional antialiasing post effect, off by default and applied with /posteffect add @s nvs:fxaa.",
+      "pack_sha256": "b148df80e8ead152c9393b209c7d9b6fa4d38ba58d82e0f59bf6fab4e18a7550"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/bus.glsl",
+      "vanilla_source": null,
+      "reason": "Defines the 38-row screen data bus, float packing and bus-column protection helpers.",
+      "pack_sha256": "a9bd963cd5f638c6339fbb18a57cb9bc755bf3e66f5682dce50fc621b905c771"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/bus_read.glsl",
+      "vanilla_source": null,
+      "reason": "Decodes projection, view rotation, sky/fog values, sun data and shared atmosphere fog functions.",
+      "pack_sha256": "f58249e6149264e97359f274b37cc6894eb36d2ce513ed271edd895223eefbee"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/clouds.glsl",
+      "vanilla_source": null,
+      "reason": "Shared procedural cloud density, shading and cloud-shadow functions.",
+      "pack_sha256": "357110f440c03ce0566cc2faffb0517131047bdaf4053c145645061ca42f7d6d"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/common.glsl",
+      "vanilla_source": null,
+      "reason": "Shared colour, distance, dither and math helpers.",
+      "pack_sha256": "fa231b55f8d96307caf936754937848495c2cda353a06b133de0580265988a59"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/config.glsl",
+      "vanilla_source": null,
+      "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
+      "pack_sha256": "8397bea9a5cc5e28454a12b16a0337d1715d68d54882805c55e10c1edcb67046"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/noise.glsl",
+      "vanilla_source": null,
+      "reason": "Shared value-noise and fractal-noise functions.",
+      "pack_sha256": "05a837e12653cb530b2c52bfb7e9f52cc831f569c7ec170af2a0b68fdda9f89b"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/sky.glsl",
+      "vanilla_source": null,
+      "reason": "Shared sky gradient, horizon warmth, night field and reflected-sky functions.",
+      "pack_sha256": "a653286432347056725d3ce6daf0c25e9580ea911599408c40e29d9b85a05aea"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/include/water.glsl",
+      "vanilla_source": null,
+      "reason": "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers.",
+      "pack_sha256": "96d1c1992b40e0ca55df69746a6cd48257e816c1e26774c7c653b2f951deac2f"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/bloom.fsh",
+      "vanilla_source": null,
+      "reason": "Low-resolution bright-pass and bloom extraction.",
+      "pack_sha256": "ee958818dd6aa1c19dfacfc0182a2ac37dcbf6b886d4d244a27aa38716a15c2e"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
+      "vanilla_source": null,
+      "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
+      "pack_sha256": "62f7cc49f0743fb248cd86ade435a7191a2c8e991bd7cc58c19764b3aed16145"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/composite.fsh",
+      "vanilla_source": null,
+      "reason": "Combines scene and bloom with final colour grading, sharpen, vignette and dither.",
+      "pack_sha256": "9339bd89378e7eeffb7154d48bc5a5c360b8056ddea6e57da72b5c85701e9718"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/copy.fsh",
+      "vanilla_source": null,
+      "reason": "Copies the final post result back to the main target.",
+      "pack_sha256": "04ebadd6be9adae7461cab63b3da684ad77421d339fcfac72cedcac9a3659d69"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/fullscreen.vsh",
+      "vanilla_source": null,
+      "reason": "Full-screen triangle vertex stage for post effects.",
+      "pack_sha256": "ca445c3aa0da327651163cf2dd34247224dfff918e89dc7c26621389a7f96ef5"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/fxaa.fsh",
+      "vanilla_source": null,
+      "reason": "Optional FXAA fragment stage.",
+      "pack_sha256": "2347af14cb20fe1340f545b17d14a3da5dff56b46a4cb1281d6100a8e1f076c2"
+    },
+    {
+      "pack_file": "assets/nvs/shaders/post/water.fsh",
+      "vanilla_source": null,
+      "reason": "Water-only post stage for screen-space reflections, refraction, Fresnel, absorption, foam and sun glint.",
+      "pack_sha256": "535d84e8f9af954c34a1e9dad4eece19a6bbb04980fa1c487f3ea96777b56e1d"
     }
   ]
 }
