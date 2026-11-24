@@ -30,4 +30,4 @@ All notable changes to this pack. The pack version is independent of the Minecra
 
 ### Verification status
 
-GitHub Actions static checks and installable-pack packaging pass on the current branch. These checks do **not** compile GLSL or verify in-game rendering. Phase 1 is not declared complete until the implementation and packaging review is finished; Minecraft 26.3 runtime validation remains the next phase.
+GitHub Actions now runs static pipeline checks, expands includes and compiles pack-owned shader stages with `glslangValidator` (including selected terrain/OIT variants), then builds the installable pack. This is not Minecraft's exact ShaderC pipeline and does not verify in-game rendering. Phase 1 remains in development pending the full implementation review; Minecraft 26.3 runtime validation remains the next phase.

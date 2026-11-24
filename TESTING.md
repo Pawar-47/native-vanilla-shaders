@@ -2,12 +2,15 @@
 
 ## What could be verified, and how
 
-Minecraft cannot run here, and neither can `shaderc`, so **no GLSL in this pack
-has been compiled**. What has been done instead is every static check that stands
-in for a compile, through [`tools/check_pack.py`](tools/check_pack.py):
+Minecraft and its exact `shaderc` pipeline cannot run in this CI environment.
+However, CI now installs `glslangValidator`, expands the pack's and vanilla 26.3's
+shader includes, and compiles every pack-owned core/post stage plus selected
+terrain and OIT variants with a real GLSL compiler. Run the same check locally with:
 
 ```sh
 python3 tools/check_pack.py
+sudo apt-get install glslang-tools
+python3 tools/compile_glsl.py
 ```
 
 The vanilla 26.3 shader source is not distributed with this repository, because it
@@ -26,6 +29,7 @@ run without it.
 | **varyings** | For every replaced fragment program, every `in` has an `out` at the same location in **every** vertex program the game links with it, with the same base type and the same `flat` qualifier. This is what keeps `position_color.fsh` valid when it is linked with `debug_point.vsh` as well as `position_color.vsh`. |
 | **post effects** | Each post-effect JSON parses, every declared output and input target exists, every referenced shader exists, no two inputs share a sampler name, each pass's shaders declare only their own inputs' samplers plus the two blocks a post pass is given, and no effect names a game target other than `minecraft:main`. A broken post effect is compiled on first use and then disables every selected pack mid-game, so this is the check that second-most matters. |
 | **glsl hygiene** | `#version` is first, the separate-shader-objects extension is present, no `#moj_import`, braces/parens/brackets balance, preprocessor conditions nest, no plain non-block uniforms, and every varying has a `layout(location)`. |
+| **GLSL compiler** | `tools/compile_glsl.py` recursively expands includes and runs `glslangValidator` on pack-owned core/post stages, including selected `MULTIDRAW_TERRAIN` and `OIT_ALPHA_ONLY` branches. This catches actual syntax and type errors, but is not Minecraft ShaderC. |
 
 `tools/manifest.py --check` (or `--write` first) verifies the SHA-256 manifests
 against the vanilla reference folder and the pack files.
@@ -35,14 +39,12 @@ against the vanilla reference folder and the pack files.
 Be aware of these before concluding something is broken, and equally before
 concluding it works:
 
-1. **That the GLSL compiles.** Only shaderc can answer that, and it is part of the
-   game. The specific things most likely to be wrong are ordinary typos, a missing
-   include guard, or a type mismatch the static checks cannot see.
-2. **That every define variant compiles.** The game compiles a program once per
-   pipeline: `terrain` in 14 variants, `entity` in 37, `clouds` in 8. The pack
-   keeps vanilla's `#ifdef` structure deliberately, and the declaration check
-   covers the conditional uniforms, but a variant-specific mistake cannot be
-   disproved without the compiler.
+1. **That Minecraft ShaderC accepts every program.** `glslangValidator` is a
+   separate compiler and cannot reproduce Minecraft's exact preprocessing,
+   backend settings or pipeline linking.
+2. **That every pipeline variant compiles.** CI checks the default stages and
+   selected terrain (`MULTIDRAW_TERRAIN`) and OIT (`OIT_ALPHA_ONLY`) branches;
+   Minecraft builds more variants and links them against its own pipeline definitions.
 3. **Any framerate figure.** The water pass uses a bounded 24-step screen-space ray
    march plus four refinements; cloud shadows use reduced octaves and bloom uses a
    fixed small target. None of this has been measured on the Intel HD 5500 target.

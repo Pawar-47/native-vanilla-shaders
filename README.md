@@ -60,13 +60,13 @@ to delete one JSON file are the options mechanism. See
 
 ## Honest status
 
-This pack was built without the ability to run Minecraft or compile GLSL. What
-has been checked is written down in [TESTING.md](TESTING.md): structure, include
-resolution, uniform and sampler availability against the 26.3 reference, varying
-pairing across every linked partner, and post-effect validity — all through
-[`tools/check_pack.py`](tools/check_pack.py). What has **not** been checked is
-that it compiles in shaderc and that it looks right: that needs your game. Please
-read [TESTING.md](TESTING.md) before deciding something is broken.
+CI runs the static pipeline checks in [`tools/check_pack.py`](tools/check_pack.py)
+and a real GLSL syntax/type check with `glslangValidator` through
+[`tools/compile_glsl.py`](tools/compile_glsl.py), including selected terrain and
+OIT variants. It also builds the installable ZIP. This is stronger than static
+inspection, but it is **not** Minecraft's exact ShaderC pipeline and does not
+prove the pack loads or looks right in-game. Those still need Minecraft 26.3;
+see [TESTING.md](TESTING.md).
 
 ## Documentation
 
