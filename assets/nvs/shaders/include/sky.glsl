@@ -22,9 +22,11 @@ vec3 nvs_sunGlow(vec3 direction, vec3 sunDirection, float rainBrightness) {
     // an expensive acos in the full-resolution sky/water passes.
     float cosine = clamp(dot(direction, sunDirection), -1.0, 1.0);
     float angle = sqrt(max(2.0 * (1.0 - cosine), 0.0));
-    float disc = 1.0 - smoothstep(0.0042, 0.0052, angle);
-    float corona = exp(-angle * 42.0) * 0.24 + exp(-angle * 13.0) * 0.075;
-    float aureole = exp(-angle * 3.5) * 0.045;
+    // A slightly generous angular disc remains legible at ordinary render
+    // distances and on low-resolution displays, without becoming a giant flare.
+    float disc = 1.0 - smoothstep(0.0058, 0.0072, angle);
+    float corona = exp(-angle * 38.0) * 0.30 + exp(-angle * 12.0) * 0.085;
+    float aureole = exp(-angle * 3.2) * 0.055;
     float visibility = smoothstep(-0.10, 0.08, sunDirection.y);
     return vec3(1.0, 0.82, 0.58) * (disc * 1.8 + corona + aureole)
          * rainBrightness * visibility;

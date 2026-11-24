@@ -34,27 +34,27 @@
 // Cloud field octaves. 4 gives multiscale cumulus detail; 3 is cheaper, 5 is
 // smoother and slower. This also drives the cloud shadows on the terrain.
 #ifndef NVS_CLOUD_OCTAVES
-#define NVS_CLOUD_OCTAVES 4
+#define NVS_CLOUD_OCTAVES 3
 #endif
  // Vertical detail is limited to two 3D octaves: clouds cover little screen
 // area, but this keeps the extra volume breakup affordable on integrated GPUs.
 #ifndef NVS_CLOUD_VOLUME_OCTAVES
-#define NVS_CLOUD_VOLUME_OCTAVES 2
+#define NVS_CLOUD_VOLUME_OCTAVES 1
 #endif
 #ifndef NVS_CLOUD_VOLUME_STRENGTH
-#define NVS_CLOUD_VOLUME_STRENGTH 0.20
+#define NVS_CLOUD_VOLUME_STRENGTH 0.16
 #endif
 // Reflected clouds use a reduced octave budget because they are evaluated in
 // the full-resolution water post pass on the integrated-GPU target.
 #ifndef NVS_CLOUD_REFLECTION_OCTAVES
-#define NVS_CLOUD_REFLECTION_OCTAVES 2
+#define NVS_CLOUD_REFLECTION_OCTAVES 1
 #endif
 #ifndef NVS_CLOUD_REFLECTION_DETAIL_OCTAVES
 #define NVS_CLOUD_REFLECTION_DETAIL_OCTAVES 1
 #endif
 // World-space size of the largest cloud feature, in blocks.
 #ifndef NVS_CLOUD_SCALE
-#define NVS_CLOUD_SCALE 96.0
+#define NVS_CLOUD_SCALE 76.0
 #endif
 // Fragments whose cloud density is below this are discarded, which is what
 // gives the shapes their wispy, non-tiled edges. Raise for thinner clouds.
@@ -67,15 +67,15 @@
 #endif
 // Depth of the cloud shadows on the ground, 0 = none, 0.18 = 18% darkening.
 #ifndef NVS_CLOUD_SHADOW_STRENGTH
-#define NVS_CLOUD_SHADOW_STRENGTH 0.18
+#define NVS_CLOUD_SHADOW_STRENGTH 0.12
 #endif
 // Cloud-shadow octave budget. Keep below visible-cloud quality to limit
 // per-fragment cost across large terrain surfaces.
 #ifndef NVS_CLOUD_SHADOW_OCTAVES
-#define NVS_CLOUD_SHADOW_OCTAVES 3
+#define NVS_CLOUD_SHADOW_OCTAVES 2
 #endif
 #ifndef NVS_CLOUD_SHADOW_DETAIL_OCTAVES
-#define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 2
+#define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 1
 #endif
 // Density threshold and penumbra width for ground cloud shadows.
 #ifndef NVS_CLOUD_SHADOW_THRESHOLD
@@ -92,11 +92,7 @@
 // -------------------------------------------------------------- water ------
 // Overall wave slope. 0 = mirror, 1 = noticeably choppy.
 #ifndef NVS_WATER_WAVE_STRENGTH
-#define NVS_WATER_WAVE_STRENGTH 0.60
-#endif
-// Extra small-scale ripple on top of the eight-wave gravity spectrum.
-#ifndef NVS_WATER_RIPPLE
-#define NVS_WATER_RIPPLE 0.35
+#define NVS_WATER_WAVE_STRENGTH 0.36
 #endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
@@ -108,11 +104,11 @@
 #endif
 // Wave-driven shift of the reflected image, in screen UV units per unit of tilt.
 #ifndef NVS_WATER_REFLECTION_RIPPLE
-#define NVS_WATER_REFLECTION_RIPPLE 0.04
+#define NVS_WATER_REFLECTION_RIPPLE 0.012
 #endif
 // Refraction shift of the vanilla water/scene sample.
 #ifndef NVS_WATER_REFRACTION_STRENGTH
-#define NVS_WATER_REFRACTION_STRENGTH 0.03
+#define NVS_WATER_REFRACTION_STRENGTH 0.012
 #endif
 // Brightness of the whitecaps on wave crests, 0 turns them off.
 #ifndef NVS_WATER_FOAM
@@ -127,18 +123,18 @@
 #ifndef NVS_WATER_FOAM_THRESHOLD
 #define NVS_WATER_FOAM_THRESHOLD 0.72
 #endif
-// Screen-space reflection ray budget. 24 coarse steps plus four refinements
-// keeps the water pass viable on Intel HD 5500-class integrated graphics.
+// Screen-space reflection ray budget. Sixteen coarse steps plus three refinements
+// reduce full-resolution water cost on Intel HD 5500-class integrated graphics.
 #ifndef NVS_WATER_SSR_STEPS
-#define NVS_WATER_SSR_STEPS 24
+#define NVS_WATER_SSR_STEPS 16
 #endif
 #ifndef NVS_WATER_SSR_REFINE_STEPS
-#define NVS_WATER_SSR_REFINE_STEPS 4
+#define NVS_WATER_SSR_REFINE_STEPS 3
 #endif
-// Growth of each screen-space ray step. 1.13 extends the 24-step low-end
-// budget across useful lake distances without doubling the sample count.
+// Growth of each screen-space ray step. A slightly larger step growth preserves
+// useful lake coverage with the reduced low-end sample budget.
 #ifndef NVS_WATER_SSR_STEP_GROWTH
-#define NVS_WATER_SSR_STEP_GROWTH 1.13
+#define NVS_WATER_SSR_STEP_GROWTH 1.17
 #endif
 // Additional aerial perspective beyond the game's vanilla fog start/end.
 #ifndef NVS_ATMOSPHERE_HAZE_DISTANCE
@@ -148,7 +144,7 @@
 // ------------------------------------------------------------- lighting ----
 // Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.
 #ifndef NVS_SKYLIGHT_CURVE
-#define NVS_SKYLIGHT_CURVE 1.15
+#define NVS_SKYLIGHT_CURVE 0.92
 #endif
 #ifndef NVS_BLOCKLIGHT_CURVE
 #define NVS_BLOCKLIGHT_CURVE 0.92
@@ -166,16 +162,16 @@
 // These are compile-time only in the sense that they affect the post programs;
 // they are constants in the shader, not in the JSON, so they need no rebuild.
 #ifndef NVS_POST_BLOOM
-#define NVS_POST_BLOOM 0.55
+#define NVS_POST_BLOOM 0.38
 #endif
 #ifndef NVS_POST_EXPOSURE
-#define NVS_POST_EXPOSURE 1.0
+#define NVS_POST_EXPOSURE 1.03
 #endif
 #ifndef NVS_POST_CONTRAST
-#define NVS_POST_CONTRAST 0.12
+#define NVS_POST_CONTRAST 0.17
 #endif
 #ifndef NVS_POST_SATURATION
-#define NVS_POST_SATURATION 1.06
+#define NVS_POST_SATURATION 1.08
 #endif
 #ifndef NVS_POST_VIGNETTE
 #define NVS_POST_VIGNETTE 0.10

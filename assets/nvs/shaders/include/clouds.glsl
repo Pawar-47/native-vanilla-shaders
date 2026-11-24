@@ -21,8 +21,15 @@
 // exactly the same mass/detail shaping so the silhouettes stay related.
 float nvs_cloudDensity(vec2 worldXZ, int massOctaves, int detailOctaves) {
     vec2 p = worldXZ / NVS_CLOUD_SCALE;
+    // Low-frequency domain warp bends the native cell grid into broad,
+    // irregular cloud masses instead of repeating rounded box silhouettes.
+    vec2 warp = vec2(
+        nvs_valueNoise(p * 0.42 + vec2(8.2, 1.7)),
+        nvs_valueNoise(p * 0.42 + vec2(19.4, 5.3))
+    ) - 0.5;
+    p += warp * 0.62;
     float mass = nvs_fbm(p, massOctaves);
-    float wisp = nvs_fbmRidged(p * 2.6 + vec2(11.0, 3.0), detailOctaves);
+    float wisp = nvs_fbmRidged(p * 2.35 + vec2(11.0, 3.0), detailOctaves);
     float d = (mass - 0.5) * 1.55 + 0.5;
     d = mix(d, d * 0.72 + wisp * 0.42, 0.45);
     return clamp(d, 0.0, 1.0);

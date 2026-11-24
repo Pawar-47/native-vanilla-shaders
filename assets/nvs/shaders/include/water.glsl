@@ -34,16 +34,16 @@ float nvs_waveTime(float gameTime) {
 }
 
 // Deep-water wave spectrum adapted from the authorized vanilla-shader
-// reference: eight directions and wavelengths, with gravity-dispersed temporal
+// reference: five directions and wavelengths, with gravity-dispersed temporal
 // frequencies rounded to whole day cycles. The screen-footprint fade removes
 // wavelengths that would alias into rings or dark bands at distance.
-const int NVS_WAVE_COUNT = 8;
-const vec2 NVS_WAVE_DIRECTIONS[8] = vec2[](
-    vec2(1.0, 0.3), vec2(-0.4, 1.0), vec2(0.8, -0.7), vec2(-1.0, -0.2),
-    vec2(0.2, -1.0), vec2(0.9, 0.9), vec2(-0.7, 0.6), vec2(0.4, 0.95)
+const int NVS_WAVE_COUNT = 5;
+const vec2 NVS_WAVE_DIRECTIONS[5] = vec2[](
+    vec2(1.0, 0.3), vec2(-0.4, 1.0), vec2(0.8, -0.7),
+    vec2(-1.0, -0.2), vec2(0.2, -1.0)
 );
-const float NVS_WAVE_LENGTHS[8] = float[](7.3, 4.6, 3.1, 2.2, 1.55, 1.1, 0.8, 0.57);
-const float NVS_WAVE_CYCLES[8] = float[](555.0, 699.0, 852.0, 1011.0, 1204.0, 1430.0, 1676.0, 1986.0);
+const float NVS_WAVE_LENGTHS[5] = float[](9.2, 6.3, 4.5, 3.2, 2.3);
+const float NVS_WAVE_CYCLES[5] = float[](555.0, 699.0, 852.0, 1011.0, 1204.0);
 
 float nvs_waveFade(float waveNumber, float footprint) {
     float pixelScale = max(footprint, 1e-4);
@@ -53,12 +53,10 @@ float nvs_waveFade(float waveNumber, float footprint) {
 // A slow, position-only warp breaks up parallel wave bands. It and the
 // per-wave amplitude variation are shared by height, slope and foam.
 vec2 nvs_waveWarp(vec2 p) {
-    return (vec2(nvs_valueNoise(p * 0.045),
-                 nvs_valueNoise(p * 0.045 + 31.7)) - 0.5) * 14.0;
-}
-
-float nvs_waveVariation(vec2 p, float wavelength, float index) {
-    return 0.3 + 1.4 * nvs_valueNoise(p * (0.6 / wavelength / 8.0) + index * 17.3);
+    // Keep only a broad, slow warp; high-frequency displacement was the
+    // principal source of crawling reflection noise on distant water.
+    return (vec2(nvs_valueNoise(p * 0.025),
+                 nvs_valueNoise(p * 0.025 + 31.7)) - 0.5) * 5.0;
 }
 
 // Evaluate height, analytic slope and normalisation amplitude together.
@@ -74,8 +72,7 @@ vec4 nvs_waterSurface(vec2 p, float t, float strength, float footprint) {
         float wavelength = NVS_WAVE_LENGTHS[i];
         float waveNumber = 6.2831853 / wavelength;
         vec2 direction = normalize(NVS_WAVE_DIRECTIONS[i]);
-        float variation = nvs_waveVariation(p, wavelength, float(i));
-        float amplitude = 0.017 * wavelength * variation * nvs_waveFade(waveNumber, footprint);
+        float amplitude = 0.017 * wavelength * nvs_waveFade(waveNumber, footprint);
         vec2 warpedPosition = p + warp * (0.5 + 0.1 * float(i));
         float phase = waveNumber * dot(direction, warpedPosition)
                     - t * (NVS_WAVE_CYCLES[i] / NVS_WAVE_CYCLES_PER_DAY);
@@ -83,18 +80,6 @@ vec4 nvs_waterSurface(vec2 p, float t, float strength, float footprint) {
         gradient += amplitude * waveNumber * cos(phase) * direction;
         totalAmplitude += amplitude;
     }
-
-    // A small circularly drifting ripple adds local surface breakup and loops
-    // exactly at the day boundary.
-    vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
-    vec2 ripplePosition = p * 0.55 + orbit;
-    const float epsilon = 0.08;
-    float center = nvs_valueNoise(ripplePosition);
-    float dx = nvs_valueNoise(ripplePosition + vec2(epsilon, 0.0));
-    float dz = nvs_valueNoise(ripplePosition + vec2(0.0, epsilon));
-    float rippleFade = nvs_waveFade(0.55, footprint);
-    gradient += NVS_WATER_RIPPLE * vec2(dx - center, dz - center)
-              / epsilon * 0.10 * rippleFade;
 
     return vec4(height, gradient * strength, totalAmplitude);
 }
