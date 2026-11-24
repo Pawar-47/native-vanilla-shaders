@@ -82,6 +82,19 @@ vec3 nvs_busViewPosition(NvsBus bus, vec2 uv, float depth) {
     return p.xyz / p.w;
 }
 
+// Reconstruct a stable view ray from the far plane. Using a near-plane point
+// is incorrect because ProjMat includes view bobbing translation; the far-plane
+// direction is effectively translation-free.
+vec3 nvs_busViewDirection(NvsBus bus, vec2 uv) {
+    float farZ = bus.zeroToOneDepth ? 1e-6 : -0.999998;
+    vec4 p = bus.inverseProjection * vec4(uv * 2.0 - 1.0, farZ, 1.0);
+    return normalize(p.xyz / p.w);
+}
+
+vec3 nvs_busWorldDirection(NvsBus bus, vec2 uv) {
+    return normalize(bus.viewToWorld * nvs_busViewDirection(bus, uv));
+}
+
 bool nvs_busCameraInAir(NvsBus bus) {
     return abs(bus.fogSkyEnd - min(bus.fogRenderDistanceEnd, 512.0)) < 1.0
         && bus.fogSkyEnd < bus.fogEnvironmentalEnd - 1.0;
