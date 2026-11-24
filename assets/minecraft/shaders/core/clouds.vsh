@@ -27,6 +27,8 @@ layout(location = 1) out vec4 vertexColor;
 layout(location = 2) out vec2 nvsCloudXZ;
 // -1 on a bottom face, 1 on a top face, 0 on the four sides.
 layout(location = 3) flat out float nvsCloudUp;
+// Local vertical position within the cloud box, for 3D density variation.
+layout(location = 4) out float nvsCloudHeight;
 
 /*
 // vertex function below should generate vec3s matching the indices in this array, but using less constants
@@ -118,4 +120,5 @@ void main() {
     nvsCloudXZ = pos.xz + cameraWorld.xz;
 
     nvsCloudUp = direction == 0 ? -1.0 : (direction == 1 ? 1.0 : 0.0);
+    nvsCloudHeight = faceVertex.y;
 }

@@ -36,6 +36,14 @@
 #ifndef NVS_CLOUD_OCTAVES
 #define NVS_CLOUD_OCTAVES 4
 #endif
+ // Vertical detail is limited to two 3D octaves: clouds cover little screen
+// area, but this keeps the extra volume breakup affordable on integrated GPUs.
+#ifndef NVS_CLOUD_VOLUME_OCTAVES
+#define NVS_CLOUD_VOLUME_OCTAVES 2
+#endif
+#ifndef NVS_CLOUD_VOLUME_STRENGTH
+#define NVS_CLOUD_VOLUME_STRENGTH 0.20
+#endif
 // Reflected clouds use a reduced octave budget because they are evaluated in
 // the full-resolution water post pass on the integrated-GPU target.
 #ifndef NVS_CLOUD_REFLECTION_OCTAVES

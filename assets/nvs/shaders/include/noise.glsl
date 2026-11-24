@@ -66,4 +66,37 @@ float nvs_fbmRidged(vec2 p, int octaves) {
     return sum / max(norm, 1e-5);
 }
 
+ // Smooth trilinear value noise in [0, 1], used to give the cloud shell
+// independent structure through its thickness instead of extruding one flat
+// XZ mask through the entire native cloud box.
+float nvs_valueNoise3(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = f * f * (3.0 - 2.0 * f);
+    float n000 = nvs_hash13(i + vec3(0.0, 0.0, 0.0));
+    float n100 = nvs_hash13(i + vec3(1.0, 0.0, 0.0));
+    float n010 = nvs_hash13(i + vec3(0.0, 1.0, 0.0));
+    float n110 = nvs_hash13(i + vec3(1.0, 1.0, 0.0));
+    float n001 = nvs_hash13(i + vec3(0.0, 0.0, 1.0));
+    float n101 = nvs_hash13(i + vec3(1.0, 0.0, 1.0));
+    float n011 = nvs_hash13(i + vec3(0.0, 1.0, 1.0));
+    float n111 = nvs_hash13(i + vec3(1.0, 1.0, 1.0));
+    float z0 = mix(mix(n000, n100, u.x), mix(n010, n110, u.x), u.y);
+    float z1 = mix(mix(n001, n101, u.x), mix(n011, n111, u.x), u.y);
+    return mix(z0, z1, u.z);
+}
+
+float nvs_fbm3(vec3 p, int octaves) {
+    float sum = 0.0;
+    float amplitude = 0.5;
+    float normalizer = 0.0;
+    for (int i = 0; i < octaves; ++i) {
+        sum += amplitude * nvs_valueNoise3(p);
+        normalizer += amplitude;
+        p = p.yzx * 2.03 + vec3(17.0, 9.0, 13.0);
+        amplitude *= 0.5;
+    }
+    return sum / max(normalizer, 1e-5);
+}
+
 #endif

@@ -11,6 +11,7 @@ layout(location = 0) in float vertexDistance;
 layout(location = 1) in vec4 vertexColor;
 layout(location = 2) in vec2 nvsCloudXZ;
 layout(location = 3) flat in float nvsCloudUp;
+layout(location = 4) in float nvsCloudHeight;
 
 #ifndef OIT_ALPHA_ONLY
 layout(location = 0) out vec4 fragColor;
@@ -32,7 +33,7 @@ void main() {
     // This happens before every OIT branch so that the three Improved
     // Transparency passes discard exactly the same fragments and their
     // transmittance stays consistent with the colour pass.
-    float density = nvs_cloudField(nvsCloudXZ);
+    float density = nvs_cloudVolumeField(nvsCloudXZ, nvsCloudHeight);
     if (density < NVS_CLOUD_CUTOFF) {
         discard;
     }

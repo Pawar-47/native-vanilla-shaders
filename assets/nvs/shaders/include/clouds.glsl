@@ -32,6 +32,22 @@ float nvs_cloudField(vec2 worldXZ) {
     return nvs_cloudDensity(worldXZ, NVS_CLOUD_OCTAVES, max(NVS_CLOUD_OCTAVES - 1, 1));
 }
 
+// Visible cloud fragments use a shallow 3D field. The native cloud mesh is a
+// thin box layer; sampling an independent vertical noise slice gives its top,
+// sides and underside different billows instead of extruding the same flat
+// silhouette through the whole volume. Ground shadows and reflected-sky
+// fallback keep the cheaper 2D projection of this field.
+float nvs_cloudVolumeField(vec2 worldXZ, float heightFraction) {
+    float base = nvs_cloudField(worldXZ);
+    vec2 p = worldXZ / NVS_CLOUD_SCALE;
+    float vertical = clamp(heightFraction, 0.0, 1.0);
+    float volume = nvs_fbm3(vec3(p * 2.1 + vec2(7.3, 11.9), vertical * 2.0 + 0.17),
+                            NVS_CLOUD_VOLUME_OCTAVES);
+    float verticalProfile = 0.94 + 0.06 * sin(vertical * 3.14159265);
+    float density = base + (volume - 0.5) * NVS_CLOUD_VOLUME_STRENGTH;
+    return clamp(density * verticalProfile, 0.0, 1.0);
+}
+
 // Vertical shading. `upward` is 1 for a top face, 0 for a bottom face.
 //
 // The game does not give the clouds program the sun's direction, so this cannot
