@@ -63,11 +63,7 @@ void main() {
         if (depth <= 0.0 || alpha < 0.99) {
             float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(bus.skyColor));
             skyWithSun += nvs_nightSky(worldDirection, night);
-            float sunAngle = acos(clamp(dot(worldDirection, bus.sunDirection), -1.0, 1.0));
-            float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
-            float corona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
-            skyWithSun += vec3(1.0, 0.82, 0.58)
-                        * (sunDisc * 1.8 + corona) * bus.rainBrightness;
+            skyWithSun += nvs_sunGlow(worldDirection, bus.sunDirection, bus.rainBrightness);
         }
 
         if (depth <= 0.0) {

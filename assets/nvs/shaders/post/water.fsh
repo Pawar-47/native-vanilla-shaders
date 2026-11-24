@@ -115,14 +115,10 @@ void main() {
     // The fallback sky needs the actual solar disc as well as the narrow
     // wave glint; otherwise off-screen sun reflections disappear at the
     // horizon and leave a flat patch where the sun should be.
-    float sunAngle = acos(clamp(dot(reflectedWorld, bus.sunDirection), -1.0, 1.0));
-    float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
-    float sunCorona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
-    float sunGlint = pow(max(dot(reflectedWorld, bus.sunDirection), 0.0), 320.0) * 0.45;
+    float sunGlint = pow(max(dot(reflectedWorld, bus.sunDirection), 0.0), 600.0) * 2.0;
     float sunVisibility = smoothstep(-0.10, 0.08, bus.sunDirection.y);
-    reflection += vec3(1.0, 0.82, 0.58)
-                * (sunDisc * 1.8 + sunCorona + sunGlint)
-                * bus.rainBrightness * sunVisibility;
+    reflection += nvs_sunGlow(reflectedWorld, bus.sunDirection, bus.rainBrightness)
+                + vec3(1.0, 0.82, 0.58) * sunGlint * bus.rainBrightness * sunVisibility;
 
     mat3 worldToView = transpose(bus.viewToWorld);
     vec3 viewFace = worldToView * faceNormal;
@@ -150,12 +146,7 @@ void main() {
     vec3 fogDirection = normalize(vec3(viewWorld.x, max(viewWorld.y, 0.0), viewWorld.z));
     vec3 distantSky = nvs_reflectedSky(fogDirection, worldPosition.xz,
                                        worldPosition.y, bus.skyColor, bus.fogColor);
-    float viewSunAngle = acos(clamp(dot(fogDirection, bus.sunDirection), -1.0, 1.0));
-    float viewSunDisc = 1.0 - smoothstep(0.0042, 0.0052, viewSunAngle);
-    float viewSunCorona = exp(-viewSunAngle * 42.0) * 0.24
-                        + exp(-viewSunAngle * 13.0) * 0.075;
-    distantSky += vec3(1.0, 0.82, 0.58)
-                * (viewSunDisc * 1.8 + viewSunCorona) * bus.rainBrightness;
+    distantSky += nvs_sunGlow(fogDirection, bus.sunDirection, bus.rainBrightness);
     reflection = mix(reflection, distantSky, fogAmount);
 
     vec2 distortion = (viewNormal.xy - viewFace.xy) * NVS_WATER_REFRACTION_STRENGTH;

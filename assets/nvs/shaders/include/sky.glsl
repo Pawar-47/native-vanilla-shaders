@@ -14,6 +14,18 @@
 // flat gradient and the hard horizon edge come from. Here the mix follows a
 // curve in the view's elevation instead.
 
+// Solar disc and atmospheric aureole shared by the visible sky and water
+// reflections. The game supplies the actual sun direction and rain dimmer.
+vec3 nvs_sunGlow(vec3 direction, vec3 sunDirection, float rainBrightness) {
+    float angle = acos(clamp(dot(normalize(direction), normalize(sunDirection)), -1.0, 1.0));
+    float disc = 1.0 - smoothstep(0.0042, 0.0052, angle);
+    float corona = exp(-angle * 42.0) * 0.24 + exp(-angle * 13.0) * 0.075;
+    float aureole = exp(-angle * 3.5) * 0.045;
+    float visibility = smoothstep(-0.10, 0.08, sunDirection.y);
+    return vec3(1.0, 0.82, 0.58) * (disc * 1.8 + corona + aureole)
+         * rainBrightness * visibility;
+}
+
 vec3 nvs_skyGradient(vec3 dir, vec3 zenith, vec3 horizon) {
     float up = clamp(dir.y, 0.0, 1.0);
 
