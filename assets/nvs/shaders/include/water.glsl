@@ -43,6 +43,11 @@ float nvs_waveTime(float gameTime) {
 // Every temporal multiplier is an integer. GameTime wraps after one day, so
 // integer harmonics close exactly at the wrap; fractional rates (1.7, 2.9,
 // etc.) caused a visible phase discontinuity at midnight.
+float nvs_waveFade(float waveNumber, float footprint) {
+    float pixelScale = max(footprint, 1e-4);
+    return smoothstep(2.0, 6.0, 6.2831853 / (waveNumber * pixelScale));
+}
+
 float nvs_waveHeight(vec2 p, float t, float footprint) {
     float f0 = nvs_waveFade(0.62, footprint);
     float f1 = nvs_waveFade(1.17, footprint);
@@ -56,11 +61,6 @@ float nvs_waveHeight(vec2 p, float t, float footprint) {
     h += 0.018 * f3 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
     h += 0.009 * f4 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
     return h;
-}
-
-float nvs_waveFade(float waveNumber, float footprint) {
-    float pixelScale = max(footprint, 1e-4);
-    return smoothstep(2.0, 6.0, 6.2831853 / (waveNumber * pixelScale));
 }
 
 // Analytic derivative of nvs_waveHeight, plus a small circularly drifting
@@ -98,7 +98,7 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     float n0 = nvs_valueNoise(rp);
     float nx = nvs_valueNoise(rp + vec2(e, 0.0));
     float nz = nvs_valueNoise(rp + vec2(0.0, e));
-    float rippleFade = smoothstep(2.0, 6.0, 2.0 / pixelScale);
+    float rippleFade = smoothstep(2.0, 6.0, 2.0 / max(footprint, 1e-4));
     grad += NVS_WATER_RIPPLE * vec2(nx - n0, nz - n0) / e * 0.10 * rippleFade;
 
     return grad * strength;
