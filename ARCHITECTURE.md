@@ -39,7 +39,7 @@ programs. None of it declares a uniform, so it is safe to include anywhere.
 | `common.glsl` | Luminance, dither, warmth, small helpers. |
 | `sky.glsl` | The sky as a function of direction; the night sky; a zenith colour inferred from the horizon for programs that do not get the sky colour. |
 | `clouds.glsl` | The cloud field, the shading, and the shadow the field casts on the ground. |
-| `water.glsl` | Water recognition, wave normals, the reflected sky and clouds, and the water fragment shader. |
+| `water.glsl` | Water recognition, filtered/warped wave normals, foam, and reflected sky/cloud helpers. |\n| `bus.glsl` / `bus_read.glsl` | Screen-column data bus and post-effect decoding of camera, sky, fog and sun values. |
 
 `sky.glsl`, `clouds.glsl` and `water.glsl` are shared deliberately: the same
 function that shapes a cloud casts its shadow, and the same sky that is drawn is
@@ -62,30 +62,19 @@ leashes and text all go through it at once.
 
 ### `core/sky.vsh` / `sky.fsh`
 
-*Only the `sky` pipeline uses this program.* The disc is drawn with the camera
-rotation alone, so the direction of each vertex from the eye is a world-space
-direction, and the vertex's `y` is the elevation — exactly 1 at the zenith and
-about 0 at the rim.
+The sky pipeline is the first writer of a reserved one-pixel screen column. Its
+10-vertex triangle fan is moved onto a 45-row strip containing a marker,
+projection and view matrices, sky/fog colours and fog distances. The lower
+horizon disc is excluded so it cannot overwrite the bus. The sun's own
+`position_tex` program adds its world-space direction and rain brightness to
+four more rows.
 
-`sky.fsh` mixes vanilla's own sky colour (`ColorModulator`) with vanilla's own
-horizon colour (`FogColor`) along a curve in the elevation rather than flat. Both
-colours already carry the hour, the weather and the dimension. The curve is
-designed so that it reaches the horizon colour exactly at the rim, which is why
-there is no seam where the sky meets fogged terrain — and why the "hard horizon
-edge" of a flat sky is gone.
-
-The night sky is gated on **how dark the game's own sky colour already is**, not
-on a clock. When vanilla's sky fades out, the pack's nebula and star field fade
-in, in every dimension and at every hour, without the pack knowing which is
-which.
-
-Vanilla's `apply_fog` call is kept with vanilla's arguments, which is what keeps
-the sky collapsing to fog under blindness and underwater.
-
-The program also draws the **shadow, and the below-horizon dark disc**. The
-vertex shader flags the second one (its model-view matrix carries a translation)
-and the fragment shader leaves it alone: it exists to hide the void, and painting
-it as sky would be wrong.
+The `bus_sky` post pass decodes those values and reconstructs the sky per pixel
+from the world direction. It preserves the vanilla moon, stars and sunrise glow
+already drawn over the clear colour. It also replaces vanilla distance fog with
+a shared sky-coloured aerial-perspective curve and a soft loaded-world edge fade.
+The pass does nothing when the bus is absent, so dimensions/effects that do not
+draw the sky writer retain their original scene.
 
 ### `core/stars.vsh` / `stars.fsh`
 
@@ -167,16 +156,17 @@ The fragment shader does two things, both confined to the **colour**:
   it.
 - **Ground.** Cloud shadows, applied in proportion to how lit the pixel already is.
 
-Neither touches the alpha, which keeps the surface translucent over whatever is
-beneath it and keeps the OIT passes consistent. That is also the reason the
-surface cannot be refracted: see [LIMITATIONS.md](LIMITATIONS.md).
+The terrain pass leaves above-water colour intact for the post chain,
+while underwater shading remains in the terrain pass. Water fragments on even
+screen columns write position-coded markers; odd columns retain vanilla water
+for refraction. The post passes decode the markers, reconstruct camera-space
+positions from depth, and redraw tagged water with waves, Fresnel, screen-space
+reflections, refraction, absorption and sun glint. The waves remain normal-only:
+moving geometry would also move glass and ice, which share the translucent pass.
 
-Water shading: the geometry is left exactly where the game put it — moving it
-would move glass and ice, which share the translucent pass and which the vertex
-shader cannot tell apart — and the waves live in the normal. Fresnel is Schlick
-with water's `F0`. The reflection is the same sky function that `sky.fsh` draws,
-plus the cloud layer sampled where the reflected ray crosses it, which is
-geometrically right for a flat cloud deck and cheap.
+The water reflection uses the same sky gradient and cloud-density field as the
+visible sky/cloud system. Screen-space rays show on-screen geometry; off-screen
+rays fall back to that procedural sky, cloud deck and solar disc.
 
 ### `core/lightmap.fsh`
 
@@ -193,19 +183,19 @@ the boss-overlay darkening, the darkness scale and the gamma blend is preserved.
 
 ### The post chain
 
-`assets/minecraft/post_effect/end_of_frame.json` — three passes:
+`assets/minecraft/post_effect/end_of_frame.json` — five ordered passes:
 
-1. `nvs:post/bloom` reads `minecraft:main` and writes a fixed 480×270 target.
-   Bloom is a glow, so it does not need the screen's resolution, and a fixed
-   target keeps the cost identical on every display. It is a bright pass and a
-   ring blur in one pass, so no separate extract pass is needed.
-2. `nvs:post/composite` reads main and the bloom target and writes a swap target:
-   sharpen, bloom, highlight shoulder, contrast, saturation, vignette, dither.
-3. `nvs:post/copy` copies the swap target back to `minecraft:main`.
-
-Pass 2 could read and write `minecraft:main` directly — 26.3 allows it — but a
-feedback loop through the current render target is exactly the kind of thing a
-low-end driver can get wrong, so the pack pays for one extra copy instead.
+1. `nvs:post/bus_sky` reads the main colour and depth, reconstructs the sky,
+   replaces vanilla fog with the shared aerial-perspective function, and tags
+   water pixels for the next pass.
+2. `nvs:post/water` reads the tagged scene, the original main image and depth.
+   It reconstructs surface positions, ray-marches screen-space reflections,
+   applies refraction, Fresnel, absorption, foam and solar glint.
+3. `nvs:post/bloom` reads the water result and writes a fixed 480×270 target.
+4. `nvs:post/composite` reads the water result and bloom target and writes a
+   swap target: sharpen, bloom, highlight shoulder, contrast, saturation,
+   vignette and dither.
+5. `nvs:post/copy` copies the swap target back to `minecraft:main`.
 
 The pack ships its own full-screen vertex program rather than referencing the
 game's, because the game renamed it in the 26.4 snapshots and a post effect that

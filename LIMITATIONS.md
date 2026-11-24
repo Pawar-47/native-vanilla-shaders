@@ -5,28 +5,25 @@ reason, and the closest valid alternative that is actually implemented. Nothing
 here is a guess about why it is hard: each reason names the interface that is
 missing.
 
-## 1. No refraction of the scene behind water
+## 1. Water depth and shoreline data are not available
 
-**What is missing.** A core shader cannot read the frame it is drawing into. Its
-samplers are exactly those its pipeline binds (`Sampler0` for terrain, `Sampler2`
-for the lightmap), and neither is the colour or depth of `minecraft:main`.
+**What is missing.** The depth buffer gives the visible water surface, not the
+thickness of the water column or the distance to the seabed. The native terrain
+inputs also do not provide a reliable shoreline mask.
 
-**Why a post effect does not solve it cheaply.** A post effect *can* read
-`minecraft:main` and its depth, and that is how a loader-based shader distorts
-what is under the water. To do it the post pass needs the camera: the projection,
-the view rotation and a way to know which pixels are water. None of those are
-given to a post pass, so they have to be smuggled through reserved screen pixels
-— the "data bus" technique, which requires *every* world program to discard the
-pixels in one column of the screen. That is a change to a dozen programs, a
-full-resolution pass, and a screen-wide discard, on a GPU with 24 execution units
-and shared memory. It is not a trade worth making for this hardware.
+**What is implemented.** A screen data bus transfers the projection, view
+rotation, sky/fog values and sun direction from core shaders to post effects.
+The post chain identifies water with terrain markers, reads the main depth
+buffer, performs screen-space reflection (24 coarse steps plus four refinements),
+and shifts the recovered water/scene colour for refraction. Rays that leave the
+screen fall back to the procedural reflected sky and cloud deck.
 
-**Alternative used.** The surface is shaded from the water's own side instead:
-Fresnel-weighted reflection of the same sky the pack draws, the cloud deck
-sampled where the reflected ray crosses it, and depth-dependent absorption of
-what is below. The alpha is left exactly as the game set it, so the bottom is
-still visible through the surface exactly as vanilla shows it — the water reads
-as water, it simply does not *bend* what is underneath.
+**Remaining limits.** Screen-space reflections can only show geometry present
+in the current frame; off-screen and occluded objects cannot be reflected.
+Refraction uses the available screen colour and is horizontally half-resolution
+because of the alternating marker layout. Absorption is therefore a view-angle
+approximation, not true shallow/deep-water depth. Shoreline foam is not possible
+without a reliable shoreline mask.
 
 ## 2. No caustics
 
@@ -43,38 +40,25 @@ for every tinted block.
 **Alternative used.** None. Caustics are omitted rather than faked on the wrong
 faces.
 
-## 3. The sun's direction is not available outside the sun's own program
+## 3. Sun direction is transferred only to post effects
 
-**What is missing.** The only place the sun's position exists is the model-view
-matrix of `core/position_tex`, whose translation column is the body's position on
-the celestial sphere. That program draws the sun and the moon and nothing else,
-and it runs before the sky, in the same frame, with no way to hand a value to
-another program.
+**What is available.** The sun's direction exists in the model-view matrix of
+`core/position_tex`, whose translation column is the body's position on the
+celestial sphere. The sun program writes that direction and rain brightness into
+the reserved screen data bus. Post effects can therefore use it for the sky disc,
+water reflection disc/corona and wave glint.
 
-**What that costs, precisely.**
+**What remains unavailable.** The core cloud and terrain programs do not receive
+the decoded bus values. Cloud shading is still a key light from above plus a
+thickness term, not a true sun-facing term; cloud shadows are not stretched along
+the sun. The water post pass can use the sun direction, but the cloud field's
+`CloudOffset` is only provided to `core/clouds`, so reflected clouds do not
+share the exact moving offset of the visible cloud geometry.
 
-- **Cloud shading** is a key light from above plus a thickness term, not a true
-  sun-facing term. Lit tops and shaded undersides are correct; which *horizontal*
-  side faces the sun is not modelled. All of the colour that changes through the
-  day arrives in `CloudColor`, which the game sets.
-- **The water has no discrete sun glint.** The sun's warmth does reach the
-  reflection, because the reflection is built from the horizon colour, which the
-  game warms at sunrise and sunset.
-- **Cloud shadows on the ground are not stretched along the sun.** They sit under
-  the cloud.
-- **The sky has no sun-anchored scattering lobe.** What it has instead is
-  vanilla's own sunrise and sunset glow, which *is* anchored to the sun by the
-  game's own geometry, refined in `position_color` from a flat disc into a radial
-  gradient. The horizon glow therefore points the right way without the pack
-  knowing where the sun is.
-
-**Why not derive it from `GameTime`.** `Globals.GameTime` is available, and it
-wraps every 24000 ticks, so a sun angle could be computed from it. The pack does
-not, deliberately: if that value is the renderer's tick counter rather than the
-world's time of day, every sun-derived effect would drift out of step with the
-real sun — a glow in the wrong part of the sky, which looks far worse than no
-glow. Colours that the game has already resolved are used instead. Nothing in the
-pack guesses the time.
+**Why not derive it from `GameTime`.** The renderer's tick counter is not a
+safe substitute for the actual celestial transform; deriving the sun from it
+could drift out of step with the game's real sun. The data bus uses the actual
+matrix instead.
 
 ## 4. No volumetric, ray-marched or layer-transported clouds
 

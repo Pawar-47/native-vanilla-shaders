@@ -30,7 +30,7 @@ Statuses used below:
 | Night sky with nebula-like depth | Done | fractal nebula, concentrated along a galactic band, gated on how dark the game's sky colour is |
 | Weather-driven sky change | Done | inherits `ColorModulator` and `FogColor`, which the game already darkens with rain; rain also fades the sun corona through `ColorModulator.a` |
 | Dimension-specific sky | Done | emerges from the colours the game supplies per dimension; the pack never branches on dimension |
-| Sky hidden under blindness / underwater | Preserved | vanilla's `apply_fog` call and arguments are kept |
+| Sky hidden under blindness / underwater | Preserved when the bus is present; otherwise vanilla scene is left alone | the post reconstruction only runs when the sky writer supplied a valid bus |
 
 ## 2. Clouds
 
@@ -52,16 +52,16 @@ Statuses used below:
 | Feature | Status | Where |
 |---|---|---|
 | Not a tinted flat surface | Done | wave normals, Fresnel and a reflected sky replace the flat tint |
-| Animated multi-scale waves with wave normals | Done | three directional waves plus a noise ripple, in `water.glsl` |
-| Fresnel reflection of the sky | Done | Schlick with water's `F0`, against the same sky function `sky.fsh` draws |
-| Fresnel reflection of clouds | Done | the reflected ray is intersected with the cloud deck and the same cloud field is sampled there |
-| Reflection of the sun | Approximated | the sun's warm colour reaches the reflection through the horizon colour, but there is no separate sun glint: the terrain program is not given the sun's direction |
+| Animated multi-scale waves with wave normals | Done | five directional components, position-only domain warp, screen-footprint filtering and a looping ripple, in `water.glsl` |
+| Fresnel reflection of the sky | Done | Schlick with water's `F0`; post pass uses the exact bus sky/fog colours and procedural sky gradient |
+| Fresnel reflection of clouds | Approximated | reflected ray intersects a fixed cloud deck and samples the shared procedural cloud field; cloud drift offset is not available in post |
+| Screen-space reflections | Done, untested | 24 coarse ray steps plus four refinements against the main depth buffer; off-screen rays fall back to sky |\n| Reflection of the sun | Done, untested | sun direction and rain brightness are transferred through the data bus; reflected disc, corona and wave glint are added |
 | Depth-dependent colour (shallow / deep) | Approximated | light from below is absorbed over the path length through the water, red first. The true depth of the water column is not available |
 | Underwater appearance | Done | the surface is desaturated and tinted when the camera is submerged |
 | Underwater fog | Done | the game's own water fog, with the pack's softer fog curve |
-| Refraction with underwater distortion | **Not possible** | a core shader has no access to the frame it is drawing into. See LIMITATIONS.md |
+| Screen-space refraction | Approximated, untested | post pass shifts the recovered vanilla water/scene sample using wave normals; half-resolution horizontal marker layout limits detail |
 | Shoreline transitions | Approximated | no hard edge, because the surface stays translucent over the bottom and the absorption is continuous; there is no shoreline mask to make foam at the sand |
-| Foam | Done | whitecaps on the crests of the wave sum, broken up by noise |
+| Foam | Done, untested | whitecaps follow the filtered wave-height sum and a looping breakup field; no shoreline foam without a shoreline mask |
 | Caustics | **Not possible** | needs the surface normal of the underwater block, which the terrain vertex format does not carry; the cardinal shade in the vertex colour is confounded with the biome tint |
 
 ## 4. Lighting
@@ -110,7 +110,7 @@ Statuses used below:
 | Vignette | Done | in the composite, so it costs no extra pass |
 | Antialiasing | Done, optional | `nvs:post_effect/fxaa.json`, applied with `/posteffect add @s nvs:fxaa` |
 | Tonemapping | Approximated | the frame is 8-bit, so there is no HDR to map. The highlight shoulder is the closest valid equivalent: identity below the knee, compression above it. See LIMITATIONS.md |
-| Any effect needing the depth buffer | **Not possible while the frame is 8-bit without a data bus** | see LIMITATIONS.md; not needed by anything the pack does |
+| Depth-aware post effects | Done | the screen data bus carries projection, view rotation, sky/fog parameters and sun data; the water pass reads the main depth buffer |
 | Applies before the GUI | Done | `end_of_frame` runs after the world and the hand, before the HUD |
 
 ## 8. Special effects and performance
@@ -124,7 +124,7 @@ Statuses used below:
 | Emissive entity paths | Preserved, unmodified | `EMISSIVE` variants of `entity` are not replaced |
 | Improved Transparency (OIT) | Preserved | every replaced program keeps vanilla's OIT branch structure; cloud discards happen before the branches so the three passes agree |
 | Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
-| Performance on Intel HD 5500 class hardware | Untested | tuned for it: analytic sky, no ray marching, no screen-space reflections, no depth-buffer passes, fixed small bloom target |
+| Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
 
 ## What is deliberately not there
 
