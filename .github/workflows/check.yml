@@ -68,6 +68,23 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
 
+      - name: Publish GitHub Alpha release
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0-alpha.${{ github.run_number }}.${{ github.run_attempt }}
+          name: Native Vanilla Shaders v0.1.0-alpha.${{ github.run_number }}.${{ github.run_attempt }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          draft: false
+          make_latest: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Refresh manifests on main
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         run: python3 tools/manifest.py --write
