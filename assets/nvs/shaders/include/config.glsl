@@ -167,7 +167,7 @@
 // These are compile-time only in the sense that they affect the post programs;
 // they are constants in the shader, not in the JSON, so they need no rebuild.
 #ifndef NVS_POST_BLOOM
-#define NVS_POST_BLOOM 0.42
+#define NVS_POST_BLOOM 0.32
 #endif
 #ifndef NVS_POST_EXPOSURE
 #define NVS_POST_EXPOSURE 1.06
@@ -176,7 +176,7 @@
 #define NVS_POST_CONTRAST 0.20
 #endif
 #ifndef NVS_POST_SATURATION
-#define NVS_POST_SATURATION 1.16
+#define NVS_POST_SATURATION 1.08
 #endif
 #ifndef NVS_POST_WARMTH
 #define NVS_POST_WARMTH 0.035
@@ -185,7 +185,7 @@
 #define NVS_POST_VIGNETTE 0.075
 #endif
 #ifndef NVS_POST_SHARPEN
-#define NVS_POST_SHARPEN 0.06
+#define NVS_POST_SHARPEN 0.02
 #endif
 // Luminance above which the highlight shoulder starts compressing.
 #ifndef NVS_POST_SHOULDER

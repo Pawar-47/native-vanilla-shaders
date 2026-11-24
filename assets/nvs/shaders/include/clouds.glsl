@@ -16,33 +16,29 @@
 // gives the cumulus blocks, and a ridged detail, which gives the torn, wispy
 // edges. Nothing repeats: there is no texture and no lookup table.
 
-// Stylised cloud silhouettes: jittered rounded lobes form broad, connected
-// cumulus masses. The native game mesh is still the carrier, but this field
-// replaces its box-like cell mask with soft, scalloped cartoon contours.
+// Scattered cloud masses use warped multi-scale noise, not a grid of equal
+// circles. A low-frequency coverage field breaks the sky into separate banks;
+// the higher-frequency billows make each bank asymmetric and softly ragged.
+float nvs_cloudLayerDensity(vec2 worldXZ, float scale, vec2 seed) {
+    vec2 p = worldXZ / max(scale, 1.0);
+    vec2 warp = vec2(
+        nvs_valueNoise(p * 0.43 + seed + vec2(7.1, 2.8)),
+        nvs_valueNoise(p * 0.43 + seed + vec2(19.7, 13.4))
+    ) - 0.5;
+    p += warp * 1.35;
+
+    float broad = nvs_fbm(p * 0.72 + seed, 2);
+    float billow = nvs_fbm(p * 1.55 + seed * 1.7 + vec2(5.3, 21.8), 2);
+    float ragged = nvs_fbmRidged(p * 2.65 + seed + vec2(29.1, 4.6), 2);
+    float bank = nvs_fbm(p * 0.24 + seed * 0.31 + vec2(41.0, 9.0), 2);
+    float mass = broad * 0.57 + billow * 0.25 + ragged * 0.10 + bank * 0.08;
+    float separation = smoothstep(0.39, 0.66, bank);
+    return clamp(mass * mix(0.30, 1.0, separation), 0.0, 1.0);
+}
+
+// The shared near-layer field is also used by water reflections.
 float nvs_cloudPuffDensity(vec2 worldXZ) {
-    vec2 p = worldXZ / (NVS_CLOUD_SCALE * 0.38);
-    float lobes = 0.0;
-    for (int y = -1; y <= 1; ++y) {
-        for (int x = -1; x <= 1; ++x) {
-            vec2 cell = floor(p) + vec2(float(x), float(y));
-            vec2 jitter = vec2(
-                nvs_hash12(cell + vec2(13.1, 7.7)),
-                nvs_hash12(cell + vec2(41.3, 19.9))
-            ) - 0.5;
-            jitter *= 0.34;
-            vec2 local = p - cell - 0.5 - jitter;
-            float radius = mix(0.48, 0.76, nvs_hash12(cell + 23.7));
-            float lobe = 1.0 - smoothstep(radius - 0.18, radius + 0.08, length(local));
-            lobes = max(lobes, lobe);
-        }
-    }
-    float broad = nvs_fbm(p * 0.31 + vec2(4.7, 8.2), 2);
-    float cluster = smoothstep(0.20, 0.72, broad);
-    float softMass = lobes * mix(0.78, 1.0, cluster);
-    // A restrained low-frequency modulation prevents a repeated bead pattern
-    // while preserving the clean, rounded silhouette of each cumulus lobe.
-    float billow = nvs_fbm(p * 0.72 + vec2(17.0, 3.0), 2);
-    return clamp(softMass * mix(0.94, 1.06, billow), 0.0, 1.0);
+    return nvs_cloudLayerDensity(worldXZ, NVS_CLOUD_SCALE, vec2(0.0));
 }
 
 // Shared density function. Visible clouds use the configured detail level;
@@ -65,7 +61,7 @@ float nvs_cloudDensity(vec2 worldXZ, int massOctaves, int detailOctaves) {
 }
 
 float nvs_cloudField(vec2 worldXZ) {
-    return nvs_cloudDensity(worldXZ, NVS_CLOUD_OCTAVES, max(NVS_CLOUD_OCTAVES - 1, 1));
+    return nvs_cloudPuffDensity(worldXZ);
 }
 
 // Visible cloud fragments use a shallow 3D field. The native cloud mesh is a
