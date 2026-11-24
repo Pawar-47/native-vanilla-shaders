@@ -55,34 +55,38 @@ void main() {
         }
 
         vec3 sky = nvs_skyGradient(worldDirection, bus.skyColor, bus.fogColor);
-        float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(bus.skyColor));
-        sky += nvs_nightSky(worldDirection, night);
-        float sunAngle = acos(clamp(dot(worldDirection, bus.sunDirection), -1.0, 1.0));
-        float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
-        float corona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
-        vec3 skyWithSun = sky + vec3(1.0, 0.82, 0.58)
-                              * (sunDisc * 1.8 + corona) * bus.rainBrightness;
+        float alpha = scene.a;
+        vec3 skyWithSun = sky;
+        // Opaque terrain only needs the horizon/zenith colour. The procedural
+        // night field and solar lobe are evaluated for sky and translucent
+        // layers only, avoiding several noise taps across most of the screen.
+        if (depth <= 0.0 || alpha < 0.99) {
+            float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(bus.skyColor));
+            skyWithSun += nvs_nightSky(worldDirection, night);
+            float sunAngle = acos(clamp(dot(worldDirection, bus.sunDirection), -1.0, 1.0));
+            float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
+            float corona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
+            skyWithSun += vec3(1.0, 0.82, 0.58)
+                        * (sunDisc * 1.8 + corona) * bus.rainBrightness;
+        }
 
         if (depth <= 0.0) {
             // The cleared frame is FogColor; preserve the vanilla moon, stars
             // and sunrise glow already drawn over it.
             color = skyWithSun + max(scene.rgb - bus.fogColor, vec3(0.0));
+        } else if (alpha < 0.99 && worldY > NVS_CLOUD_HEIGHT - 2.0) {
+            // Clouds are translucent over the clear colour. Replace only
+            // the uncovered part with the same sky that the post pass drew.
+            color = scene.rgb + (1.0 - alpha) * (skyWithSun - bus.fogColor);
         } else {
-            float alpha = scene.a;
-            if (alpha < 0.99 && worldY > NVS_CLOUD_HEIGHT - 2.0) {
-                // Clouds are translucent over the clear colour. Replace only
-                // the uncovered part with the same sky that the post pass drew.
-                color = scene.rgb + (1.0 - alpha) * (skyWithSun - bus.fogColor);
-            } else {
-                // Remove vanilla's fog contribution, then add the stronger
-                // aerial perspective and loaded-world edge fade.
-                float vanillaFog = nvs_vanillaFog(bus, worldRelative);
-                float amount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
-                vec3 surface = scene.rgb - (1.0 - alpha) * bus.fogColor
-                             - alpha * vanillaFog * bus.fogColor;
-                float keep = (1.0 - amount) / max(1.0 - vanillaFog, 1e-4);
-                color = surface * keep + alpha * amount * sky + (1.0 - alpha) * skyWithSun;
-            }
+            // Remove vanilla's fog contribution, then add the stronger
+            // aerial perspective and loaded-world edge fade.
+            float vanillaFog = nvs_vanillaFog(bus, worldRelative);
+            float amount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
+            vec3 surface = scene.rgb - (1.0 - alpha) * bus.fogColor
+                         - alpha * vanillaFog * bus.fogColor;
+            float keep = (1.0 - amount) / max(1.0 - vanillaFog, 1e-4);
+            color = surface * keep + alpha * amount * sky + (1.0 - alpha) * skyWithSun;
         }
     }
 
