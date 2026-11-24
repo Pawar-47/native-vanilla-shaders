@@ -250,7 +250,7 @@
       "pack_file": "assets/nvs/shaders/include/bus_read.glsl",
       "vanilla_source": null,
       "reason": "Decodes projection, view rotation, sky/fog values, sun data and shared atmosphere fog functions.",
-      "pack_sha256": "f58249e6149264e97359f274b37cc6894eb36d2ce513ed271edd895223eefbee"
+      "pack_sha256": "d24c93c98b3d83216f9eb24a7b95631a15dab3461479f7e528d59566c8a9f447"
     },
     {
       "pack_file": "assets/nvs/shaders/include/clouds.glsl",
@@ -298,7 +298,7 @@
       "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
       "vanilla_source": null,
       "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
-      "pack_sha256": "77d1406969a71475eae757ce2436b98896c87d12903ffd4009c0e79c731bc4f3"
+      "pack_sha256": "b1bc78a93fe5d8c3fb550df24c74b5dfed710aa2aa38719ce335f0744d8b7b65"
     },
     {
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
