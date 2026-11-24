@@ -47,7 +47,7 @@
 // Reflected clouds use a reduced octave budget because they are evaluated in
 // the full-resolution water post pass on the integrated-GPU target.
 #ifndef NVS_CLOUD_REFLECTION_OCTAVES
-#define NVS_CLOUD_REFLECTION_OCTAVES 2
+#define NVS_CLOUD_REFLECTION_OCTAVES 1
 #endif
 #ifndef NVS_CLOUD_REFLECTION_DETAIL_OCTAVES
 #define NVS_CLOUD_REFLECTION_DETAIL_OCTAVES 1
@@ -92,11 +92,11 @@
 // -------------------------------------------------------------- water ------
 // Overall wave slope. 0 = mirror, 1 = noticeably choppy.
 #ifndef NVS_WATER_WAVE_STRENGTH
-#define NVS_WATER_WAVE_STRENGTH 0.60
+#define NVS_WATER_WAVE_STRENGTH 0.36
 #endif
 // Extra small-scale ripple on top of the eight-wave gravity spectrum.
 #ifndef NVS_WATER_RIPPLE
-#define NVS_WATER_RIPPLE 0.35
+#define NVS_WATER_RIPPLE 0.0
 #endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
@@ -108,11 +108,11 @@
 #endif
 // Wave-driven shift of the reflected image, in screen UV units per unit of tilt.
 #ifndef NVS_WATER_REFLECTION_RIPPLE
-#define NVS_WATER_REFLECTION_RIPPLE 0.04
+#define NVS_WATER_REFLECTION_RIPPLE 0.012
 #endif
 // Refraction shift of the vanilla water/scene sample.
 #ifndef NVS_WATER_REFRACTION_STRENGTH
-#define NVS_WATER_REFRACTION_STRENGTH 0.03
+#define NVS_WATER_REFRACTION_STRENGTH 0.012
 #endif
 // Brightness of the whitecaps on wave crests, 0 turns them off.
 #ifndef NVS_WATER_FOAM
@@ -130,15 +130,15 @@
 // Screen-space reflection ray budget. 24 coarse steps plus four refinements
 // keeps the water pass viable on Intel HD 5500-class integrated graphics.
 #ifndef NVS_WATER_SSR_STEPS
-#define NVS_WATER_SSR_STEPS 24
+#define NVS_WATER_SSR_STEPS 16
 #endif
 #ifndef NVS_WATER_SSR_REFINE_STEPS
-#define NVS_WATER_SSR_REFINE_STEPS 4
+#define NVS_WATER_SSR_REFINE_STEPS 3
 #endif
 // Growth of each screen-space ray step. 1.13 extends the 24-step low-end
 // budget across useful lake distances without doubling the sample count.
 #ifndef NVS_WATER_SSR_STEP_GROWTH
-#define NVS_WATER_SSR_STEP_GROWTH 1.13
+#define NVS_WATER_SSR_STEP_GROWTH 1.17
 #endif
 // Additional aerial perspective beyond the game's vanilla fog start/end.
 #ifndef NVS_ATMOSPHERE_HAZE_DISTANCE
