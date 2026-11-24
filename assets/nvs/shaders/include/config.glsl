@@ -61,6 +61,13 @@
 #ifndef NVS_CLOUD_SHADOW_DETAIL_OCTAVES
 #define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 2
 #endif
+// Density threshold and penumbra width for ground cloud shadows.
+#ifndef NVS_CLOUD_SHADOW_THRESHOLD
+#define NVS_CLOUD_SHADOW_THRESHOLD 0.30
+#endif
+#ifndef NVS_CLOUD_SHADOW_SOFTNESS
+#define NVS_CLOUD_SHADOW_SOFTNESS 0.46
+#endif
 // Height of the cloud layer, in blocks, as used for the shadow gradient.
 #ifndef NVS_CLOUD_HEIGHT
 #define NVS_CLOUD_HEIGHT 192.0

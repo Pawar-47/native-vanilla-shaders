@@ -59,14 +59,16 @@ float nvs_cloudShade(float density, float upward) {
 // How much a ground fragment at this world XZ is shaded by the cloud above it.
 // 1.0 = full sun.
 //
-// This runs on every lit terrain fragment, so it uses three octaves of the mass
-// channel only. The shadow is soft enough that the detail it drops is invisible,
-// and the shape it keeps is the same one `core/clouds` carves with.
+// This runs on every lit terrain fragment, so it uses a reduced mass/detail
+// octave budget. The shared density function keeps its shaping consistent with
+// the visible cloud volume while the lower frequency count limits GPU cost.
 float nvs_cloudShadow(vec2 worldXZ) {
     float density = nvs_cloudDensity(worldXZ,
                                       NVS_CLOUD_SHADOW_OCTAVES,
                                       NVS_CLOUD_SHADOW_DETAIL_OCTAVES);
-    float cover = smoothstep(0.30, 0.76, density);
+    float cover = smoothstep(NVS_CLOUD_SHADOW_THRESHOLD,
+                             NVS_CLOUD_SHADOW_THRESHOLD + NVS_CLOUD_SHADOW_SOFTNESS,
+                             density);
     return 1.0 - cover * NVS_CLOUD_SHADOW_STRENGTH;
 }
 
