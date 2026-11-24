@@ -212,7 +212,8 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     // that make a large lake look striped rather than reflective.
     float distanceFade = 1.0 / (1.0 + viewDistance / NVS_WATER_FLATTEN_DISTANCE);
     float waveStrength = NVS_WATER_WAVE_STRENGTH * distanceFade;
-    vec3 N = nvs_waterNormal(worldPos.xz, t, waveStrength);
+    vec4 waveSurface = nvs_waterSurface(worldPos.xz, t, waveStrength, 1.0);
+    vec3 N = normalize(vec3(-waveSurface.y, 1.0, -waveSurface.z));
 
     float NoV = clamp(dot(N, V), 0.0, 1.0);
 
@@ -248,7 +249,8 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     // Whitecaps: the crests of the same wave sum, broken up by the ripple so
     // they do not read as a regular pattern.
     if (NVS_WATER_FOAM > 0.0) {
-        float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0, nvs_waterCrest(worldPos.xz, t));
+        float crestValue = clamp(0.5 + 0.5 * waveSurface.x / max(waveSurface.w, 1e-5), 0.0, 1.0);
+        float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0, crestValue);
         float broken = nvs_valueNoise(worldPos.xz * 1.9 + vec2(t * 0.25));
         float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, distanceFade);
         color += vec3(NVS_WATER_FOAM) * foam;
