@@ -24,6 +24,14 @@ jobs:
       - name: Check the pack
         run: python3 tools/check_pack.py
 
+      - name: Install GLSL validator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y glslang-tools
+
+      - name: Compile shader stages and supported variants
+        run: python3 tools/compile_glsl.py
+
       - name: Build the installable pack
         run: python3 tools/package.py --zip
 
