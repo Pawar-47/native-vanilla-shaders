@@ -119,7 +119,14 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     float t = nvs_waveTime(gameTime);
 
     vec3 V = normalize(-viewPos);
-    vec3 N = nvs_waterNormal(worldPos.xz, t, NVS_WATER_WAVE_STRENGTH);
+    float viewDistance = length(viewPos);
+
+    // Keep the near-field lively, but fade sub-pixel wave detail in the far
+    // field. Without this, the high-frequency ripples alias into dark bands
+    // that make a large lake look striped rather than reflective.
+    float farWaveFade = 1.0 - smoothstep(22.0, 88.0, viewDistance);
+    float waveStrength = NVS_WATER_WAVE_STRENGTH * mix(0.42, 1.0, farWaveFade);
+    vec3 N = nvs_waterNormal(worldPos.xz, t, waveStrength);
 
     float NoV = clamp(dot(N, V), 0.0, 1.0);
 
@@ -128,13 +135,17 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     // its transparent near field.
     float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - NoV, 5.0);
 
-    // Depth: the light from below travels through water, and red is absorbed
-    // first. The path length is the distance to the surface, capped, which is
-    // the closest proxy the native pipeline offers for the depth of the column.
-    float pathLength = min(length(viewPos), 48.0);
+    // The native terrain pass does not expose the bottom depth of a water
+    // column. Camera distance is NOT water depth: using length(viewPos) here
+    // made distant lakes turn nearly black even when the water was shallow.
+    // Use a stable artistic water-column estimate instead, with a little more
+    // absorption at grazing angles. This keeps the far field bright and blue-
+    // green while still giving the surface real depth and color separation.
+    float pathLength = mix(8.0, 24.0, smoothstep(0.15, 0.90, 1.0 - NoV));
     vec3 absorption = vec3(0.34, 0.13, 0.085) * NVS_WATER_ABSORB;
     vec3 transmittance = exp(-absorption * pathLength);
-    vec3 below = baseColor * transmittance;
+    vec3 deepWaterTint = vec3(0.78, 0.94, 1.06);
+    vec3 below = baseColor * transmittance * deepWaterTint;
 
     vec3 reflected = reflect(-V, N);
     vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, horizon);
@@ -146,7 +157,8 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     if (NVS_WATER_FOAM > 0.0) {
         float crest = smoothstep(0.72, 1.0, nvs_waterCrest(worldPos.xz * 0.55, t));
         float broken = nvs_valueNoise(worldPos.xz * 1.9 + vec2(t * 0.25));
-        color += vec3(NVS_WATER_FOAM) * crest * smoothstep(0.35, 0.85, broken);
+        float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, farWaveFade);
+        color += vec3(NVS_WATER_FOAM) * foam;
     }
 
     // Seen from under the surface: the game already fogs the world toward the
