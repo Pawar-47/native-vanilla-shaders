@@ -53,7 +53,7 @@ vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
             }
         }
         previous = position;
-        stepLength *= 1.12;
+        stepLength *= NVS_WATER_SSR_STEP_GROWTH;
     }
     return vec3(0.0);
 }
@@ -105,8 +105,10 @@ void main() {
     float sunDisc = 1.0 - smoothstep(0.0042, 0.0052, sunAngle);
     float sunCorona = exp(-sunAngle * 42.0) * 0.24 + exp(-sunAngle * 13.0) * 0.075;
     float sunGlint = pow(max(dot(reflectedWorld, bus.sunDirection), 0.0), 320.0) * 0.45;
+    float sunVisibility = smoothstep(-0.10, 0.08, bus.sunDirection.y);
     reflection += vec3(1.0, 0.82, 0.58)
-                * (sunDisc * 1.8 + sunCorona + sunGlint) * bus.rainBrightness;
+                * (sunDisc * 1.8 + sunCorona + sunGlint)
+                * bus.rainBrightness * sunVisibility;
 
     mat3 worldToView = transpose(bus.viewToWorld);
     vec3 viewFace = worldToView * faceNormal;

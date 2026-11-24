@@ -113,6 +113,11 @@
 #ifndef NVS_WATER_SSR_REFINE_STEPS
 #define NVS_WATER_SSR_REFINE_STEPS 4
 #endif
+// Growth of each screen-space ray step. 1.13 extends the 24-step low-end
+// budget across useful lake distances without doubling the sample count.
+#ifndef NVS_WATER_SSR_STEP_GROWTH
+#define NVS_WATER_SSR_STEP_GROWTH 1.13
+#endif
 
 // ------------------------------------------------------------- lighting ----
 // Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.
