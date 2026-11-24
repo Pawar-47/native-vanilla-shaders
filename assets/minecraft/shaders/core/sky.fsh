@@ -1,16 +1,9 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 #include <nvs:bus.glsl>
-#include <minecraft:projection.glsl>
-
 #include <minecraft:fog.glsl>
 #include <minecraft:dynamictransforms.glsl>
-#include <nvs:sky.glsl>
 
-layout(location = 0) in float sphericalVertexDistance;
-layout(location = 1) in float cylindricalVertexDistance;
-layout(location = 2) in vec3 nvsSkyDirection;
-layout(location = 3) flat in float nvsLowerDisc;
 layout(location = 4) in float nvsBusRow;
 
 layout(location = 0) out vec4 fragColor;
