@@ -74,9 +74,9 @@ change to spend the extra headroom.
 
 | Setting | Effect |
 |---|---|
-| **Graphics: Fancy** | Required for the cloud volume and the translucent terrain pass. On Fast, clouds are a single flat layer with nothing to shade. |
+| **Graphics: Fancy** | Required for the cloud volume and translucent terrain pass. Use Fancy, not Fabulous, for the complete above-water screen-space water effect. |
 | **Clouds: Fancy** | As above. The pack works with Fast clouds but has less to work with. |
-| **Improved Transparency** | Supported, on or off. Every replaced program keeps vanilla's three OIT branches, and the cloud discards happen before them so the passes agree. It costs a lot of fill rate on weak hardware. |
+| **Improved Transparency** | The native OIT branches and cloud discard parity are preserved, but above-water water markers are written only in the non-OIT colour pass. Turn Improved Transparency off for reliable water SSR/refraction; with it on, other transparent geometry retains the OIT path but water effects may fall back. |
 | **Render distance** | Unchanged. The pack does not alter fog distances, only the curve between them. |
 | **Brightness / gamma** | Still works: `LightmapInfo.BrightnessFactor` still drives the blend, at 85% of vanilla's strength so the image is less washed out. Set `NVS_GAMMA_STRENGTH 1.0` for vanilla's response. |
 | **Fullscreen vs windowed** | Irrelevant; nothing in the pack depends on resolution except the dither, which is per-pixel. |

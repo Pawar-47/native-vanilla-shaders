@@ -37,8 +37,8 @@ See [INSTALLATION.md](INSTALLATION.md). Short version: the pack is `pack.mcmeta`
 plus `assets/`, so cloning this repository gives you a clean tree. Build the
 installable folder or `.zip` with `python3 tools/package.py --zip`, put it in
 `.minecraft/resourcepacks/`, enable it in **Options → Resource Packs**, and set
-**Graphics: Fancy** and **Clouds: Fancy** so the cloud and water work has the
-geometry it expects.
+**Graphics: Fancy**, **Clouds: Fancy**, and **Improved Transparency: off** for
+the complete above-water screen-space water effect.
 
 The user-supplied Minecraft 26.3 vanilla source archive and its extracted,
 read-only tree are retained under `reference/vanilla-stock/` as the compatibility

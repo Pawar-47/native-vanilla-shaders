@@ -9,19 +9,20 @@
     translucent terrain pass.
   - **Clouds: Fancy** — the pack works with Fast clouds, but they are a single
     flat layer, so the volume shading has nothing to shade.
-  - **Improved Transparency: off** (the default). The pack supports it in all
-    three of its passes, but it costs a lot on weak hardware.
+  - **Improved Transparency: off** for the intended water effects. The native
+    OIT branches remain intact, but water markers are only written in the
+    non-OIT colour pass, so screen-space reflections/refraction are not reliable
+    with Improved Transparency enabled.
 
 ## What to copy, and what not to
 
 The pack itself is **`pack.mcmeta` plus `assets/`**. That is all Minecraft reads.
 
-The repository this came from also contains the vanilla reference folder
-(`Vanilla-stock /`), a benchmark shaderpack (`Good working shader/`, whose licence
-forbids redistribution), the research notes (`.research/`) and the tooling
-(`tools/`). **Do not copy the repository root into `resourcepacks/`.** The game
-would ignore those paths, so it would seem to work, while shipping material that
-must not be redistributed and tens of megabytes the game never reads.
+The repository also contains the user-supplied vanilla reference under
+`reference/vanilla-stock/` and the development tools/docs. The external visual
+benchmark and local research notes are not bundled. **Do not copy the repository
+root into `resourcepacks/`.** The game would ignore those paths; use the clean
+package produced by the script below.
 
 Build a clean pack folder, and optionally a proper `.zip`, with:
 
@@ -80,7 +81,10 @@ value can break the shaders' interfaces. The useful ones:
 | `NVS_POST_VIGNETTE` | `0.10` | Vignette. `0.0` disables it. |
 | `NVS_CLOUD_OCTAVES` | `4` | Cloud detail. `3` is the cheapest useful value. |
 | `NVS_CLOUD_CUTOFF` | `0.30` | Higher gives thinner, wispier clouds. |
-| `NVS_WATER_WAVE_STRENGTH` | `0.55` | Wave slope. `0.0` is a mirror. |
+| `NVS_WATER_WAVE_STRENGTH` | `0.60` | Eight-wave surface slope. `0.0` is a mirror. |
+| `NVS_WATER_SSR_STEPS` | `24` | Screen-space reflection ray steps. Lower to `16` for performance. |
+| `NVS_WATER_SSR_REFINE_STEPS` | `4` | Reflection hit refinement steps. Lower to `3` for performance. |
+| `NVS_CLOUD_VOLUME_OCTAVES` | `2` | Vertical cloud-shell detail. `1` is cheaper. |
 | `NVS_PLANT_SWAY` | `0.055` | Plant sway. `0.0` makes plants still. |
 | `NVS_NIGHT_STRENGTH` | `1.0` | Nebula and star field. `0.0` removes them. |
 | `NVS_CLOUD_SHADOW_STRENGTH` | `0.18` | Cloud shadows on the ground. `0.0` disables them. |
@@ -92,12 +96,11 @@ report it in the log.
 
 ### 2. Whole features
 
-- **All post-processing off** (bloom, grade, vignette, dither, and the extra
-  full-screen passes): delete or rename
-  `assets/minecraft/post_effect/end_of_frame.json`. The world, sky, clouds,
-  water and lighting are all drawn by the core shaders and are unaffected. This
-  is the single biggest performance saving available, and the first thing to try
-  on weak hardware.
+- **Do not remove the default end-of-frame effect for normal performance
+  tuning.** It is required for the data-bus sky/fog reconstruction and above-water
+  water reflections/refraction, as well as bloom and the final grade. Removing
+  `assets/minecraft/post_effect/end_of_frame.json` is a last-resort compatibility
+  fallback only; it also removes those sky/water features, not just post polish.
 - **Antialiasing on**: it is not in the default chain, because it costs a
   full-resolution pass and softens the block edges. Apply it as its own effect:
 
@@ -111,11 +114,17 @@ report it in the log.
 
 ## Performance, briefly
 
-The pack is tuned for an integrated GPU. If it is too slow, in this order:
+The pack is tuned for an integrated GPU. If it is too slow, reduce cost without
+disabling the sky and water pipeline:
 
-1. Delete `assets/minecraft/post_effect/end_of_frame.json` (removes three
-   full-screen passes).
-2. `NVS_CLOUD_OCTAVES 3` and `NVS_CLOUD_CUTOFF 0.38` (fewer, thinner clouds).
-3. `NVS_WATER_RIPPLE 0.15` and `NVS_WATER_FOAM 0.0`.
+1. `NVS_WATER_SSR_STEPS 16` and `NVS_WATER_SSR_REFINE_STEPS 3`.
+2. `NVS_CLOUD_OCTAVES 3`, `NVS_CLOUD_VOLUME_OCTAVES 1` and
+   `NVS_CLOUD_CUTOFF 0.38`.
+3. `NVS_CLOUD_SHADOW_OCTAVES 2` and `NVS_CLOUD_SHADOW_DETAIL_OCTAVES 1`.
 4. `NVS_NIGHT_STRENGTH 0.0` and `NVS_NEBULA_OCTAVES 2`.
-5. Set **Clouds: Fast** — the pack then shades a flat layer instead of a volume.
+5. `NVS_WATER_RIPPLE 0.015` and `NVS_WATER_FOAM 0.0`.
+6. Set **Clouds: Fast** only if necessary — the pack then shades a flat layer
+   instead of a volume.
+
+Removing `end_of_frame.json` is not a routine performance setting; it disables
+the reconstructed sky/fog and above-water water effects too.

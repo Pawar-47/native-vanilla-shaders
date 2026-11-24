@@ -123,7 +123,7 @@ Statuses used below:
 | Lightning | Preserved | vanilla lightning shader retained with the reserved bus-column guard |
 | Item and entity glint | Preserved | vanilla glint paths retained with the reserved bus-column guard |
 | Emissive entity paths | Preserved | vanilla emissive entity paths retained with the reserved bus-column guard |
-| Improved Transparency (OIT) | Pipeline-preserved; water SSR unverified | native OIT branches remain intact, but the water marker is written only in the final non-accumulation terrain pass; test water with OIT both on and off |
+| Improved Transparency (OIT) | Pipeline-preserved; water SSR requires OIT off | native OIT branches remain intact, but the water marker is written only in the non-OIT final terrain colour pass; use Fancy graphics with Improved Transparency off for the intended water effect |
 | Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
 | Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
 
