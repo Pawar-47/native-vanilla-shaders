@@ -1,6 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 #include <nvs:bus.glsl>
+#include <minecraft:projection.glsl>
 #include <minecraft:fog.glsl>
 #include <minecraft:dynamictransforms.glsl>
 
