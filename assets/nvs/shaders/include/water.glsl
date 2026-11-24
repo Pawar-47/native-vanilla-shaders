@@ -98,7 +98,7 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     float n0 = nvs_valueNoise(rp);
     float nx = nvs_valueNoise(rp + vec2(e, 0.0));
     float nz = nvs_valueNoise(rp + vec2(0.0, e));
-    float rippleFade = smoothstep(2.0, 6.0, 2.0 / max(footprint, 1e-4));
+    float rippleFade = nvs_waveFade(0.55, footprint);
     grad += NVS_WATER_RIPPLE * vec2(nx - n0, nz - n0) / e * 0.10 * rippleFade;
 
     return grad * strength;
