@@ -36,6 +36,14 @@
 #ifndef NVS_CLOUD_OCTAVES
 #define NVS_CLOUD_OCTAVES 4
 #endif
+// Reflected clouds use a reduced octave budget because they are evaluated in
+// the full-resolution water post pass on the integrated-GPU target.
+#ifndef NVS_CLOUD_REFLECTION_OCTAVES
+#define NVS_CLOUD_REFLECTION_OCTAVES 2
+#endif
+#ifndef NVS_CLOUD_REFLECTION_DETAIL_OCTAVES
+#define NVS_CLOUD_REFLECTION_DETAIL_OCTAVES 1
+#endif
 // World-space size of the largest cloud feature, in blocks.
 #ifndef NVS_CLOUD_SCALE
 #define NVS_CLOUD_SCALE 96.0
