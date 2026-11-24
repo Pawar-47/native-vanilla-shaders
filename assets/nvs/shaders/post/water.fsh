@@ -12,7 +12,6 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
-
 vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
     float stepLength = 0.3 + 0.01 * length(origin);
     vec3 previous = origin;
@@ -32,12 +31,22 @@ vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
                 for (int j = 0; j < NVS_WATER_SSR_REFINE_STEPS; ++j) {
                     vec3 middle = 0.5 * (a + b);
                     vec4 projected = bus.projection * vec4(middle, 1.0);
+                    if (projected.w <= 0.0) {
+                        a = middle;
+                        continue;
+                    }
                     vec2 muv = projected.xy / projected.w * 0.5 + 0.5;
+                    if (any(lessThan(muv, vec2(0.0))) || any(greaterThan(muv, vec2(1.0)))) {
+                        a = middle;
+                        continue;
+                    }
                     float md = texture(DepthSampler, muv).r;
                     if (md > 0.0 && nvs_busViewPosition(bus, muv, md).z > middle.z) {
                         b = middle;
                         uv = muv;
-                    } else a = middle;
+                    } else {
+                        a = middle;
+                    }
                 }
                 vec2 edge = smoothstep(vec2(0.0), vec2(0.08), min(uv, 1.0 - uv));
                 return vec3(uv, edge.x * edge.y * (1.0 - float(i) / float(NVS_WATER_SSR_STEPS)));
@@ -76,7 +85,8 @@ void main() {
     vec3 normal = faceNormal;
     float t = nvs_waveTime(GameTime);
     float farWaveFade = 1.0 - smoothstep(NVS_WATER_FAR_FADE_START, NVS_WATER_FAR_FADE_END, distanceToSurface);
-    float waveStrength = NVS_WATER_WAVE_STRENGTH * mix(0.42, 1.0, farWaveFade);
+    float grazingFade = mix(0.15, 1.0, smoothstep(0.02, 0.25, abs(viewWorld.y)));
+    float waveStrength = NVS_WATER_WAVE_STRENGTH * mix(0.42, 1.0, farWaveFade) * grazingFade;
     if (top) {
         normal = nvs_waterNormal(worldPosition.xz, t, waveStrength);
         if (faceNormal.y < 0.0) normal.y = -normal.y;
@@ -91,16 +101,22 @@ void main() {
     mat3 worldToView = transpose(bus.viewToWorld);
     vec3 viewFace = worldToView * faceNormal;
     vec3 viewNormal = worldToView * normal;
+    // March the flat-surface reflection for stable shoreline hits; waves only
+    // perturb the lookup position, avoiding large misses at grazing angles.
     vec3 rayDirection = normalize(reflect(normalize(viewPosition), viewFace));
     vec3 hit = nvs_screenReflection(bus, viewPosition + viewFace * 0.05, rayDirection);
     if (hit.z > 0.0) {
         vec2 ripple = (viewNormal.xy - viewFace.xy) * 0.035;
         vec2 uv = hit.xy + ripple;
         bool inside = all(greaterThan(uv, vec2(0.0))) && all(lessThan(uv, vec2(1.0)));
-        vec4 shiftedHit = inside ? texture(InSampler, uv) : vec4(0.0);
         vec4 directHit = texture(InSampler, hit.xy);
-        vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedHit.rgb : directHit.rgb;
-        reflection = mix(reflection, mirrored, hit.z);
+        // Do not reflect another tagged water pixel back into this surface.
+        // That feedback reads as dark patches and unstable recursive mirrors.
+        if (directHit.a > 0.9) {
+            vec4 shiftedHit = inside ? texture(InSampler, uv) : vec4(0.0);
+            vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedHit.rgb : directHit.rgb;
+            reflection = mix(reflection, mirrored, hit.z);
+        }
     }
 
     float sphericalFog = smoothstep(bus.fogEnvironmentalStart, max(bus.fogEnvironmentalEnd, bus.fogEnvironmentalStart + 1.0), distanceToSurface);

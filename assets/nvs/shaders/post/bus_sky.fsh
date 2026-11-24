@@ -1,6 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
+#include <minecraft:globals.glsl>
 #include <nvs:bus_read.glsl>
 #include <nvs:sky.glsl>
 #include <nvs:water.glsl>
@@ -20,8 +21,8 @@ void main() {
     float depth = texelFetch(DepthSampler, pixel, 0).r;
     float waterData = 0.0;
     bool drawn = depth > 0.0;
-    if (drawn && nvs_isWaterMarker(texelFetch(InSampler, pixel, 0), pixel.x)) {
-        waterData = texelFetch(InSampler, pixel, 0).b;
+    if (drawn && nvs_isWaterMarker(scene, pixel.x)) {
+        waterData = scene.b;
         vec4 right = texelFetch(InSampler, ivec2(min(pixel.x + 1, size.x - 1), pixel.y), 0);
         vec4 left = texelFetch(InSampler, ivec2(max(pixel.x - 1, 0), pixel.y), 0);
         bool leftIsWater = pixel.x >= 2
@@ -32,7 +33,25 @@ void main() {
         if (nvs_isWaterMarker(leftMarker, pixel.x - 1)) waterData = leftMarker.b;
     }
 
-    if (bus.present && nvs_busCameraInAir(bus) && depth <= 0.0) {
+    bool inAir = bus.present && nvs_busCameraInAir(bus);
+
+    // Clouds are drawn after translucent water. On even columns their blending
+    // can cover the marker before this pass sees it, producing alternating
+    // reflection stripes. Recover the vanilla water colour from the two odd
+    // neighbours, exactly where the native cloud layer sits above the water.
+    if (inAir && drawn && waterData == 0.0 && (pixel.x & 1) == 0
+            && scene.a > 252.5 / 255.0) {
+        vec3 viewPosition = nvs_busViewPosition(bus, texCoord, depth);
+        float cameraY = float(CameraBlockPos.y) - CameraOffset.y;
+        float worldY = (bus.viewToWorld * viewPosition).y + cameraY;
+        if (worldY > NVS_CLOUD_HEIGHT - 2.0) {
+            vec4 left = texelFetch(InSampler, ivec2(max(pixel.x - 1, 0), pixel.y), 0);
+            vec4 right = texelFetch(InSampler, ivec2(min(pixel.x + 1, size.x - 1), pixel.y), 0);
+            scene.rgb = 0.5 * (left.rgb + right.rgb);
+        }
+    }
+
+    if (inAir && depth <= 0.0) {
         vec3 worldDir = nvs_busWorldDirection(bus, texCoord);
         vec3 sky = nvs_skyGradient(worldDir, bus.skyColor, bus.fogColor);
         float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(bus.skyColor));
