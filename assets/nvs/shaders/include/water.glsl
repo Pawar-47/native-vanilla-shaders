@@ -104,6 +104,12 @@ vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 horizon) 
     vec3 zenith = nvs_zenithFromHorizon(horizon);
     vec3 sky = nvs_skyGradient(reflected, zenith, horizon);
 
+    // Carry the procedural night sky into the reflection as well. Without this,
+    // the sky above can show stars and nebula while the water remains a flat,
+    // empty dark gradient at night.
+    float night = 1.0 - smoothstep(0.010, 0.075, nvs_luma(zenith));
+    sky += nvs_nightSky(reflected, night);
+
     if (reflected.y > 0.02) {
         // Where the reflected ray crosses the cloud layer. The reflection of
         // real clouds is worth the four noise taps: a flat mirror is the single
