@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Compile pack-owned core and post shaders with glslangValidator.
+"""Run an additional GLSL syntax/type pass over pack-owned shader stages.
 
-Minecraft 26.3 uses ShaderC and its own resource/include pipeline. This is an
-additional real GLSL parser/type-check pass, not a replacement for Minecraft
-runtime validation.
+Minecraft 26.3 uses ShaderC and its own resource/include pipeline. glslang is
+used here as a second parser, not as a replacement for Minecraft compilation or
+in-game runtime testing.
 """
 from pathlib import Path
 import argparse
@@ -13,7 +13,11 @@ import subprocess
 import sys
 import tempfile
 
-INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]\s*$', re.M)
+INCLUDE_RE = re.compile(r'^\\s*#\\s*include\\s*[<"]([^>"]+)[>"]\\s*$', re.M)
+
+# glslang's OpenGL frontend exposes gl_VertexID; Minecraft's ShaderC source
+# uses the Vulkan-style gl_VertexIndex spelling for the same vertex index.
+VERTEX_INDEX_COMPAT = "#define gl_VertexIndex gl_VertexID"
 
 
 def find_vanilla(root: Path):
@@ -52,26 +56,56 @@ def expand_includes(path: Path, root: Path, vanilla: Path, stack=()):
         spec = match.group(1)
         included = resolve_include(spec, root, vanilla)
         body = expand_includes(included, root, vanilla, stack + (resolved,))
-        return "\n// begin include <%s>\n%s\n// end include <%s>\n" % (spec, body, spec)
+        return "\\n// begin include <%s>\\n%s\\n// end include <%s>\\n" % (spec, body, spec)
 
     return INCLUDE_RE.sub(replace, source)
 
 
-def variants_for(path: Path):
-    if path.name in ("terrain.vsh", "terrain.fsh"):
-        return [(), ("MULTIDRAW_TERRAIN",), ("OIT_ALPHA_ONLY",),
-                ("MULTIDRAW_TERRAIN", "OIT_ALPHA_ONLY")]
-    if path.name in ("clouds.fsh", "position_color.fsh"):
-        return [(), ("OIT_ALPHA_ONLY",)]
-    return [()]
+def add_glslang_compat(source: str):
+    lines = source.splitlines()
+    if not lines or not lines[0].lstrip().startswith("#version"):
+        raise RuntimeError("shader must begin with #version")
+    insert_at = 1
+    while insert_at < len(lines) and lines[insert_at].lstrip().startswith("#extension"):
+        insert_at += 1
+    lines.insert(insert_at, VERTEX_INDEX_COMPAT)
+    return "\\n".join(lines) + "\\n"
+
+
+def oit_defines(coeff_count):
+    return (
+        "OIT=1",
+        "OIT_COEFF_COUNT=%d" % coeff_count,
+        "OIT_COEFF_ATTACHMENT_COUNT=%d" % (coeff_count // 4),
+        "OIT_WAVELET_RANK=%d" % (coeff_count.bit_length() - 2),
+    )
+
+
+def variants_for(path: Path, source: str):
+    variants = [()]
+    if path.name == "rendertype_end_portal.fsh":
+        return [("PORTAL_LAYERS=15",), ("PORTAL_LAYERS=16",)]
+
+    uses_oit = "minecraft:oit.glsl" in source or "OIT_ALPHA_ONLY" in source or "OIT_ACCUMULATE" in source
+    if uses_oit:
+        for count in (8, 16):
+            base = oit_defines(count)
+            variants.extend([
+                base + ("OIT_ALPHA_ONLY=1", "OIT_DEPTH_BOUNDS=1"),
+                base + ("OIT_ALPHA_ONLY=1", "OIT_TRANSMITTANCE=1"),
+                base + ("OIT_ACCUMULATE=1",),
+                base + ("OIT_ACCUMULATE=1", "OIT_ADDITIVE=1"),
+            ])
+    return variants
 
 
 def compile_one(validator, source, stage, label, defines, tempdir):
     suffix = ".vert" if stage == "vert" else ".frag"
     temporary = tempdir / (re.sub(r"[^A-Za-z0-9_.-]", "_", label) + suffix)
     temporary.write_text(source, encoding="utf-8")
-    command = [validator, "-S", stage]
-    command.extend("-D%s=1" % define for define in defines)
+    command = [validator, "-l", "-S", stage]
+    for define in defines:
+        command.append("-D" + define)
     command.append(str(temporary))
     result = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     if result.returncode:
@@ -112,10 +146,11 @@ def main():
             stage = "vert" if path.suffix == ".vsh" else "frag"
             try:
                 expanded = expand_includes(path, root, vanilla)
+                expanded = add_glslang_compat(expanded)
             except Exception as error:
                 failures.append((path, str(error)))
                 continue
-            for defines in variants_for(path):
+            for defines in variants_for(path, path.read_text(encoding="utf-8")):
                 label = path.relative_to(root).as_posix()
                 if not compile_one(validator, expanded, stage, label, defines, tempdir):
                     failures.append((path, "GLSL compilation failed for %r" % (defines,)))
