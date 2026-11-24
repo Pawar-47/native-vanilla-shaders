@@ -4,8 +4,6 @@
 #include <nvs:config.glsl>
 #include <nvs:noise.glsl>
 
-const float NVS_PI = 3.14159265358979;
-
 float nvs_luma(vec3 c) {
     return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }
@@ -42,15 +40,9 @@ float nvs_dither(vec2 fragCoord) {
     return (nvs_bayer4(fragCoord) - 0.5) / 255.0;
 }
 
-// The dimension is not branched on anywhere in this pack. 26.3 hands every
+// Note on the dimension: nothing in this pack branches on it. 26.3 hands every
 // program the dimension's colours already (the sky's ColorModulator, FogColor,
 // the lightmap's SkyLightColor and BlockLightTint), so the pack shapes those
 // rather than trying to identify a dimension it cannot see.
-//
-// Camera height above sea level, in blocks, for the faint altitude response of
-// the sky and the fog.
-float nvs_altitude(float cameraY) {
-    return clamp((cameraY - 63.0) / 160.0, -0.5, 1.0);
-}
 
 #endif

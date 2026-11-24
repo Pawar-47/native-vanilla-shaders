@@ -1,0 +1,54 @@
+name: check
+
+# Nothing here can run Minecraft, so this is what stands in for a build: the
+# static checks run on every push, and the installable pack is assembled to prove
+# it still assembles. A shader that fails these checks is a shader that is likely
+# to make the game drop every selected resource pack.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check the pack
+        run: python3 tools/check_pack.py
+
+      - name: Build the installable pack
+        run: python3 tools/package.py --zip
+
+      - name: Verify the archive has pack.mcmeta at its root
+        run: |
+          python3 - <<'PY'
+          import sys, zipfile, glob
+          archives = glob.glob('dist/*.zip')
+          if not archives:
+              sys.exit('no .zip was built')
+          with zipfile.ZipFile(archives[0]) as handle:
+              names = handle.namelist()
+          required = ['pack.mcmeta', 'assets/minecraft/post_effect/end_of_frame.json']
+          for entry in required:
+              if entry not in names:
+                  sys.exit('%s is not at the archive root; names: %s' % (entry, names[:10]))
+          leaked = [n for n in names if n.startswith(('Good working shader/', 'Vanilla-stock', '.research/', 'tools/'))]
+          if leaked:
+              sys.exit('the archive carries material that must not be redistributed: %s' % leaked[:5])
+          print('%s entries checked, pack.mcmeta at the root, nothing leaked' % len(names))
+          PY
+
+      - name: Upload the pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-vanilla-shaders
+          path: dist/*.zip
+          if-no-files-found: error

@@ -16,10 +16,12 @@ Checks:
   3. include          - every #include resolves; no include has a #version.
   4. varyings         - every fragment input has a vertex output at the same
                         location, in every program the game links with it.
-  5. post effects     - the JSON chains are valid, their targets and shaders
+  5. symbols          - every nvs_ function and NVS_ macro the pack uses is
+                        defined somewhere in the pack (catches typos).
+  6. post effects     - the JSON chains are valid, their targets and shaders
                         exist, and their shaders declare only what a post pass
                         is given.
-  6. glsl hygiene     - version first, separate shader objects, balanced
+  7. glsl hygiene     - version first, separate shader objects, balanced
                         preprocessor and braces, layout on every varying.
 
 Usage:
@@ -277,7 +279,8 @@ def guard_allows(guards, token, sense):
     for guard in reversed(guards):
         if token in guard:
             if sense == "not defined":
-                return ("ifndef" in guard) or ("!defined" in guard) or ("!defined" in guard.replace(" ", ""))
+                compact = guard.replace(" ", "")
+                return "ifndef" in guard or "!defined" in compact
             return True
     return False
 
@@ -481,7 +484,61 @@ def check_varyings(root, vanilla, report):
 
 
 # --------------------------------------------------------------------------
-# 5. post effects
+# 5. the pack's own symbols
+# --------------------------------------------------------------------------
+SELF_FUNCTION_RE = re.compile(
+    r"^\s*(?:const\s+)?(?:void|float|int|bool|vec[234]|ivec[234]|mat[234])\s+(nvs_\w+)\s*\(",
+    re.M,
+)
+MACRO_DEFINE_RE = re.compile(r"^\s*#\s*define\s+(NVS_\w+)", re.M)
+MACRO_CONST_RE = re.compile(r"\bconst\s+\w+\s+(NVS_\w+)")
+GUARD_LINE_RE = re.compile(r"^\s*#\s*(?:define|ifndef|ifdef)\s+NVS_")
+
+
+def check_symbols(root, report):
+    """Every nvs_ function and NVS_ macro that is used must be defined.
+
+    Both prefixes belong to this pack and nothing in GLSL or in vanilla uses
+    them, so a name that is used but never defined is a typo rather than a
+    builtin. It is the cheapest way to catch the one class of mistake that a
+    compiler would otherwise be the first to find, and it cannot produce a false
+    positive.
+
+    The search is pack-wide rather than per-file: it proves the symbol exists,
+    not that the file using it includes the file defining it.
+    """
+    files = []
+    for base, _dirs, names in os.walk(os.path.join(root, "assets")):
+        for name in sorted(names):
+            if name.endswith((".vsh", ".fsh", ".glsl")):
+                files.append(os.path.join(base, name))
+
+    defined_functions = set()
+    defined_macros = set()
+    bodies = {}
+    for path in files:
+        body = strip_comments(read(path))
+        bodies[path] = body
+        defined_functions.update(SELF_FUNCTION_RE.findall(body))
+        defined_macros.update(MACRO_DEFINE_RE.findall(body))
+        defined_macros.update(MACRO_CONST_RE.findall(body))
+
+    for path, body in bodies.items():
+        rel = os.path.relpath(path, root).replace(os.sep, "/")
+        for name in sorted(set(re.findall(r"\b(nvs_\w+)\s*\(", body))):
+            if name not in defined_functions:
+                report.fail("symbols", rel, "%s() is called but never defined" % name)
+        for number, line in enumerate(body.splitlines(), 1):
+            if GUARD_LINE_RE.match(line):
+                continue
+            for name in sorted(set(re.findall(r"\b(NVS_\w+)\b", line))):
+                if name not in defined_macros:
+                    report.fail("symbols", rel,
+                                "line %d: %s is used but never defined" % (number, name))
+
+
+# --------------------------------------------------------------------------
+# 6. post effects
 # --------------------------------------------------------------------------
 def check_post_effects(root, report):
     directory = os.path.join(root, "assets")
@@ -555,10 +612,10 @@ def find_post_program(root, identifier):
         namespace, path = identifier.split(":", 1)
     else:
         namespace, path = "minecraft", identifier
-    for suffix in (".vsh", ".fsh"):
-        candidate = os.path.join(root, "assets", namespace, "shaders", namespace + "_post_placeholder")
-        _ = candidate
-    for base, _dirs, names in os.walk(os.path.join(root, "assets", namespace, "shaders")):
+    directory = os.path.join(root, "assets", namespace, "shaders")
+    if not os.path.isdir(directory):
+        return None
+    for base, _dirs, names in os.walk(directory):
         for name in names:
             stem = name.rsplit(".", 1)[0]
             rel = os.path.relpath(os.path.join(base, stem), os.path.join(root, "assets", namespace, "shaders"))
@@ -602,6 +659,7 @@ def main(argv):
     check_structure(root, report)
     check_includes(root, vanilla, report)
     check_varyings(root, vanilla, report)
+    check_symbols(root, report)
     check_post_effects(root, report)
 
     for base, _dirs, names in os.walk(os.path.join(root, "assets")):
