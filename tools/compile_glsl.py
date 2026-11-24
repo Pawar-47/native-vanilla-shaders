@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 
-INCLUDE_RE = re.compile(r'^\\s*#\\s*include\\s*[<"]([^>"]+)[>"]\\s*$', re.M)
+INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]\s*$', re.M)
 
 # glslang's OpenGL frontend exposes gl_VertexID; Minecraft's ShaderC source
 # uses the Vulkan-style gl_VertexIndex spelling for the same vertex index.
@@ -56,7 +56,7 @@ def expand_includes(path: Path, root: Path, vanilla: Path, stack=()):
         spec = match.group(1)
         included = resolve_include(spec, root, vanilla)
         body = expand_includes(included, root, vanilla, stack + (resolved,))
-        return "\\n// begin include <%s>\\n%s\\n// end include <%s>\\n" % (spec, body, spec)
+        return "\n// begin include <%s>\n%s\n// end include <%s>\n" % (spec, body, spec)
 
     return INCLUDE_RE.sub(replace, source)
 
@@ -69,7 +69,7 @@ def add_glslang_compat(source: str):
     while insert_at < len(lines) and lines[insert_at].lstrip().startswith("#extension"):
         insert_at += 1
     lines.insert(insert_at, VERTEX_INDEX_COMPAT)
-    return "\\n".join(lines) + "\\n"
+    return "\n".join(lines) + "\n"
 
 
 def oit_defines(coeff_count):
