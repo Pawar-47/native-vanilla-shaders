@@ -85,8 +85,10 @@ If something is wrong, this order finds it fastest.
 12. **The GUI**: the HUD, chat and inventory must be **unaffected** by the grade.
     If they are graded, the post chain is running at the wrong time and something
     is badly wrong.
-13. **Improved Transparency on** (graphics preset must be "custom"): water, glass
-    and clouds should look the same as with it off, only sorted better.
+13. **Improved Transparency on** (graphics preset must be "custom"): compare
+    water tagging/reflections with OIT off and on. The terrain OIT branches are
+    preserved, but water markers are emitted only in the final colour pass, so
+    incomplete SSR tagging is a known risk. Glass and clouds must remain intact.
 
 ## If it is too slow
 
