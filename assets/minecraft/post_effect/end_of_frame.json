@@ -5,7 +5,8 @@
       "width": 480,
       "height": 270
     },
-    "bus_scene": {}
+    "bus_scene": {},
+    "water_scene": {}
   },
   "passes": [
     {
@@ -26,11 +27,31 @@
     },
     {
       "vertex_shader": "nvs:post/fullscreen",
-      "fragment_shader": "nvs:post/bloom",
+      "fragment_shader": "nvs:post/water",
       "inputs": [
         {
           "sampler_name": "In",
           "target": "bus_scene"
+        },
+        {
+          "sampler_name": "Main",
+          "target": "minecraft:main"
+        },
+        {
+          "sampler_name": "Depth",
+          "target": "minecraft:main",
+          "use_depth_buffer": true
+        }
+      ],
+      "output": "water_scene"
+    },
+    {
+      "vertex_shader": "nvs:post/fullscreen",
+      "fragment_shader": "nvs:post/bloom",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "water_scene"
         }
       ],
       "output": "bloom"
@@ -41,7 +62,7 @@
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "bus_scene"
+          "target": "water_scene"
         },
         {
           "sampler_name": "Bloom",

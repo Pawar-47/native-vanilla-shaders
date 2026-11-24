@@ -131,6 +131,25 @@ vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 horizon) 
     return sky;
 }
 
+
+bool nvs_waterMarkersOn(float environmentalFogEnd) { return environmentalFogEnd > 100.0; }
+float nvs_waterData(vec3 worldPosition) {
+    vec3 n = cross(dFdx(worldPosition), dFdy(worldPosition));
+    float l = length(n);
+    n = l > 1e-5 ? n / l : vec3(0.0, 1.0, 0.0);
+    return abs(n.y) > 0.7 ? 1.0 : (128.0 / 255.0);
+}
+vec4 nvs_waterMarker(int x, float data) {
+    return vec4(float((x * 73 + 11) & 255) / 255.0,
+                float((x * 197 + 89) & 255) / 255.0, data, 1.0);
+}
+bool nvs_isWaterMarker(vec4 c, int x) {
+    vec4 m = nvs_waterMarker(x, 0.0);
+    bool data = abs(c.b - 1.0) < 0.5 / 255.0 || abs(c.b - 128.0 / 255.0) < 1.0 / 255.0;
+    return (x & 1) == 0 && abs(c.r - m.r) < 0.5 / 255.0
+        && abs(c.g - m.g) < 0.5 / 255.0 && c.a > 254.5 / 255.0 && data;
+}
+
 // Shade one water fragment.
 //
 // `baseColor` is what the game already computed for the water surface: texture

@@ -43,6 +43,14 @@ void main() {
     // Sampled first and unconditionally: sampleNearest and sampleRGSS take
     // screen-space derivatives, which are undefined inside a branch.
     vec4 texel = (UseRgss == 1 ? sampleRGSS(Sampler0, texCoord0, 1.0f / TextureSize) : sampleNearest(Sampler0, texCoord0, 1.0f / TextureSize));
+    float waterData = nvs_waterData(nvsWorldPos);
+    #if !defined(OIT_ALPHA_ONLY) && !defined(OIT_ACCUMULATE)
+    if (nvs_waterMarkersOn(FogEnvironmentalEnd) && (int(gl_FragCoord.x) & 1) == 0
+            && nvs_isWater(texel, nvsTint)) {
+        fragColor = nvs_waterMarker(int(gl_FragCoord.x), waterData);
+        return;
+    }
+    #endif
     vec4 color = texel * vertexColor;
 
     #ifndef OIT_ALPHA_ONLY
@@ -56,7 +64,9 @@ void main() {
         // environmental fog distance, which it does only for water (at most 96
         // blocks; it is 768 or more in air).
         float underwater = (FogEnvironmentalEnd < 200.0 && FogEnvironmentalEnd > 8.0) ? 1.0 : 0.0;
-        color.rgb = nvs_shadeWater(color.rgb, nvsViewPos, nvsWorldPos, GameTime, FogColor.rgb, underwater);
+        if (underwater > 0.5) {
+            color.rgb = nvs_shadeWater(color.rgb, nvsViewPos, nvsWorldPos, GameTime, FogColor.rgb, underwater);
+        }
     } else {
         // Cloud shadows. They are applied in proportion to how lit the pixel
         // already is, because the fragment stage receives one combined light
