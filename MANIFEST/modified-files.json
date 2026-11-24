@@ -91,7 +91,7 @@
       "pack_file": "assets/minecraft/shaders/core/terrain.vsh",
       "vanilla_source": "Vanilla-stock /core/terrain.vsh",
       "reason": "Passes absolute world position, camera-relative position and raw tint; applies conservative sway to identifiable cutout plants.",
-      "pack_sha256": "0a9f7b5572ab48d9f9025267bf2b3f2d5b0d38183db006c6da8ca2bd9397c5bb",
+      "pack_sha256": "5c4586a183f2a5cbe36b306bea5488b7ea4cfb07ffd0faffee3f1337bd0ff77a",
       "vanilla_sha256": "001120e03dd7b9d690d3c98a1563334497c465f79ce14dc557d3d4caa02299a0"
     },
     {
@@ -287,7 +287,7 @@
       "pack_file": "assets/nvs/shaders/include/sky.glsl",
       "vanilla_source": null,
       "reason": "Shared sky gradient, horizon warmth, night field and reflected-sky functions.",
-      "pack_sha256": "06c1a9ac3276c68fdeb71841458d87ed93629333ee0fb7f27920caaadeb8e8ed"
+      "pack_sha256": "7ca7cdda53f321dd0526d2782ad4f7845684649e483cb8ee4ab32ad17b39a13b"
     },
     {
       "pack_file": "assets/nvs/shaders/include/water.glsl",
@@ -305,7 +305,7 @@
       "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
       "vanilla_source": null,
       "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
-      "pack_sha256": "2a67986097fde81373e4d3f01463ef1fd7de1d7444dd7d56086a2fe0a8507069"
+      "pack_sha256": "49b89b4d5f4497f6b38d13b8b4061ce70c56e93b929e0d53a15e331293857bea"
     },
     {
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
