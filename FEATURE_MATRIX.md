@@ -23,7 +23,7 @@ Statuses used below:
 | No banding | Done | `nvs_dither` in `bus_sky.fsh` and again in the post composite |
 | Sunrise / sunset colour transitions | Done | a warm band whose strength follows how warm `FogColor` already is, so noon is untouched and dusk is deepened |
 | Sun-anchored sunrise glow | Done | `position_color.vsh/.fsh` give vanilla's 18-vertex glow fan a radial gradient instead of one flat colour |
-| Sun disc with halo | Done | the sun direction is transferred from `position_tex` through the bus; `bus_sky.fsh` draws the disc/corona and `water.fsh` adds the reflected disc/glint |
+| Sun disc with halo | Done | the sun direction is transferred from `position_tex`; a shared rain-aware disc/corona/aureole is used by the sky and water reflections |
 | Moon | Done | untouched body, plus a cool corona from the same program |
 | Moonlight | Done | `lightmap.fsh` — `SkyLightColor` is what the game sets for the moon |
 | Stars with natural distribution | Done | a procedural field in `sky.glsl`/`bus_sky.fsh` with per-star magnitude and colour temperature, plus per-star tint on the game's own star points in `stars.fsh` |
@@ -43,7 +43,7 @@ Statuses used below:
 | Altitude and scale | Done | `NVS_CLOUD_SCALE`, `NVS_CLOUD_HEIGHT` |
 | Sun-facing illumination and shading | Approximated | lit tops, shaded undersides and darker creases, from face orientation and density. The clouds program is not given the sun's direction, so this is a key light from above, not a true sun-facing term |
 | Sunset / night / rain appearance | Done | all of it arrives in `CloudColor`, set by the game |
-| Cloud shadows on terrain | Approximated | the same field, three octaves, at up to 18% darkening, weighted by how lit the pixel already is. Soft and world-anchored, not stretched along the sun |
+| Cloud shadows on terrain | Approximated | the shared 2D mass/ridge projection (three octaves), at up to 18% darkening, weighted by how lit the pixel already is. The visible shell adds separate 3D vertical breakup; shadows remain soft and world-anchored, not stretched along the sun |
 | No obvious tiling | Done | no texture and no lookup table; octaves are rotated before they are scaled |
 | Works with Fast clouds | Degrades | the flat cloud layer gets the same field and shading, with no volume to shade |
 

@@ -35,15 +35,15 @@ programs. None of it declares a uniform, so it is safe to include anywhere.
 | File | Role |
 |---|---|
 | `config.glsl` | Every tunable, as an `#ifndef`-guarded `#define`. |
-| `noise.glsl` | Hash, value noise, and a fractal sum whose octaves are rotated before they are scaled, so no grid or direction lines up. |
+| `noise.glsl` | 2D and 3D value noise, hash functions, and fractal sums for cloud volume, water waves and sky detail. |
 | `common.glsl` | Luminance, dither, warmth, small helpers. |
 | `sky.glsl` | The sky as a function of direction; the night sky; a zenith colour inferred from the horizon for programs that do not get the sky colour. |
 | `clouds.glsl` | The cloud field, the shading, and the shadow the field casts on the ground. |
 | `water.glsl` | Water recognition, eight-wave gravity spectrum, filtered normals, foam, and reflected sky/cloud helpers. |
 | `bus.glsl` / `bus_read.glsl` | Screen-column data bus and post-effect decoding of camera, sky, fog and sun values. |
 
-`sky.glsl`, `clouds.glsl` and `water.glsl` are shared deliberately: the same
-function that shapes a cloud casts its shadow, and the same sky that is drawn is
+`sky.glsl`, `clouds.glsl` and `water.glsl` are shared deliberately: the shared 2D cloud mass/ridge projection also drives terrain shadows, while the
+visible cloud shell adds a shallow 3D density slice; and the same sky that is drawn is
 the one the water reflects.
 
 ## Replaced programs, and why each one

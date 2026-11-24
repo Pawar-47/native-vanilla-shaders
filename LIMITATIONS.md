@@ -115,8 +115,10 @@ midtones, which is what a tone map is for, minus the part that needs HDR.
 `core/clouds` and to nothing else. Terrain cannot see how far the clouds have
 moved.
 
-**Alternative used.** The shadows use the same field, three octaves of it, at no
-more than 18% darkening, anchored to the world and not animated. They read as
+**Alternative used.** The shadows use the shared 2D mass/ridge projection of the
+cloud field at three octaves, with no more than 18% darkening. The visible cloud
+shell adds a shallow 3D vertical density slice, which is not part of the ground
+shadow projection. Shadows remain world-anchored and do not drift with the clouds. They read as
 large soft patches of shade rather than as a hard shadow that would visibly slide
 against the clouds.
 

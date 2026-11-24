@@ -5,20 +5,23 @@ Nothing in `assets/` comes from another shader pack.
 
 ## What this repository contains
 
-Only the pack and its tooling: `pack.mcmeta`, `assets/`, the documentation,
-`tools/` and `MANIFEST/`. Three folders named throughout this document are **not**
-in the repository, and are excluded by `.gitignore`, because two of them cannot
-lawfully be redistributed:
+The repository contains the pack, tooling, documentation and two reference
+areas. The user-supplied Minecraft 26.3 vanilla shader archive and its extracted
+read-only source tree are retained under `reference/vanilla-stock/` as the
+compatibility baseline. They are **not copied into the installable resource
+pack**. `reference/carlodrift/README.md` is our own pointer to the external
+technical reference; it does not contain upstream source code.
 
-| Folder | Why it is not here |
-|---|---|
-| `Good working shader/` | The Complementary License 1.8 forbids redistribution. |
-| `Vanilla-stock /` | Mojang's own client shader source, for the same reason as the game. Supply your own copy beside the pack to run `tools/check_pack.py` (it degrades to a note without it) and `tools/manifest.py` (it needs it). |
-| `.research/` | Copies of another repository's experiment definitions, kept locally as build-time reference. |
+The external Complementary-based benchmark folder (`Good working shader/`) and
+the local `.research/` copies are not in this repository. The benchmark was
+consulted visually only and is not part of the deliverable.
 
-Everything below therefore describes material that was read while building the
-pack, not material the repository distributes.
-
+| Reference | Repository status | Use |
+|---|---|---|
+| `reference/vanilla-stock/` | User-supplied archive and extracted source are present | Read-only 26.3 interface baseline; excluded from the installable ZIP |
+| `reference/carlodrift/README.md` | Our pointer README only | Links to licensed upstream docs and examples |
+| `Good working shader/` | Not bundled | Visual benchmark only; no code/assets used |
+| `.research/` | Not bundled | No runtime or packaging dependency |
 
 ## What this pack ships
 
@@ -43,7 +46,7 @@ own instruction is stricter still: no copying, porting, translating or
 redistributing its GLSL, textures or noise assets, including into another shader
 architecture.
 
-**Nothing from that folder appears in this pack.** Specifically:
+**Nothing from that benchmark folder appears in this pack.** Specifically:
 
 - no GLSL file, function, constant or comment was copied, ported or translated;
 - no texture or noise image was used (`textures/cloud-water.png`,
@@ -63,10 +66,9 @@ bloom. Those are judgements about an outcome, and the implementations that achie
 them here are original and constrained by a completely different architecture
 (there is no G-buffer to read, no buffer to allocate, and no shadow map).
 
-The folder is not in this repository: the licence does not permit redistribution,
-so it was never committed. It is recorded here as the benchmark it was, not as
-part of the deliverable, and it is not inside the pack's `assets/`. **Do not
-distribute it with the pack.**
+The folder is not in this repository or the installable pack: the licence does not
+permit redistribution. It is recorded here as the visual benchmark it was, not
+as part of the deliverable. **Do not distribute it with the pack.**
 
 ## `carlodrift/minecraft-vanilla-shaders` — technical reference
 
@@ -103,6 +105,10 @@ verified, in-game-checked facts about it. The specific facts this pack relies on
 - that cutout plants can be identified by cutout + biome tint + off-grid position,
   and that neither end of a plant is identifiable;
 - that the environmental fog end is at most 96 in water and 768 or more in air;
+- the eight-wave water spectrum used in the water-reflections example: its eight
+  directions and wavelengths, gravity-dispersed day-loop frequencies, position-only
+  domain warp and screen-footprint fade. NVS rewrites the implementation around its
+  own noise functions, water markers, post chain and low-end quality budget;
 - that `core/lightmap` is drawn once per frame with `LightmapInfo`, and the
   meaning of each of its members.
 
@@ -115,9 +121,9 @@ Attribution for the documentation, as CC BY 4.0 requires:
 
 > Documentation and reference material from **carlodrift/minecraft-vanilla-shaders**
 > (https://github.com/carlodrift/minecraft-vanilla-shaders), © carlodrift,
-> licensed CC BY 4.0. Example and experiment shader code under CC0. No code from
-> that repository is included in this pack; the facts listed above are used as
-> technical reference and the implementations here are original.
+> licensed CC BY 4.0. Example and experiment shader code under CC0. The water-wave spectrum is adapted from the repository's CC0 example code; the
+> implementation is rewritten for NVS. No upstream shader file, texture or noise
+> asset is included.
 
 ## `Vanilla-stock /` — the vanilla 26.3 shader source
 
@@ -143,7 +149,7 @@ the absence is explicit.
 | Source | Licence | Used for | Code or assets taken |
 |---|---|---|---|
 | This pack's own code | © the pack's author | everything in `assets/nvs/` | — |
-| `Vanilla-stock /` (Mojang, MC 26.3) | Minecraft EULA / Usage Guidelines | the 15 replaced programs and includes | replaced files only, listed |
-| `carlodrift/minecraft-vanilla-shaders` | docs CC BY 4.0, code CC0 | verified architectural facts | none |
+| `Vanilla-stock /` (Mojang, MC 26.3) | Minecraft EULA / Usage Guidelines | 26.3 interface baseline | replaced programs are listed in the manifest; source archive is excluded from pack ZIP |
+| `carlodrift/minecraft-vanilla-shaders` | docs CC BY 4.0, example code CC0 | native pipeline research and eight-wave water model | water-wave algorithm adapted; no upstream files/assets bundled |
 | `Good working shader/` | Complementary License Agreement 1.8 | visual benchmark | **none** |
 | `../Ref-Shader/MakeUp-UltraFast-9.6a` | — | nothing | none |

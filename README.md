@@ -12,7 +12,7 @@ architecture — see [ARCHITECTURE.md](ARCHITECTURE.md) for exactly which progra
 are replaced and why, and [LIMITATIONS.md](LIMITATIONS.md) for what that
 architecture genuinely cannot do.
 
-Phase 1 implementation is complete and the installable Minecraft Java 26.3 pack is ready for in-game validation. See [TESTING.md](TESTING.md) for the Phase 2 visual checklist and [LIMITATIONS.md](LIMITATIONS.md) for known native-pipeline constraints.
+Phase 1 source work is in final review. CI builds an installable Minecraft Java 26.3 pack, but no in-game rendering or performance result is claimed yet. Phase 2 is the Minecraft runtime and visual-validation stage; see [TESTING.md](TESTING.md) for its checklist.
 
 ## What it does
 
@@ -40,11 +40,12 @@ installable folder or `.zip` with `python3 tools/package.py --zip`, put it in
 **Graphics: Fancy** and **Clouds: Fancy** so the cloud and water work has the
 geometry it expects.
 
-Two reference folders that the documentation mentions — the vanilla 26.3 shader
-source and the benchmark shaderpack — are deliberately **not** in this repository,
-because neither may be redistributed. See
-[MANIFEST/licensing.md](MANIFEST/licensing.md). `tools/check_pack.py` runs without
-them and checks more with them.
+The user-supplied Minecraft 26.3 vanilla source archive and its extracted,
+read-only tree are retained under `reference/vanilla-stock/` as the compatibility
+baseline; they are excluded from the installable resource pack. The
+`reference/carlodrift/` folder contains our own pointer README, not upstream code.
+The external benchmark shaderpack is not bundled. See
+[MANIFEST/licensing.md](MANIFEST/licensing.md).
 
 ## Requirements and expectations
 
@@ -88,7 +89,9 @@ see [TESTING.md](TESTING.md).
 
 ## Licence
 
-The shader code in this pack is original. It is derived from no shaderpack. The
-one external shaderpack in this repository (`Good working shader/`) was used as a
-visual benchmark only and no code, texture or noise asset from it appears here;
-see [MANIFEST/licensing.md](MANIFEST/licensing.md).
+The NVS shader integration and procedural assets are authored for this pack. The
+eight-wave water spectrum adapts the CC0 algorithm and parameters from the
+`carlodrift/minecraft-vanilla-shaders` water-reflections example, rewritten for
+NVS's data bus, filtering and performance budget. The external Complementary-based
+benchmark was consulted visually only; it is not bundled and contributes no code,
+textures or noise assets. See [MANIFEST/licensing.md](MANIFEST/licensing.md).
