@@ -141,8 +141,8 @@ void main() {
         }
     }
 
-    float vanillaFog = nvs_vanillaFog(bus, worldRelative);
-    float fogAmount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
+    float vanillaFog = nvs_vanillaFog(bus, viewPosition);
+    float fogAmount = nvs_atmosphereFog(bus, viewPosition, vanillaFog);
     vec3 fogDirection = normalize(vec3(viewWorld.x, max(viewWorld.y, 0.0), viewWorld.z));
     vec3 distantSky = nvs_reflectedSky(fogDirection, worldPosition.xz,
                                        worldPosition.y, bus.skyColor, bus.fogColor);
