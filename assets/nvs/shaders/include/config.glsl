@@ -1,0 +1,133 @@
+#ifndef NVS_CONFIG_GLSL
+#define NVS_CONFIG_GLSL
+
+// Native Vanilla Shaders (NVS) - tunables.
+//
+// This pack has no options menu, because 26.3 has no shader options screen for
+// resource packs. These #defines are the options: every one is guarded with
+// #ifndef, so you can also override them by editing this one file. Nothing here
+// changes the pack's interfaces, so any value compiles.
+//
+// The defaults are tuned for a low-end integrated GPU (Intel HD Graphics 5500
+// class: 24 EUs, shared DDR3 memory). Raise them if you have headroom.
+
+// ---------------------------------------------------------------- sky ------
+// How quickly the sky goes from the horizon colour to the zenith colour.
+// 1.0 = linear, higher = the horizon band stays thinner.
+#ifndef NVS_SKY_HAZE_POWER
+#define NVS_SKY_HAZE_POWER 2.6
+#endif
+// Sunrise and sunset: how strongly the low sky is warmed, 0 disables.
+#ifndef NVS_SKY_WARM_STRENGTH
+#define NVS_SKY_WARM_STRENGTH 0.55
+#endif
+// Night sky detail. 0 turns the procedural night sky off entirely.
+#ifndef NVS_NIGHT_STRENGTH
+#define NVS_NIGHT_STRENGTH 1.0
+#endif
+// Nebula noise octaves. 3 is the low-end default, 5 is richer and slower.
+#ifndef NVS_NEBULA_OCTAVES
+#define NVS_NEBULA_OCTAVES 3
+#endif
+
+// ------------------------------------------------------------- clouds ------
+// Cloud field octaves. 4 gives multiscale cumulus detail; 3 is cheaper, 5 is
+// smoother and slower. This also drives the cloud shadows on the terrain.
+#ifndef NVS_CLOUD_OCTAVES
+#define NVS_CLOUD_OCTAVES 4
+#endif
+// World-space size of the largest cloud feature, in blocks.
+#ifndef NVS_CLOUD_SCALE
+#define NVS_CLOUD_SCALE 96.0
+#endif
+// Fragments whose cloud density is below this are discarded, which is what
+// gives the shapes their wispy, non-tiled edges. Raise for thinner clouds.
+#ifndef NVS_CLOUD_CUTOFF
+#define NVS_CLOUD_CUTOFF 0.30
+#endif
+// How dark the shaded underside of a cloud gets, 1.0 = flat.
+#ifndef NVS_CLOUD_SHADE
+#define NVS_CLOUD_SHADE 0.55
+#endif
+// Depth of the cloud shadows on the ground, 0 = none, 0.18 = 18% darkening.
+#ifndef NVS_CLOUD_SHADOW_STRENGTH
+#define NVS_CLOUD_SHADOW_STRENGTH 0.18
+#endif
+// Height of the cloud layer, in blocks, as used for the shadow gradient.
+#ifndef NVS_CLOUD_HEIGHT
+#define NVS_CLOUD_HEIGHT 192.0
+#endif
+
+// -------------------------------------------------------------- water ------
+// Overall wave slope. 0 = mirror, 1 = noticeably choppy.
+#ifndef NVS_WATER_WAVE_STRENGTH
+#define NVS_WATER_WAVE_STRENGTH 0.55
+#endif
+// Extra small-scale ripple on top of the three directional waves.
+#ifndef NVS_WATER_RIPPLE
+#define NVS_WATER_RIPPLE 0.35
+#endif
+// How much water absorbs the scene underneath, per block of path length.
+#ifndef NVS_WATER_ABSORB
+#define NVS_WATER_ABSORB 0.022
+#endif
+// Fresnel floor: the reflectance of water seen straight down.
+#ifndef NVS_WATER_F0
+#define NVS_WATER_F0 0.02
+#endif
+// Brightness of the whitecaps on wave crests, 0 turns them off.
+#ifndef NVS_WATER_FOAM
+#define NVS_WATER_FOAM 0.07
+#endif
+
+// ------------------------------------------------------------- lighting ----
+// Extra shaping of the vanilla lightmap. 1.0 leaves vanilla's curve alone.
+#ifndef NVS_SKYLIGHT_CURVE
+#define NVS_SKYLIGHT_CURVE 1.15
+#endif
+#ifndef NVS_BLOCKLIGHT_CURVE
+#define NVS_BLOCKLIGHT_CURVE 0.92
+#endif
+// Ambient lift that keeps caves and nights from crushing to pure black.
+#ifndef NVS_BLACK_LIFT
+#define NVS_BLACK_LIFT 0.004
+#endif
+// How much of vanilla's "notGamma" curve is kept, 0 = linear, 1 = vanilla.
+#ifndef NVS_GAMMA_STRENGTH
+#define NVS_GAMMA_STRENGTH 0.85
+#endif
+
+// ------------------------------------------------------------- post --------
+// These are compile-time only in the sense that they affect the post programs;
+// they are constants in the shader, not in the JSON, so they need no rebuild.
+#ifndef NVS_POST_BLOOM
+#define NVS_POST_BLOOM 0.55
+#endif
+#ifndef NVS_POST_EXPOSURE
+#define NVS_POST_EXPOSURE 1.0
+#endif
+#ifndef NVS_POST_CONTRAST
+#define NVS_POST_CONTRAST 0.12
+#endif
+#ifndef NVS_POST_SATURATION
+#define NVS_POST_SATURATION 1.06
+#endif
+#ifndef NVS_POST_VIGNETTE
+#define NVS_POST_VIGNETTE 0.10
+#endif
+#ifndef NVS_POST_SHARPEN
+#define NVS_POST_SHARPEN 0.18
+#endif
+// Luminance above which the highlight shoulder starts compressing.
+#ifndef NVS_POST_SHOULDER
+#define NVS_POST_SHOULDER 0.72
+#endif
+
+// ------------------------------------------------------------- plants ------
+// Sway of cutout plants. Only plants that the native vertex data can actually
+// identify are moved (see ARCHITECTURE.md); 0 disables it.
+#ifndef NVS_PLANT_SWAY
+#define NVS_PLANT_SWAY 0.055
+#endif
+
+#endif

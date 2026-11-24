@@ -1,0 +1,25 @@
+# Reference material only. None of this is part of the pack, and two of the
+# three folders may not be redistributed:
+#
+#   Good working shader/  - Complementary License 1.8 forbids redistribution.
+#   Vanilla-stock /       - Mojang's own client shader source.
+#   .research/            - copies of another repository's experiment definitions.
+#
+# The installable pack is pack.mcmeta + assets/. See INSTALLATION.md and
+# MANIFEST/licensing.md. tools/check_pack.py runs without the vanilla folder and
+# does more with it; tools/manifest.py needs it.
+#
+# The glob has no trailing space on purpose: the local folder is literally named
+# "Vanilla-stock " with one, and git ignores unescaped trailing spaces.
+/Good working shader/
+/Vanilla-stock*/
+/.research/
+
+# Build output from tools/package.py
+/dist/
+__pycache__/
+*.pyc
+
+# Editor and OS
+.DS_Store
+Thumbs.db

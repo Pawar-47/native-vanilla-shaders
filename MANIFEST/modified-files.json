@@ -1,0 +1,127 @@
+{
+  "generated": false,
+  "generator": "python3 tools/manifest.py --write",
+  "minecraft_version": "26.3",
+  "note": "One entry per file the pack places at a path vanilla also uses, plus the files the pack adds. Every reason is hand-written and stays as it is; the two sha256 columns are filled in by the generator, which cannot run in the environment this pack was built in. Run `python3 tools/manifest.py --write` once, then `--check`. Files the pack adds under assets/nvs/ are listed in vanilla-hashes.json's companion and in ARCHITECTURE.md rather than here one by one, because they replace nothing.",
+  "replaced": [
+    {
+      "pack_file": "assets/minecraft/shaders/include/fog.glsl",
+      "vanilla_source": "Vanilla-stock /include/fog.glsl",
+      "reason": "The fog value goes through a smoothstep between the same start and end, so fog fades in instead of starting at a visible line and ending at a wall. Every block, function and signature is kept, and FogColor and FogColor.a are untouched, so underwater fog, blindness, darkness and rain fog keep the game's colours and distances. Widest reach of any change in the pack: terrain, entities, items, particles, glint, clouds, sky, end portal, beacon beam, lightning, leashes and text all include this file.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/sky.vsh",
+      "vanilla_source": "Vanilla-stock /core/sky.vsh",
+      "reason": "Adds two varyings: the world-space view direction of the sky vertex (the disc is drawn with the camera rotation alone, so normalize(Position).y is the elevation) and a flag for the below-horizon dark disc, which the same program draws translated 12 blocks down.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/sky.fsh",
+      "vanilla_source": "Vanilla-stock /core/sky.fsh",
+      "reason": "Replaces the flat sky colour with an elevation gradient built from the game's own ColorModulator and FogColor, which already carry the hour, the weather, the biome and the dimension. Adds a warm sunrise and sunset band driven by how warm FogColor already is, a night nebula and star field gated on how dark the sky colour already is, and a 4x4 ordered dither against 8-bit banding. Vanilla's apply_fog call and arguments are kept, so blindness and underwater still collapse the sky to fog, and the below-horizon disc keeps vanilla's look.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/stars.vsh",
+      "vanilla_source": "Vanilla-stock /core/stars.vsh",
+      "reason": "Derives a per-star magnitude and colour temperature from a hash of the star's direction. The position is the only per-star input the program is given; there is no per-star attribute and no texture.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/stars.fsh",
+      "vanilla_source": "Vanilla-stock /core/stars.fsh",
+      "reason": "Applies that tint to ColorModulator. Vanilla wrote ColorModulator alone, so every star was identical.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/position_tex.vsh",
+      "vanilla_source": "Vanilla-stock /core/position_tex.vsh",
+      "reason": "Adds the position within the celestial quad (UV0 recentred to -1..1) and which body it is: the sun's quad is scaled by 30 and the moon's by 20, read from the model-view matrix. This program draws the sun and the moon and nothing else, so no heuristic is needed.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/position_tex.fsh",
+      "vanilla_source": "Vanilla-stock /core/position_tex.fsh",
+      "reason": "Adds a corona around the sun and the moon inside the quad each body already occupies, where the radial distance is literally an angular distance and the quad edge is about 17 degrees out; it is faded to exactly zero at that edge. The body's own alpha is folded into the colour and alpha 1 is written, which makes the additive blend add exactly what vanilla added for the body while placing the halo beside it. Rain brightness, which arrives in ColorModulator.a, fades both.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/position_color.vsh",
+      "vanilla_source": "Vanilla-stock /core/position_color.vsh",
+      "reason": "Computes a radial factor across the sunrise and sunset glow, which vanilla paints in one flat colour. The fan is recognised by geometry (a centre at (0,100,0) and a ring about 120 units out) under a perspective projection within the first 18 vertices; anything else keeps a factor of exactly 1, so the debug shapes this program also draws are untouched.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/position_color.fsh",
+      "vanilla_source": "Vanilla-stock /core/position_color.fsh",
+      "reason": "Multiplies the colour by that factor. It must be the colour and not the alpha: the sunrise and sunset pipeline blends with (one, one), where alpha is ignored. Vanilla's OIT branch structure and calculateFinalColor placement are unchanged.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/debug_point.vsh",
+      "vanilla_source": "Vanilla-stock /core/debug_point.vsh",
+      "reason": "Required partner change, not a feature: position_color.fsh is linked with debug_point.vsh as well as position_color.vsh, and every fragment input needs a vertex output at the same location in every partner. This program writes a glow factor of 1. If it were not replaced, the pack would fail to link on four pipelines.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/clouds.vsh",
+      "vanilla_source": "Vanilla-stock /core/clouds.vsh",
+      "reason": "Adds the world-anchored XZ of each cloud fragment and which way its face points. CloudOffset is already inside the position the game computes, so the procedural field travels with the clouds the game moves. The cell unpacking, the packing constants and the CloudFaces reads are unchanged.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/clouds.fsh",
+      "vanilla_source": "Vanilla-stock /core/clouds.fsh",
+      "reason": "Carves the cloud volume with a procedural multiscale field (a smooth mass plus a ridged detail channel) and shades it by density and face orientation. The discards happen before every OIT branch, so the three Improved Transparency passes discard identical fragments and their transmittance stays consistent with the colour pass. All time-of-day, weather and dimension colour still comes from CloudColor.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/terrain.vsh",
+      "vanilla_source": "Vanilla-stock /core/terrain.vsh",
+      "reason": "Adds three varyings (absolute world position, camera-relative position, raw pre-lighting tint) and sways plants, identified only by the three properties the native vertex data supplies: cutout pipeline, biome tint, and off the block grid. Vanilla's MULTIDRAW_TERRAIN and OIT_ALPHA_ONLY structure is preserved line for line, including the guarded ChunkPosition/ChunkVisibility inputs.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/terrain.fsh",
+      "vanilla_source": "Vanilla-stock /core/terrain.fsh",
+      "reason": "Shades water with wave normals, Fresnel and a reflected sky and cloud layer, and darkens lit ground under cloud cover. Water is recognised by the uniform 180/255 texture alpha plus a biome tint, which the slime block lacks. Only the colour changes and never the alpha, so the surface stays translucent over the bottom and the OIT passes stay consistent. The texture sample is still taken unconditionally at the top, because sampleNearest and sampleRGSS take screen-space derivatives.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    },
+    {
+      "pack_file": "assets/minecraft/shaders/core/lightmap.fsh",
+      "vanilla_source": "Vanilla-stock /core/lightmap.fsh",
+      "reason": "Reshapes the sky and block light response curves, keeps more of block light's warmth and reach, and lifts absolute black slightly so caves and nights do not crush. Every colour still comes from LightmapInfo, which the game sets from the celestial angle, the weather and the dimension, so sun angle, moonlight, day and night transitions all remain the game's. Vanilla's ordering of the boss overlay darkening, the darkness scale and the gamma blend is preserved.",
+      "pack_sha256": null,
+      "vanilla_sha256": null
+    }
+  ],
+  "added": [
+    {
+      "pack_file": "assets/minecraft/post_effect/end_of_frame.json",
+      "vanilla_source": null,
+      "reason": "The end-of-frame hook. 26.3 requests minecraft:end_of_frame on every frame in which a world is rendered: it runs after the world, the hand and the glowing-entity outline, and before the GUI. Vanilla ships no such effect, so the log carries a harmless 'Requested post effect does not exist: minecraft:end_of_frame' without a pack. This file is the only way a resource pack can post-process the frame, and it is three passes: a bright-pass ring blur into a fixed 480x270 target, a composite, and a copy back to minecraft:main.",
+      "pack_sha256": null
+    },
+    {
+      "pack_file": "assets/nvs/post_effect/fxaa.json",
+      "vanilla_source": null,
+      "reason": "Optional antialiasing, not part of the default chain, because it costs a full-resolution pass and softens the block edges. Applied per player with /posteffect add @s nvs:fxaa and removed with /posteffect remove. It reads minecraft:main into a swap target and copies back, rather than reading and writing the same target in one pass.",
+      "pack_sha256": null
+    }
+  ]
+}

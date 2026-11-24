@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Native Vanilla Shaders 1.0 for Minecraft Java 26.3 - sky, clouds, water, lighting and post-processing as an ordinary resource pack, no shader loader. See README.md.",
+    "min_format": 97,
+    "max_format": 97
+  }
+}

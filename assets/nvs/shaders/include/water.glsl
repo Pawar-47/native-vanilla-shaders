@@ -1,0 +1,159 @@
+#ifndef NVS_WATER_GLSL
+#define NVS_WATER_GLSL
+
+#include <nvs:common.glsl>
+#include <nvs:clouds.glsl>
+#include <nvs:sky.glsl>
+
+// Water.
+//
+// The surface stays flat, exactly where the game put it: the waves live in the
+// normal, which is all a reflection needs. Moving the geometry instead would
+// also move glass and ice, which share the translucent terrain pass, and the
+// vertex program gets no texture to tell them apart.
+//
+// Water is recognised the way the game's own textures allow: every water
+// texture has a uniform alpha of 180/255, and water is tinted by the biome. The
+// slime block shares the alpha but not the tint. The raw pre-lighting vertex
+// colour is what makes that test possible, so `core/terrain.vsh` passes it.
+
+#define NVS_WATER_ALPHA 180.0
+
+bool nvs_isWater(vec4 texel, vec4 tint) {
+    float spread = nvs_max3(tint.rgb) - nvs_min3(tint.rgb);
+    return abs(texel.a * 255.0 - NVS_WATER_ALPHA) < 1.5 && spread > 0.04;
+}
+
+// GameTime arrives as 0..1 over 24000 ticks and wraps. Every animated function
+// here is built so that the wrap is seamless: the time enters as whole numbers
+// of cycles per day, and everywhere else as the phase of a circle.
+#define NVS_WAVE_CYCLES_PER_DAY 120.0
+
+float nvs_waveTime(float gameTime) {
+    return gameTime * 6.2831853 * NVS_WAVE_CYCLES_PER_DAY;
+}
+
+// Surface slope: the gradient of a sum of directional waves, plus a ripple
+// channel made of value noise. The ripple drifts around a circle rather than
+// along a line, so it loops exactly when the day does.
+vec2 nvs_waveGradient(vec2 p, float t, float strength) {
+    vec2 grad = vec2(0.0);
+
+    float k0 = 0.62;
+    float k1 = 1.17;
+    float k2 = 2.31;
+    float a0 = 0.050;
+    float a1 = 0.026;
+    float a2 = 0.012;
+
+    float ph0 = dot(p, vec2(0.94, 0.34)) * k0 + t;
+    grad += (a0 * k0) * cos(ph0) * vec2(0.94, 0.34);
+
+    // 1.7 and 2.9 times the base rate are 204 and 348 cycles per day: whole
+    // numbers, so these waves also close the loop.
+    float ph1 = dot(p, vec2(-0.42, 0.91)) * k1 + t * 1.7;
+    grad += (a1 * k1) * cos(ph1) * vec2(-0.42, 0.91);
+
+    float ph2 = dot(p, vec2(0.68, -0.73)) * k2 + t * 2.9;
+    grad += (a2 * k2) * cos(ph2) * vec2(0.68, -0.73);
+
+    vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
+    vec2 rp = p * 0.55 + orbit;
+    const float e = 0.08;
+    float n0 = nvs_valueNoise(rp);
+    float nx = nvs_valueNoise(rp + vec2(e, 0.0));
+    float nz = nvs_valueNoise(rp + vec2(0.0, e));
+    grad += NVS_WATER_RIPPLE * vec2(nx - n0, nz - n0) / e * 0.10;
+
+    return grad * strength;
+}
+
+vec3 nvs_waterNormal(vec2 p, float t, float strength) {
+    vec2 g = nvs_waveGradient(p, t, strength);
+    return normalize(vec3(-g.x, 1.0, -g.y));
+}
+
+// Foam on the crests of the wave sum. 0 in the troughs, 1 on the peaks.
+float nvs_waterCrest(vec2 p, float t) {
+    float h = 0.0;
+    h += 0.5 + 0.5 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
+    h += 0.5 + 0.5 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 1.7);
+    h += 0.5 + 0.5 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 2.9);
+    return h / 3.0;
+}
+
+// The sky in the direction of a reflection, including the cloud layer.
+// `horizon` is FogColor; the zenith is inferred from it, because this runs in
+// a program that does not receive the sky's own colour.
+vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 horizon) {
+    vec3 zenith = nvs_zenithFromHorizon(horizon);
+    vec3 sky = nvs_skyGradient(reflected, zenith, horizon);
+
+    if (reflected.y > 0.02) {
+        // Where the reflected ray crosses the cloud layer. The reflection of
+        // real clouds is worth the four noise taps: a flat mirror is the single
+        // most obvious tell of a fake water surface.
+        float cloudY = NVS_CLOUD_HEIGHT;
+        float travel = max(cloudY - worldY, 1.0);
+        vec2 cloudXZ = worldXZ + reflected.xz * (travel / reflected.y);
+        float d = nvs_cloudField(cloudXZ);
+        float cover = smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.45, d) * 0.55;
+        vec3 cloudTint = horizon * 1.10 + vec3(0.05);
+        sky = mix(sky, cloudTint, cover);
+    }
+
+    return sky;
+}
+
+// Shade one water fragment.
+//
+// `baseColor` is what the game already computed for the water surface: texture
+// times the biome tint times the lightmap. `viewPos` is the fragment relative to
+// the camera (the camera is the origin there), `worldPos` is absolute.
+//
+// Only the colour changes. The alpha is left exactly as the game set it, which
+// is what keeps the water translucent over the bottom and keeps the three
+// Improved Transparency passes consistent with each other.
+vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
+                    vec3 horizon, float underwater) {
+    float t = nvs_waveTime(gameTime);
+
+    vec3 V = normalize(-viewPos);
+    vec3 N = nvs_waterNormal(worldPos.xz, t, NVS_WATER_WAVE_STRENGTH);
+
+    float NoV = clamp(dot(N, V), 0.0, 1.0);
+
+    // Schlick's approximation with water's F0. Grazing angles reflect almost
+    // everything, which is what gives water its bright, silvery far field and
+    // its transparent near field.
+    float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - NoV, 5.0);
+
+    // Depth: the light from below travels through water, and red is absorbed
+    // first. The path length is the distance to the surface, capped, which is
+    // the closest proxy the native pipeline offers for the depth of the column.
+    float pathLength = min(length(viewPos), 48.0);
+    vec3 absorption = vec3(0.34, 0.13, 0.085) * NVS_WATER_ABSORB;
+    vec3 transmittance = exp(-absorption * pathLength);
+    vec3 below = baseColor * transmittance;
+
+    vec3 reflected = reflect(-V, N);
+    vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, horizon);
+
+    vec3 color = mix(below, skyReflection, fresnel);
+
+    // Whitecaps: the crests of the same wave sum, broken up by the ripple so
+    // they do not read as a regular pattern.
+    if (NVS_WATER_FOAM > 0.0) {
+        float crest = smoothstep(0.72, 1.0, nvs_waterCrest(worldPos.xz * 0.55, t));
+        float broken = nvs_valueNoise(worldPos.xz * 1.9 + vec2(t * 0.25));
+        color += vec3(NVS_WATER_FOAM) * crest * smoothstep(0.35, 0.85, broken);
+    }
+
+    // Seen from under the surface: the game already fogs the world toward the
+    // water colour, this only keeps the surface from reading as a mirror.
+    color = mix(color, color * vec3(0.72, 0.94, 0.98), underwater * 0.6);
+
+    return color;
+}
+
+#endif

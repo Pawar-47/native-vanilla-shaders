@@ -1,0 +1,51 @@
+#version 330
+#extension GL_ARB_separate_shader_objects : require
+
+#include <minecraft:fog.glsl>
+#include <minecraft:oit.glsl>
+#include <nvs:clouds.glsl>
+
+layout(location = 0) in float vertexDistance;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec2 nvsCloudXZ;
+layout(location = 3) flat in float nvsCloudUp;
+
+#ifndef OIT_ALPHA_ONLY
+layout(location = 0) out vec4 fragColor;
+#endif
+
+vec4 calculateFinalColor(vec4 color) {
+    #ifdef OIT_ACCUMULATE
+    color = sampleColorForAccumulation(color);
+    #endif
+    return color;
+}
+
+void main() {
+    // Carve the volume. The game supplies the cells; the field decides which
+    // parts of them survive, which is where the multiscale cumulus forms, the
+    // torn wispy edges and the absence of tiling come from.
+    //
+    // This happens before every OIT branch so that the three Improved
+    // Transparency passes discard exactly the same fragments and their
+    // transmittance stays consistent with the colour pass.
+    float density = nvs_cloudField(nvsCloudXZ);
+    if (density < NVS_CLOUD_CUTOFF) {
+        discard;
+    }
+
+    vec4 color = vertexColor;
+    #ifndef OIT_DEPTH_BOUNDS
+    color.a *= 1.0f - linear_fog_value(vertexDistance, 0, FogCloudsEnd);
+    #endif
+
+    // Lit tops, shaded undersides, darker creases. All of the hour, the weather
+    // and the dimension arrive in CloudColor, which the game sets.
+    color.rgb *= nvs_cloudShade(density, nvsCloudUp * 0.5 + 0.5);
+
+    #ifdef OIT_ALPHA_ONLY
+    executeAlphaOnlyPhase(gl_FragCoord.z, color.a);
+    #else
+    fragColor = calculateFinalColor(color);
+    #endif
+}

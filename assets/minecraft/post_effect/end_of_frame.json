@@ -1,0 +1,33 @@
+{
+  "targets": {
+    "swap": {},
+    "bloom": { "width": 480, "height": 270 }
+  },
+  "passes": [
+    {
+      "vertex_shader": "nvs:post/fullscreen",
+      "fragment_shader": "nvs:post/bloom",
+      "inputs": [
+        { "sampler_name": "In", "target": "minecraft:main" }
+      ],
+      "output": "bloom"
+    },
+    {
+      "vertex_shader": "nvs:post/fullscreen",
+      "fragment_shader": "nvs:post/composite",
+      "inputs": [
+        { "sampler_name": "In", "target": "minecraft:main" },
+        { "sampler_name": "Bloom", "target": "bloom" }
+      ],
+      "output": "swap"
+    },
+    {
+      "vertex_shader": "nvs:post/fullscreen",
+      "fragment_shader": "nvs:post/copy",
+      "inputs": [
+        { "sampler_name": "In", "target": "swap" }
+      ],
+      "output": "minecraft:main"
+    }
+  ]
+}
