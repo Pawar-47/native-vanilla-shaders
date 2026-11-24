@@ -148,21 +148,10 @@ void main() {
         // faces and flat vegetation cards. This adds directional form without
         // a shadow map or another render target.
         if (depth > 0.0 && alpha >= 0.99 && waterData == 0.0) {
-            ivec2 pxL = ivec2(max(pixel.x - 1, 0), pixel.y);
-            ivec2 pxR = ivec2(min(pixel.x + 1, size.x - 1), pixel.y);
-            ivec2 pxD = ivec2(pixel.x, max(pixel.y - 1, 0));
-            ivec2 pxU = ivec2(pixel.x, min(pixel.y + 1, size.y - 1));
-            float dL = texelFetch(DepthSampler, pxL, 0).r;
-            float dR = texelFetch(DepthSampler, pxR, 0).r;
-            float dD = texelFetch(DepthSampler, pxD, 0).r;
-            float dU = texelFetch(DepthSampler, pxU, 0).r;
-            vec3 pL = nvs_busViewPosition(bus, (vec2(pxL) + 0.5) / vec2(size), max(dL > 0.0 ? dL : depth, 1e-6));
-            vec3 pR = nvs_busViewPosition(bus, (vec2(pxR) + 0.5) / vec2(size), max(dR > 0.0 ? dR : depth, 1e-6));
-            vec3 pD = nvs_busViewPosition(bus, (vec2(pxD) + 0.5) / vec2(size), max(dD > 0.0 ? dD : depth, 1e-6));
-            vec3 pU = nvs_busViewPosition(bus, (vec2(pxU) + 0.5) / vec2(size), max(dU > 0.0 ? dU : depth, 1e-6));
-            vec3 dx = abs(dR - depth) < abs(dL - depth) ? pR - viewPosition : viewPosition - pL;
-            vec3 dy = abs(dU - depth) < abs(dD - depth) ? pU - viewPosition : viewPosition - pD;
-            vec3 normalView = normalize(cross(dx, dy));
+            // Derivatives are evaluated in the uniform in-air branch, before
+            // the per-pixel material condition, avoiding undefined derivatives
+            // and four extra depth/position samples on the integrated GPU.
+            vec3 normalView = normalize(cross(dFdx(viewPosition), dFdy(viewPosition)));
             if (dot(normalView, -viewPosition) < 0.0) normalView = -normalView;
             vec3 normalWorld = normalize(bus.viewToWorld * normalView);
 
