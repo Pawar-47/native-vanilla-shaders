@@ -153,7 +153,7 @@ void main() {
     // pass deliberately leaves the vanilla surface untouched for SSR).
     if (top && NVS_WATER_FOAM > 0.0) {
         float crest = smoothstep(NVS_WATER_FOAM_THRESHOLD, 1.0,
-                                 nvs_waterCrest(worldPosition.xz, t));
+                                 nvs_waterCrest(worldPosition.xz, t, pixelFootprint));
         float broken = nvs_valueNoise(worldPosition.xz * 1.9 + vec2(t * 0.25));
         float foam = crest * smoothstep(0.35, 0.85, broken) * mix(0.45, 1.0, farWaveFade);
         finalColor += vec3(NVS_WATER_FOAM) * foam;

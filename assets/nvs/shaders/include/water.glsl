@@ -43,14 +43,24 @@ float nvs_waveTime(float gameTime) {
 // Every temporal multiplier is an integer. GameTime wraps after one day, so
 // integer harmonics close exactly at the wrap; fractional rates (1.7, 2.9,
 // etc.) caused a visible phase discontinuity at midnight.
-float nvs_waveHeight(vec2 p, float t) {
+float nvs_waveHeight(vec2 p, float t, float footprint) {
+    float f0 = nvs_waveFade(0.62, footprint);
+    float f1 = nvs_waveFade(1.17, footprint);
+    float f2 = nvs_waveFade(2.31, footprint);
+    float f3 = nvs_waveFade(0.86, footprint);
+    float f4 = nvs_waveFade(1.72, footprint);
     float h = 0.0;
-    h += 0.050 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
-    h += 0.026 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 2.0);
-    h += 0.012 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 3.0);
-    h += 0.018 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
-    h += 0.009 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
+    h += 0.050 * f0 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
+    h += 0.026 * f1 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 2.0);
+    h += 0.012 * f2 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 3.0);
+    h += 0.018 * f3 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
+    h += 0.009 * f4 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
     return h;
+}
+
+float nvs_waveFade(float waveNumber, float footprint) {
+    float pixelScale = max(footprint, 1e-4);
+    return smoothstep(2.0, 6.0, 6.2831853 / (waveNumber * pixelScale));
 }
 
 // Analytic derivative of nvs_waveHeight, plus a small circularly drifting
@@ -69,12 +79,11 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     const float k4 = 1.72;
     // A wave shorter than roughly two pixels aliases; fade it out before
     // it reaches that point, as in the reference water implementation.
-    float pixelScale = max(footprint, 1e-4);
-    float f0 = smoothstep(2.0, 6.0, 6.2831853 / (k0 * pixelScale));
-    float f1 = smoothstep(2.0, 6.0, 6.2831853 / (k1 * pixelScale));
-    float f2 = smoothstep(2.0, 6.0, 6.2831853 / (k2 * pixelScale));
-    float f3 = smoothstep(2.0, 6.0, 6.2831853 / (k3 * pixelScale));
-    float f4 = smoothstep(2.0, 6.0, 6.2831853 / (k4 * pixelScale));
+    float f0 = nvs_waveFade(k0, footprint);
+    float f1 = nvs_waveFade(k1, footprint);
+    float f2 = nvs_waveFade(k2, footprint);
+    float f3 = nvs_waveFade(k3, footprint);
+    float f4 = nvs_waveFade(k4, footprint);
 
     vec2 grad = vec2(0.0);
     grad += (0.050 * k0) * cos(dot(p, d0) * k0 + t) * d0 * f0;
@@ -106,9 +115,17 @@ vec3 nvs_waterNormal(vec2 p, float t, float strength) {
 
 // Foam follows the actual combined wave height, so its crests coincide with
 // the normal field rather than using five equally weighted, mismatched waves.
+float nvs_waterCrest(vec2 p, float t, float footprint) {
+    float totalAmplitude = 0.050 * nvs_waveFade(0.62, footprint)
+                         + 0.026 * nvs_waveFade(1.17, footprint)
+                         + 0.012 * nvs_waveFade(2.31, footprint)
+                         + 0.018 * nvs_waveFade(0.86, footprint)
+                         + 0.009 * nvs_waveFade(1.72, footprint);
+    return clamp(0.5 + 0.5 * nvs_waveHeight(p, t, footprint) / max(totalAmplitude, 1e-5), 0.0, 1.0);
+}
+
 float nvs_waterCrest(vec2 p, float t) {
-    const float totalAmplitude = 0.115;
-    return clamp(0.5 + 0.5 * nvs_waveHeight(p, t) / totalAmplitude, 0.0, 1.0);
+    return nvs_waterCrest(p, t, 1.0);
 }
 
 // The sky in the direction of a reflection, including the cloud layer.
