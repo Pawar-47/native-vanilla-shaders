@@ -145,7 +145,15 @@ void main() {
 
     float vanillaFog = nvs_vanillaFog(bus, worldRelative);
     float fogAmount = nvs_atmosphereFog(bus, worldRelative, vanillaFog);
-    vec3 distantSky = nvs_skyGradient(viewWorld, bus.skyColor, bus.fogColor);
+    vec3 fogDirection = normalize(vec3(viewWorld.x, max(viewWorld.y, 0.0), viewWorld.z));
+    vec3 distantSky = nvs_reflectedSky(fogDirection, worldPosition.xz,
+                                       worldPosition.y, bus.skyColor, bus.fogColor);
+    float viewSunAngle = acos(clamp(dot(fogDirection, bus.sunDirection), -1.0, 1.0));
+    float viewSunDisc = 1.0 - smoothstep(0.0042, 0.0052, viewSunAngle);
+    float viewSunCorona = exp(-viewSunAngle * 42.0) * 0.24
+                        + exp(-viewSunAngle * 13.0) * 0.075;
+    distantSky += vec3(1.0, 0.82, 0.58)
+                * (viewSunDisc * 1.8 + viewSunCorona) * bus.rainBrightness;
     reflection = mix(reflection, distantSky, fogAmount);
 
     vec2 distortion = (viewNormal.xy - viewFace.xy) * NVS_WATER_REFRACTION_STRENGTH;
