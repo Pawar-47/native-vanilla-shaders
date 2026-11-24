@@ -55,6 +55,10 @@ void main() {
     // so it adds punch without moving either end.
     c = mix(c, c * c * (3.0 - 2.0 * c), NVS_POST_CONTRAST);
 
+    // A restrained warm film balance: amber highlights and neutral mids,
+    // without turning the whole world orange or crushing cool shadows.
+    c *= vec3(1.0 + NVS_POST_WARMTH, 1.0, 1.0 - NVS_POST_WARMTH * 0.72);
+
     float l = nvs_luma(c);
     c = mix(vec3(l), c, NVS_POST_SATURATION);
 

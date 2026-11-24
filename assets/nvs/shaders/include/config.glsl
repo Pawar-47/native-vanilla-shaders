@@ -59,11 +59,11 @@
 // Fragments whose cloud density is below this are discarded, which is what
 // gives the shapes their wispy, non-tiled edges. Raise for thinner clouds.
 #ifndef NVS_CLOUD_CUTOFF
-#define NVS_CLOUD_CUTOFF 0.30
+#define NVS_CLOUD_CUTOFF 0.34
 #endif
 // How dark the shaded underside of a cloud gets, 1.0 = flat.
 #ifndef NVS_CLOUD_SHADE
-#define NVS_CLOUD_SHADE 0.55
+#define NVS_CLOUD_SHADE 0.30
 #endif
 // Depth of the cloud shadows on the ground, 0 = none, 0.18 = 18% darkening.
 #ifndef NVS_CLOUD_SHADOW_STRENGTH
@@ -92,7 +92,7 @@
 // -------------------------------------------------------------- water ------
 // Overall wave slope. 0 = mirror, 1 = noticeably choppy.
 #ifndef NVS_WATER_WAVE_STRENGTH
-#define NVS_WATER_WAVE_STRENGTH 0.36
+#define NVS_WATER_WAVE_STRENGTH 0.20
 #endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
@@ -104,15 +104,15 @@
 #endif
 // Wave-driven shift of the reflected image, in screen UV units per unit of tilt.
 #ifndef NVS_WATER_REFLECTION_RIPPLE
-#define NVS_WATER_REFLECTION_RIPPLE 0.012
+#define NVS_WATER_REFLECTION_RIPPLE 0.002
 #endif
 // Refraction shift of the vanilla water/scene sample.
 #ifndef NVS_WATER_REFRACTION_STRENGTH
-#define NVS_WATER_REFRACTION_STRENGTH 0.012
+#define NVS_WATER_REFRACTION_STRENGTH 0.004
 #endif
 // Brightness of the whitecaps on wave crests, 0 turns them off.
 #ifndef NVS_WATER_FOAM
-#define NVS_WATER_FOAM 0.07
+#define NVS_WATER_FOAM 0.018
 #endif
 // Flatten the wave spectrum with camera distance, as the projected wave
 // height becomes less visible; the per-wave footprint filter handles aliasing.
@@ -121,7 +121,7 @@
 #endif
 // Normalised wave-height threshold for whitecap foam.
 #ifndef NVS_WATER_FOAM_THRESHOLD
-#define NVS_WATER_FOAM_THRESHOLD 0.72
+#define NVS_WATER_FOAM_THRESHOLD 0.82
 #endif
 // Screen-space reflection ray budget. Sixteen coarse steps plus three refinements
 // reduce full-resolution water cost on Intel HD 5500-class integrated graphics.
@@ -162,19 +162,22 @@
 // These are compile-time only in the sense that they affect the post programs;
 // they are constants in the shader, not in the JSON, so they need no rebuild.
 #ifndef NVS_POST_BLOOM
-#define NVS_POST_BLOOM 0.38
+#define NVS_POST_BLOOM 0.42
 #endif
 #ifndef NVS_POST_EXPOSURE
-#define NVS_POST_EXPOSURE 1.03
+#define NVS_POST_EXPOSURE 1.06
 #endif
 #ifndef NVS_POST_CONTRAST
-#define NVS_POST_CONTRAST 0.17
+#define NVS_POST_CONTRAST 0.20
 #endif
 #ifndef NVS_POST_SATURATION
-#define NVS_POST_SATURATION 1.08
+#define NVS_POST_SATURATION 1.16
+#endif
+#ifndef NVS_POST_WARMTH
+#define NVS_POST_WARMTH 0.035
 #endif
 #ifndef NVS_POST_VIGNETTE
-#define NVS_POST_VIGNETTE 0.10
+#define NVS_POST_VIGNETTE 0.075
 #endif
 #ifndef NVS_POST_SHARPEN
 #define NVS_POST_SHARPEN 0.18

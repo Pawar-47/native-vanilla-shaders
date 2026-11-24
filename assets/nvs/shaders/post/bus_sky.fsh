@@ -86,6 +86,37 @@ void main() {
             float keep = (1.0 - amount) / max(1.0 - vanillaFog, 1e-4);
             color = surface * keep + alpha * amount * sky + (1.0 - alpha) * skyWithSun;
         }
+
+        // Procedural stylised cloud layer. The native cloud mesh is deliberately
+        // transparent; intersect each sky ray with the configured cloud plane
+        // and draw soft, rounded cumulus lobes here instead of vanilla boxes.
+        bool cloudCandidate = depth <= 0.0
+                          || (alpha < 0.99 && abs(worldY - NVS_CLOUD_HEIGHT) < 48.0);
+        if (cloudCandidate && abs(worldDirection.y) > 0.012) {
+            vec3 cameraWorld = vec3(CameraBlockPos) - CameraOffset;
+            float cloudTravel = (NVS_CLOUD_HEIGHT - cameraY) / worldDirection.y;
+            if (cloudTravel > 0.0 && cloudTravel < 6000.0) {
+                vec2 cloudXZ = cameraWorld.xz + worldDirection.xz * cloudTravel;
+                float density = nvs_cloudPuffDensity(cloudXZ);
+                float cloudAlpha = smoothstep(NVS_CLOUD_CUTOFF - 0.055,
+                                              NVS_CLOUD_CUTOFF + 0.13, density);
+                cloudAlpha *= smoothstep(0.08, 0.30, density);
+                cloudAlpha *= smoothstep(0.008, 0.055, abs(worldDirection.y));
+
+                if (cloudAlpha > 0.002) {
+                    float sunElevation = smoothstep(-0.12, 0.22, bus.sunDirection.y);
+                    float sunStrength = max(bus.sunDirection.y, 0.0);
+                    vec3 coolUnderside = mix(vec3(0.39, 0.49, 0.65),
+                                             vec3(0.62, 0.67, 0.75), sunElevation);
+                    vec3 warmLitTop = vec3(1.00, 0.965, 0.885)
+                                    * (0.86 + 0.14 * sunStrength);
+                    float litForm = smoothstep(0.34, 0.82, density);
+                    vec3 cloudColor = mix(coolUnderside, warmLitTop, litForm);
+                    cloudColor *= nvs_cloudShade(density, 0.55);
+                    color = mix(color, cloudColor, cloudAlpha * 0.96);
+                }
+            }
+        }
     }
 
     // The bus is transport data, not a visible one-pixel stripe.

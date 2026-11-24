@@ -16,6 +16,35 @@
 // gives the cumulus blocks, and a ridged detail, which gives the torn, wispy
 // edges. Nothing repeats: there is no texture and no lookup table.
 
+// Stylised cloud silhouettes: jittered rounded lobes form broad, connected
+// cumulus masses. The native game mesh is still the carrier, but this field
+// replaces its box-like cell mask with soft, scalloped cartoon contours.
+float nvs_cloudPuffDensity(vec2 worldXZ) {
+    vec2 p = worldXZ / (NVS_CLOUD_SCALE * 0.38);
+    float lobes = 0.0;
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            vec2 cell = floor(p) + vec2(float(x), float(y));
+            vec2 jitter = vec2(
+                nvs_hash12(cell + vec2(13.1, 7.7)),
+                nvs_hash12(cell + vec2(41.3, 19.9))
+            ) - 0.5;
+            jitter *= 0.34;
+            vec2 local = p - cell - 0.5 - jitter;
+            float radius = mix(0.48, 0.76, nvs_hash12(cell + 23.7));
+            float lobe = 1.0 - smoothstep(radius - 0.18, radius + 0.08, length(local));
+            lobes = max(lobes, lobe);
+        }
+    }
+    float broad = nvs_fbm(p * 0.31 + vec2(4.7, 8.2), 2);
+    float cluster = smoothstep(0.20, 0.72, broad);
+    float softMass = lobes * mix(0.78, 1.0, cluster);
+    // A restrained low-frequency modulation prevents a repeated bead pattern
+    // while preserving the clean, rounded silhouette of each cumulus lobe.
+    float billow = nvs_fbm(p * 0.72 + vec2(17.0, 3.0), 2);
+    return clamp(softMass * mix(0.94, 1.06, billow), 0.0, 1.0);
+}
+
 // Shared density function. Visible clouds use the configured detail level;
 // terrain shadows use fewer octaves for the integrated-GPU target, but retain
 // exactly the same mass/detail shaping so the silhouettes stay related.
@@ -68,18 +97,15 @@ float nvs_cloudVolumeField(vec2 worldXZ, float heightFraction) {
 // game, which is why this stays correct at every hour.
 float nvs_cloudShade(float density, float upward) {
     float face = clamp(upward, 0.0, 1.0);
-    float form = mix(1.0 - NVS_CLOUD_SHADE, 1.05, face);
-    float thickness = mix(0.80, 1.14, smoothstep(0.30, 0.88, density));
-
-    // Dense cloud cores absorb more skylight on their undersides, while thin
-    // upper edges scatter a little extra light. This adds volume without a
-    // guessed sun vector: 26.3's CloudColor still supplies the real day,
-    // sunset, night and weather tint.
-    float core = smoothstep(0.48, 0.92, density) * (1.0 - face) * 0.14;
-    float edge = (1.0 - smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.34, density))
-               * smoothstep(0.08, 0.82, face) * 0.11;
-
-    return max(form * thickness - core, 0.0) + edge;
+    // Lift the underside substantially: the previous 0.45-ish multiplier
+    // crushed Minecraft's already subdued CloudColor into charcoal/black.
+    // A warm key on upper lobes and a cool ambient fill give the puffs depth.
+    float ambient = mix(0.78, 1.18, face);
+    float fullness = mix(0.94, 1.08, smoothstep(0.30, 0.90, density));
+    float core = smoothstep(0.55, 0.96, density) * (1.0 - face) * 0.035;
+    float edge = (1.0 - smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.30, density))
+               * smoothstep(0.08, 0.82, face) * 0.045;
+    return max(ambient * fullness - core, 0.0) + edge;
 }
 
 // How much a ground fragment at this world XZ is shaded by the cloud above it.
