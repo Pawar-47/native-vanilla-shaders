@@ -32,64 +32,116 @@ ROOT = os.path.dirname(HERE)
 # Every replaced file, with the vanilla source it derives from.
 REPLACED = [
     ("assets/minecraft/shaders/include/fog.glsl", "include/fog.glsl",
-     "Fog reach: vanilla's linear distance curve becomes a smoothstep between the same "
-     "start and end. Showed as a start line and an end wall; FogColor and FogColor.a are "
-     "untouched so underwater, blindness, darkness and rain fog keep the game's colours."),
+     "Matches the game's fog start/end and colour while smoothing the distance transition; "
+     "the post atmosphere pass uses the same smoothstep curve and captured fog alpha."),
     ("assets/minecraft/shaders/core/sky.vsh", "core/sky.vsh",
-     "Passes the world-space view direction of each sky vertex, and whether this is the "
-     "below-horizon disc, to the fragment stage."),
+     "Moves the vanilla 10-vertex sky fan onto the 38-row screen data bus; the lower "
+     "dark disc remains hidden."),
     ("assets/minecraft/shaders/core/sky.fsh", "core/sky.fsh",
-     "Replaces the flat sky colour with an elevation gradient built from the game's own "
-     "ColorModulator and FogColor, adds a night nebula and a procedural star field, and "
-     "dithers the result so an 8-bit target does not band. Keeps vanilla's apply_fog call "
-     "and arguments, so blindness and underwater still collapse the sky to fog."),
+     "Writes projection, view rotation, sky/fog values and fog parameters into the data "
+     "bus; the end-of-frame pass reconstructs the visible sky."),
     ("assets/minecraft/shaders/core/stars.vsh", "core/stars.vsh",
-     "Derives a per-star brightness and colour temperature from the star's position, the "
-     "only per-star input the program is given."),
+     "Adds stable per-star brightness and colour variation from the star's position."),
     ("assets/minecraft/shaders/core/stars.fsh", "core/stars.fsh",
-     "Applies that tint. Vanilla writes ColorModulator alone, so every star was identical."),
+     "Applies the per-star tint while preserving the native star geometry and blending."),
     ("assets/minecraft/shaders/core/position_tex.vsh", "core/position_tex.vsh",
-     "Passes the position within the celestial quad and which body it is (the sun's quad is "
-     "scaled by 30, the moon's by 20)."),
+     "Identifies the sun quad and transfers its world-space direction and rain brightness "
+     "to the data bus; the moon keeps its native draw path."),
     ("assets/minecraft/shaders/core/position_tex.fsh", "core/position_tex.fsh",
-     "Adds a corona inside the sun's and the moon's own quad, where the angular distance is "
-     "known exactly, and folds the body's alpha into the colour so the additive blend adds "
-     "exactly what vanilla added. Rain brightness still fades both."),
+     "Writes sun direction/rain data to the bus and preserves the native moon texture; "
+     "the post pass draws the solar disc and reflection glint."),
     ("assets/minecraft/shaders/core/position_color.vsh", "core/position_color.vsh",
-     "Computes a radial factor across the sunrise and sunset glow, which vanilla paints in "
-     "one flat colour."),
+     "Passes a radial factor for the sunrise/sunset glow and protects the matching varying."),
     ("assets/minecraft/shaders/core/position_color.fsh", "core/position_color.fsh",
-     "Applies that factor to the colour, because the glow's pipeline blends with (one, one) "
-     "where alpha is ignored."),
+     "Applies the sunrise/sunset radial colour treatment and discards the reserved bus column."),
     ("assets/minecraft/shaders/core/debug_point.vsh", "core/debug_point.vsh",
-     "Required partner change: position_color.fsh is linked with this program too, so it "
-     "must emit the same varying. Debug points are never the glow and write 1."),
+     "Required partner stage for position_color.fsh; emits the same varying while keeping "
+     "debug points visually unchanged."),
     ("assets/minecraft/shaders/core/clouds.vsh", "core/clouds.vsh",
-     "Passes the world-anchored XZ of each cloud fragment (CloudOffset is already in the "
-     "position, so the pattern travels with the clouds) and which way the face points."),
+     "Passes world-anchored cloud coordinates and face orientation to the fragment stage."),
     ("assets/minecraft/shaders/core/clouds.fsh", "core/clouds.fsh",
-     "Carves the cloud volume with a procedural multiscale field and shades it by density "
-     "and orientation. The discards sit before every OIT branch so the three Improved "
-     "Transparency passes agree."),
+     "Adds procedural density carving and top/underside/side shading; preserves OIT branches "
+     "and protects the reserved data-bus column."),
     ("assets/minecraft/shaders/core/terrain.vsh", "core/terrain.vsh",
-     "Passes the absolute world position, the camera-relative position and the raw tint; "
-     "sways plants that the native vertex data can actually identify (cutout, biome-tinted, "
-     "off the block grid)."),
+     "Passes absolute world position, camera-relative position and raw tint; applies "
+     "conservative sway to identifiable cutout plants."),
     ("assets/minecraft/shaders/core/terrain.fsh", "core/terrain.fsh",
-     "Shades water with wave normals, Fresnel and a reflected sky and cloud layer; darkens "
-     "lit ground under cloud cover. Only the colour changes, never the alpha, so the surface "
-     "stays translucent and the OIT passes stay consistent."),
+     "Tags above-water surfaces for the post reflection/refraction pass, retains underwater "
+     "Fresnel/absorption shading, adds cloud shadows and protects the data-bus column."),
     ("assets/minecraft/shaders/core/lightmap.fsh", "core/lightmap.fsh",
-     "Reshapes the sky and block light response curves, keeps a little warmth in block light, "
-     "and lifts absolute black slightly. Every colour still comes from LightmapInfo."),
+     "Reshapes block/sky light response and adds a zero-light normalization guard."),
+    ("assets/minecraft/shaders/core/blit_screen.fsh", "core/blit_screen.fsh",
+     "Protects the reserved data-bus column from full-screen blits that run before end-of-frame."),
+    ("assets/minecraft/shaders/core/block.fsh", "core/block.fsh",
+     "Preserves the data-bus column during block rendering; visual shading outside that column "
+     "remains vanilla."),
+    ("assets/minecraft/shaders/core/entity.fsh", "core/entity.fsh",
+     "Preserves the data-bus column during entity rendering; native entity shading remains intact."),
+    ("assets/minecraft/shaders/core/glint.fsh", "core/glint.fsh",
+     "Preserves the data-bus column during glint rendering; native glint shading remains intact."),
+    ("assets/minecraft/shaders/core/item.fsh", "core/item.fsh",
+     "Preserves the data-bus column during item rendering; native item shading remains intact."),
+    ("assets/minecraft/shaders/core/oit_composite.fsh", "core/oit_composite.fsh",
+     "Preserves the data-bus column during the OIT composite so the camera/sky/sun payload "
+     "survives transparent rendering."),
+    ("assets/minecraft/shaders/core/particle.fsh", "core/particle.fsh",
+     "Preserves the data-bus column during particle rendering; native particle shading remains intact."),
+    ("assets/minecraft/shaders/core/rendertype_beacon_beam.fsh", "core/rendertype_beacon_beam.fsh",
+     "Preserves the data-bus column during beacon rendering; native beam visuals remain intact."),
+    ("assets/minecraft/shaders/core/rendertype_crumbling.fsh", "core/rendertype_crumbling.fsh",
+     "Preserves the data-bus column during block-breaking overlay rendering."),
+    ("assets/minecraft/shaders/core/rendertype_end_portal.fsh", "core/rendertype_end_portal.fsh",
+     "Preserves the data-bus column during end-portal rendering; portal visuals remain vanilla."),
+    ("assets/minecraft/shaders/core/rendertype_entity_shadow.fsh", "core/rendertype_entity_shadow.fsh",
+     "Preserves the data-bus column during entity-shadow rendering."),
+    ("assets/minecraft/shaders/core/rendertype_leash.fsh", "core/rendertype_leash.fsh",
+     "Preserves the data-bus column during leash rendering."),
+    ("assets/minecraft/shaders/core/rendertype_lightning.fsh", "core/rendertype_lightning.fsh",
+     "Preserves the data-bus column during lightning rendering; native lightning visuals remain intact."),
+    ("assets/minecraft/shaders/core/rendertype_lines.fsh", "core/rendertype_lines.fsh",
+     "Preserves the data-bus column during line rendering."),
+    ("assets/minecraft/shaders/core/text.fsh", "core/text.fsh",
+     "Preserves the data-bus column during world text rendering."),
+    ("assets/minecraft/shaders/core/world_border.fsh", "core/world_border.fsh",
+     "Preserves the data-bus column during world-border rendering."),
 ]
 
 POST_FILES = [
+    ("pack.mcmeta", "Declares the Java 26.3 resource-pack format and metadata."),
     ("assets/minecraft/post_effect/end_of_frame.json",
-     "The end-of-frame hook. 26.3 runs this post effect every frame after the world and "
-     "before the GUI; it is the only way a resource pack can post-process the frame."),
+     "Hooks the five-pass end-of-frame chain: sky/atmosphere reconstruction, water SSR/refraction, bloom, composite and copy."),
     ("assets/nvs/post_effect/fxaa.json",
-     "Optional antialiasing, off by default, applied with /posteffect add @s nvs:fxaa."),
+     "Optional antialiasing post effect, off by default and applied with /posteffect add @s nvs:fxaa."),
+    ("assets/nvs/shaders/include/bus.glsl",
+     "Defines the 38-row screen data bus, float packing and bus-column protection helpers."),
+    ("assets/nvs/shaders/include/bus_read.glsl",
+     "Decodes projection, view rotation, sky/fog values, sun data and shared atmosphere fog functions."),
+    ("assets/nvs/shaders/include/clouds.glsl",
+     "Shared procedural cloud density, shading and cloud-shadow functions."),
+    ("assets/nvs/shaders/include/common.glsl",
+     "Shared colour, distance, dither and math helpers."),
+    ("assets/nvs/shaders/include/config.glsl",
+     "User-tunable quality, lighting, cloud, water and atmosphere controls."),
+    ("assets/nvs/shaders/include/noise.glsl",
+     "Shared value-noise and fractal-noise functions."),
+    ("assets/nvs/shaders/include/sky.glsl",
+     "Shared sky gradient, horizon warmth, night field and reflected-sky functions."),
+    ("assets/nvs/shaders/include/water.glsl",
+     "Water recognition, tagged surface orientation, filtered wave field, Fresnel, absorption and reflection helpers."),
+    ("assets/nvs/shaders/post/bloom.fsh",
+     "Low-resolution bright-pass and bloom extraction."),
+    ("assets/nvs/shaders/post/bus_sky.fsh",
+     "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces."),
+    ("assets/nvs/shaders/post/composite.fsh",
+     "Combines scene and bloom with final colour grading, sharpen, vignette and dither."),
+    ("assets/nvs/shaders/post/copy.fsh",
+     "Copies the final post result back to the main target."),
+    ("assets/nvs/shaders/post/fullscreen.vsh",
+     "Full-screen triangle vertex stage for post effects."),
+    ("assets/nvs/shaders/post/fxaa.fsh",
+     "Optional FXAA fragment stage."),
+    ("assets/nvs/shaders/post/water.fsh",
+     "Water-only post stage for screen-space reflections, refraction, Fresnel, absorption, foam and sun glint."),
 ]
 
 GENERATED = ("MANIFEST/vanilla-hashes.json", "MANIFEST/modified-files.json")
@@ -104,9 +156,14 @@ def digest(path):
 
 
 def find_vanilla():
-    for name in sorted(os.listdir(ROOT)):
-        if name.strip().lower() == "vanilla-stock" and os.path.isdir(os.path.join(ROOT, name)):
-            return os.path.join(ROOT, name)
+    # The supplied archive is extracted under reference/vanilla-stock/ and
+    # intentionally retains its source directory's trailing space.
+    for parent in (os.path.join(ROOT, "reference", "vanilla-stock"), ROOT):
+        if not os.path.isdir(parent):
+            continue
+        for name in sorted(os.listdir(parent)):
+            if name.strip().lower() == "vanilla-stock" and os.path.isdir(os.path.join(parent, name)):
+                return os.path.join(parent, name)
     return None
 
 
