@@ -158,6 +158,13 @@
       "vanilla_sha256": "8a5bfb706fea404b739edb982bd3eeabbd7d64fd2c75987f0ef5021d16f1ee1c"
     },
     {
+      "pack_file": "assets/minecraft/shaders/core/particle.vsh",
+      "vanilla_source": "Vanilla-stock /core/particle.vsh",
+      "reason": "Keeps particle texture and vertex colours while neutralising most per-channel lightmap tint to prevent coloured weather-particle speckles.",
+      "pack_sha256": "37d04ec3a084c3bef07ee2f7321de5f8460093c5db322e1063e6a185c3ae1879",
+      "vanilla_sha256": "ac1752f8f4020d484c8529a59868949fb4f64fff522a61a5b88dc1f7bd8adb5d"
+    },
+    {
       "pack_file": "assets/minecraft/shaders/core/rendertype_beacon_beam.fsh",
       "vanilla_source": "Vanilla-stock /core/rendertype_beacon_beam.fsh",
       "reason": "Preserves the data-bus column during beacon rendering; native beam visuals remain intact.",
@@ -256,7 +263,7 @@
       "pack_file": "assets/nvs/shaders/include/clouds.glsl",
       "vanilla_source": null,
       "reason": "Shared procedural cloud density, shading and cloud-shadow functions.",
-      "pack_sha256": "49d5d9a91f50b4d3626aec0a461296189f05b8c81821821b95b6867fd8bbf398"
+      "pack_sha256": "c98be679145c02398546cc9990dbd12e94446fbd055e5c8a532a1969632730be"
     },
     {
       "pack_file": "assets/nvs/shaders/include/common.glsl",
@@ -268,7 +275,7 @@
       "pack_file": "assets/nvs/shaders/include/config.glsl",
       "vanilla_source": null,
       "reason": "User-tunable quality, lighting, cloud, water and atmosphere controls.",
-      "pack_sha256": "cf9cf75e8d542c314b81c2e7858065e02775aedaed1d1b836617623e8274a22a"
+      "pack_sha256": "515b96509976f84ca1f032a216be4dd55e72cfec047ed31ce03729b5be76153a"
     },
     {
       "pack_file": "assets/nvs/shaders/include/noise.glsl",
@@ -298,13 +305,13 @@
       "pack_file": "assets/nvs/shaders/post/bus_sky.fsh",
       "vanilla_source": null,
       "reason": "Reconstructs the sky, replaces vanilla distance fog with aerial perspective and tags water surfaces.",
-      "pack_sha256": "a410197b8aa3e3388d0ae1c5b9675375a0dd48ad93a84ad3835cb29aba096477"
+      "pack_sha256": "2a67986097fde81373e4d3f01463ef1fd7de1d7444dd7d56086a2fe0a8507069"
     },
     {
       "pack_file": "assets/nvs/shaders/post/composite.fsh",
       "vanilla_source": null,
       "reason": "Combines scene and bloom with final colour grading, sharpen, vignette and dither.",
-      "pack_sha256": "0008b7f9a5042bcd11ba7d924c4df7dfc56b387c0efc41bd91dbe52fbf9262c0"
+      "pack_sha256": "8f5359ee1290bcade4805f102021ffa786f9970efcb7c282770ae2113b1d2687"
     },
     {
       "pack_file": "assets/nvs/shaders/post/copy.fsh",
