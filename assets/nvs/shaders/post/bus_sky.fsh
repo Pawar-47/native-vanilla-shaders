@@ -3,6 +3,7 @@
 
 #include <nvs:bus_read.glsl>
 #include <nvs:sky.glsl>
+#include <nvs:water.glsl>
 
 uniform sampler2D InSampler;
 uniform sampler2D DepthSampler;
