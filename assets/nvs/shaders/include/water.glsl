@@ -117,7 +117,7 @@ vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 zenith, v
         float cloudY = NVS_CLOUD_HEIGHT;
         float travel = max(cloudY - worldY, 1.0);
         vec2 cloudXZ = worldXZ + reflected.xz * (travel / reflected.y);
-        float d = nvs_cloudDensity(cloudXZ, NVS_CLOUD_REFLECTION_OCTAVES, NVS_CLOUD_REFLECTION_DETAIL_OCTAVES);
+        float d = nvs_cloudPuffDensity(cloudXZ);
         float cover = smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.45, d) * 0.62;
         // Water sees the underside of the cloud layer. Reuse the same
         // thickness/underside response as the visible cloud volume instead of
