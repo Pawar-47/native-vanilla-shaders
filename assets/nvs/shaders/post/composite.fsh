@@ -67,10 +67,8 @@ void main() {
     float r = length(texCoord - 0.5) * 1.41421356;
     c *= 1.0 - NVS_POST_VIGNETTE * smoothstep(0.35, 1.0, r);
 
-    // Dither, so the grading does not band an 8-bit target.
-    // A quarter-strength ordered dither avoids coloured crawling specks on
-    // fine alpha-cutout foliage when the camera moves.
-    c += nvs_dither(gl_FragCoord.xy) * 0.25;
+    // Leave particle/weather edges untouched: even a small ordered dither can
+    // turn thin moving rain streaks into crawling coloured pixel specks.
 
     // Alpha 1: this pass consumes the world's alpha, and everything downstream
     // expects the frame to be opaque.

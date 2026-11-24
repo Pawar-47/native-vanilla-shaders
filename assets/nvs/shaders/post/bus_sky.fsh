@@ -12,6 +12,43 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
+void nvs_drawCloudLayer(inout vec3 baseColor, vec3 rayDirection,
+                          vec2 cameraXZ, float cameraY, float cloudHeight,
+                          float scale, vec2 seed, float opacity,
+                          vec3 sunDirection) {
+    if (rayDirection.y <= 0.003) return;
+    float travel = (cloudHeight - cameraY) / rayDirection.y;
+    if (travel <= 0.0 || travel >= 26000.0) return;
+
+    vec2 cloudXZ = cameraXZ + rayDirection.xz * travel;
+    float density = nvs_cloudLayerDensity(cloudXZ, scale, seed);
+    float coverage = smoothstep(0.545, 0.695, density);
+    coverage *= smoothstep(0.006, 0.032, rayDirection.y);
+    float alpha = coverage * opacity;
+    if (alpha <= 0.002) return;
+
+    // A cheap finite-difference normal gives each irregular bank a lit crown,
+    // shaded folds and soft side volume instead of a flat 2-D stamp.
+    float stepSize = scale * 0.018;
+    float dx = nvs_cloudLayerDensity(cloudXZ + vec2(stepSize, 0.0), scale, seed)
+             - nvs_cloudLayerDensity(cloudXZ - vec2(stepSize, 0.0), scale, seed);
+    float dz = nvs_cloudLayerDensity(cloudXZ + vec2(0.0, stepSize), scale, seed)
+             - nvs_cloudLayerDensity(cloudXZ - vec2(0.0, stepSize), scale, seed);
+    vec3 normal = normalize(vec3(-dx * 8.0, 0.82, -dz * 8.0));
+    vec3 lightDir = normalize(vec3(sunDirection.x, max(sunDirection.y, 0.16), sunDirection.z));
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    float sunUp = smoothstep(-0.12, 0.24, sunDirection.y);
+
+    vec3 underside = mix(vec3(0.38, 0.46, 0.59),
+                         vec3(0.61, 0.68, 0.77), sunUp);
+    vec3 crown = vec3(1.00, 0.975, 0.91) * (0.90 + 0.10 * max(sunDirection.y, 0.0));
+    float lighting = smoothstep(0.12, 0.88, diffuse);
+    vec3 cloudColor = mix(underside, crown, lighting);
+    float body = smoothstep(0.55, 0.78, density);
+    cloudColor *= 0.82 + 0.20 * body + 0.10 * diffuse;
+    baseColor = mix(baseColor, cloudColor, alpha);
+}
+
 void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 pixel = clamp(ivec2(texCoord * vec2(size)), ivec2(0), size - 1);
@@ -87,35 +124,22 @@ void main() {
             color = surface * keep + alpha * amount * sky + (1.0 - alpha) * skyWithSun;
         }
 
-        // Procedural stylised cloud layer. The native cloud mesh is deliberately
-        // transparent; intersect each sky ray with the configured cloud plane
-        // and draw soft, rounded cumulus lobes here instead of vanilla boxes.
+        // Three independently seeded cloud decks create depth: nearby broken
+        // cumulus, smaller mid-distance banks and sparse high/horizon fragments.
+        // The layers share the same world-anchored field used by reflections.
         bool cloudCandidate = depth <= 0.0
                           || (alpha < 0.99 && abs(worldY - NVS_CLOUD_HEIGHT) < 48.0);
-        if (cloudCandidate && abs(worldDirection.y) > 0.012) {
+        if (cloudCandidate) {
             vec3 cameraWorld = vec3(CameraBlockPos) - CameraOffset;
-            float cloudTravel = (NVS_CLOUD_HEIGHT - cameraY) / worldDirection.y;
-            if (cloudTravel > 0.0 && cloudTravel < 6000.0) {
-                vec2 cloudXZ = cameraWorld.xz + worldDirection.xz * cloudTravel;
-                float density = nvs_cloudPuffDensity(cloudXZ);
-                float cloudAlpha = smoothstep(NVS_CLOUD_CUTOFF - 0.055,
-                                              NVS_CLOUD_CUTOFF + 0.13, density);
-                cloudAlpha *= smoothstep(0.08, 0.30, density);
-                cloudAlpha *= smoothstep(0.008, 0.055, abs(worldDirection.y));
-
-                if (cloudAlpha > 0.002) {
-                    float sunElevation = smoothstep(-0.12, 0.22, bus.sunDirection.y);
-                    float sunStrength = max(bus.sunDirection.y, 0.0);
-                    vec3 coolUnderside = mix(vec3(0.39, 0.49, 0.65),
-                                             vec3(0.62, 0.67, 0.75), sunElevation);
-                    vec3 warmLitTop = vec3(1.00, 0.965, 0.885)
-                                    * (0.86 + 0.14 * sunStrength);
-                    float litForm = smoothstep(0.34, 0.82, density);
-                    vec3 cloudColor = mix(coolUnderside, warmLitTop, litForm);
-                    cloudColor *= nvs_cloudShade(density, 0.55);
-                    color = mix(color, cloudColor, cloudAlpha * 0.96);
-                }
-            }
+            nvs_drawCloudLayer(color, worldDirection, cameraWorld.xz, cameraY,
+                               NVS_CLOUD_HEIGHT, 92.0, vec2(0.0, 0.0), 0.76,
+                               bus.sunDirection);
+            nvs_drawCloudLayer(color, worldDirection, cameraWorld.xz, cameraY,
+                               252.0, 148.0, vec2(31.7, 18.3), 0.58,
+                               bus.sunDirection);
+            nvs_drawCloudLayer(color, worldDirection, cameraWorld.xz, cameraY,
+                               326.0, 214.0, vec2(83.1, 47.9), 0.43,
+                               bus.sunDirection);
         }
     }
 

@@ -98,6 +98,11 @@ PROGRAM_UNIFORMS = {
         "samplers": {"CloudFaces"},
         "conditional": {},
     },
+    "particle.vsh": {
+        "always": {"Fog", "Globals", "DynamicTransforms", "Projection"},
+        "samplers": {"Sampler2"},
+        "conditional": {},
+    },
     "terrain.vsh": {
         "always": {"Fog", "Globals", "Projection", "TerrainUniform"},
         "samplers": {"Sampler0"},
@@ -134,6 +139,7 @@ FRAGMENT_PARTNERS = {
     "position_tex.fsh": ["position_tex.vsh"],
     "position_color.fsh": ["position_color.vsh", "debug_point.vsh"],
     "clouds.fsh": ["clouds.vsh"],
+    "particle.fsh": ["particle.vsh"],
     "terrain.fsh": ["terrain.vsh"],
     "lightmap.fsh": ["screenquad.vsh"],
     "bloom.fsh": ["fullscreen.vsh"],

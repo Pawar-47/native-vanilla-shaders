@@ -34,3 +34,14 @@ All notable changes to this pack. The pack version is independent of the Minecra
 Phase 1 remains in development. The current GitHub Actions pipeline passes static checks, glslang syntax/type compilation for the supported shader variants, manifest generation, installable-pack creation, archive-root verification and artifact upload. The recent eight-wave water spectrum and shallow 3D cloud-density changes are compiled and packaged, but still need the remaining source review before the pack is handed over for Phase 2.
 
 The glslang pass is not Minecraft ShaderC, and no in-game rendering or performance result is claimed. Known native-pipeline limitations are recorded in [LIMITATIONS.md](LIMITATIONS.md).
+
+
+## Beta 1 — 2026-11-24
+
+- Replaced repeated circular cloud puffs with asymmetric, warped multi-scale cloud banks and separated coverage.
+- Added three independently seeded cloud layers at different heights and scales, including distant high and horizon formations.
+- Added finite-difference cloud normals for soft crown lighting, shaded folds and more convincing volume.
+- Neutralised most per-channel lightmap tint on particles while preserving particle texture and vertex colours, reducing coloured rain/particle speckles.
+- Removed final ordered dither and reduced bloom, saturation and sharpening to avoid coloured crawling around thin moving weather streaks.
+- Changed release automation to publish one fixed Beta 1 release only for the Beta 1 merge; ordinary commits no longer create a new release each time.
+- CI regenerates manifests before checking them on pull requests, then refreshes the committed hashes on main.

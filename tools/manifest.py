@@ -86,6 +86,8 @@ REPLACED = [
      "survives transparent rendering."),
     ("assets/minecraft/shaders/core/particle.fsh", "core/particle.fsh",
      "Preserves the data-bus column during particle rendering; native particle shading remains intact."),
+    ("assets/minecraft/shaders/core/particle.vsh", "core/particle.vsh",
+     "Keeps particle texture and vertex colours while neutralising most per-channel lightmap tint to prevent coloured weather-particle speckles."),
     ("assets/minecraft/shaders/core/rendertype_beacon_beam.fsh", "core/rendertype_beacon_beam.fsh",
      "Preserves the data-bus column during beacon rendering; native beam visuals remain intact."),
     ("assets/minecraft/shaders/core/rendertype_crumbling.fsh", "core/rendertype_crumbling.fsh",
