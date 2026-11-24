@@ -56,7 +56,7 @@ Statuses used below:
 | Fresnel reflection of the sky | Done | Schlick with water's `F0`; post pass uses the exact bus sky/fog colours and procedural sky gradient |
 | Fresnel reflection of clouds | Approximated | reflected ray intersects a fixed cloud deck and samples the shared procedural cloud field; cloud drift offset is not available in post |
 | Screen-space reflections | Done, untested | 24 coarse ray steps plus four refinements against the main depth buffer; off-screen rays fall back to sky |
-| Reflection of the sun | Done, untested | sun direction and rain brightness are transferred through the data bus; reflected disc, corona and wave glint are added |
+| Reflection of the sun | Done, untested | sun direction and rain brightness are transferred through the data bus; shared disc, corona and aureole plus wave glint are added |
 | Depth-dependent colour (shallow / deep) | Approximated | light from below is absorbed over the path length through the water, red first. The true depth of the water column is not available |
 | Underwater appearance | Done | the surface is desaturated and tinted when the camera is submerged |
 | Underwater fog | Done | the game's own water fog, with the pack's softer fog curve |
@@ -124,7 +124,7 @@ Statuses used below:
 | Item and entity glint | Preserved | vanilla glint paths retained with the reserved bus-column guard |
 | Emissive entity paths | Preserved | vanilla emissive entity paths retained with the reserved bus-column guard |
 | Improved Transparency (OIT) | Pipeline-preserved; water SSR requires OIT off | native OIT branches remain intact, but the water marker is written only in the non-OIT final terrain colour pass; use Fancy graphics with Improved Transparency off for the intended water effect |
-| Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
+| Quality tiers | Done, as documented switches | `config.glsl` defines reduce individual costs; deleting `end_of_frame.json` is only a last-resort fallback because it also disables reconstructed sky/fog and above-water water effects. Vanilla has no shader options menu |
 | Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
 
 ## What is deliberately not there
