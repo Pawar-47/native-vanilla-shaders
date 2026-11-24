@@ -24,9 +24,11 @@ void main() {
     // Reach exactly zero at the edge of the quad, so the glow has no cut-off.
     halo *= 1.0 - smoothstep(0.72, 1.0, r);
 
-    // The halo takes its colour and its weather fade from the same
-    // ColorModulator the game uses for the sun itself.
-    vec3 haloColor = nvsIsSun > 0.5 ? vec3(1.00, 0.82, 0.52) : vec3(0.66, 0.78, 1.00);
+    // Start with the celestial colour supplied by the game, then bias it
+    // toward a warm solar corona or a cool lunar halo. This preserves the
+    // dimension/time tint instead of painting a fixed orange/blue glow over it.
+    vec3 haloTint = nvsIsSun > 0.5 ? vec3(1.00, 0.88, 0.70) : vec3(0.72, 0.84, 1.00);
+    vec3 haloColor = ColorModulator.rgb * haloTint;
 
     if (body.a == 0.0 && halo < 0.002) {
         discard;
