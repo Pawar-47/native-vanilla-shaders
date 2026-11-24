@@ -24,46 +24,33 @@ bool nvs_isWater(vec4 texel, vec4 tint) {
     return abs(texel.a * 255.0 - NVS_WATER_ALPHA) < 1.5 && spread > 0.04;
 }
 
-// GameTime arrives as 0..1 over 24000 ticks and wraps. The eight wave
-// frequencies below are integer cycles per Minecraft day, so no phase jumps
-// occur when GameTime wraps at midnight.
+// GameTime arrives as 0..1 over 24000 ticks and wraps. Three broad wave
+// frequencies are integer cycles per Minecraft day, so phases remain seamless.
 #define NVS_WAVE_CYCLES_PER_DAY 120.0
 
 float nvs_waveTime(float gameTime) {
     return gameTime * 6.2831853 * NVS_WAVE_CYCLES_PER_DAY;
 }
 
-// Deep-water wave spectrum adapted from the authorized vanilla-shader
-// reference: five directions and wavelengths, with gravity-dispersed temporal
-// frequencies rounded to whole day cycles. The screen-footprint fade removes
-// wavelengths that would alias into rings or dark bands at distance.
-const int NVS_WAVE_COUNT = 5;
-const vec2 NVS_WAVE_DIRECTIONS[5] = vec2[](
-    vec2(1.0, 0.3), vec2(-0.4, 1.0), vec2(0.8, -0.7),
-    vec2(-1.0, -0.2), vec2(0.2, -1.0)
+// Broad, overlapping swells replace the short, crossing ripples that produced
+// crawling bands in reflections. Three directions are enough for calm lakes
+// and rivers; the footprint filter fades detail before it can alias.
+const int NVS_WAVE_COUNT = 3;
+const vec2 NVS_WAVE_DIRECTIONS[3] = vec2[](
+    vec2(1.0, 0.22), vec2(-0.38, 1.0), vec2(0.72, -0.68)
 );
-const float NVS_WAVE_LENGTHS[5] = float[](9.2, 6.3, 4.5, 3.2, 2.3);
-const float NVS_WAVE_CYCLES[5] = float[](555.0, 699.0, 852.0, 1011.0, 1204.0);
+const float NVS_WAVE_LENGTHS[3] = float[](18.0, 11.5, 7.5);
+const float NVS_WAVE_CYCLES[3] = float[](390.0, 505.0, 635.0);
 
 float nvs_waveFade(float waveNumber, float footprint) {
     float pixelScale = max(footprint, 1e-4);
     return smoothstep(2.0, 6.0, 6.2831853 / (waveNumber * pixelScale));
 }
 
-// A slow, position-only warp breaks up parallel wave bands. It and the
-// per-wave amplitude variation are shared by height, slope and foam.
-vec2 nvs_waveWarp(vec2 p) {
-    // Keep only a broad, slow warp; high-frequency displacement was the
-    // principal source of crawling reflection noise on distant water.
-    return (vec2(nvs_valueNoise(p * 0.025),
-                 nvs_valueNoise(p * 0.025 + 31.7)) - 0.5) * 5.0;
-}
-
 // Evaluate height, analytic slope and normalisation amplitude together.
-// The water post pass needs both the normal and crest for whitecaps; sharing
-// this loop avoids sampling the per-wave noise field twice per water pixel.
+// No domain warp is used: the analytic gradient must be the true derivative
+// of the height field, otherwise the reflection normal becomes visibly noisy.
 vec4 nvs_waterSurface(vec2 p, float t, float strength, float footprint) {
-    vec2 warp = nvs_waveWarp(p);
     float height = 0.0;
     float totalAmplitude = 0.0;
     vec2 gradient = vec2(0.0);
@@ -72,9 +59,8 @@ vec4 nvs_waterSurface(vec2 p, float t, float strength, float footprint) {
         float wavelength = NVS_WAVE_LENGTHS[i];
         float waveNumber = 6.2831853 / wavelength;
         vec2 direction = normalize(NVS_WAVE_DIRECTIONS[i]);
-        float amplitude = 0.017 * wavelength * nvs_waveFade(waveNumber, footprint);
-        vec2 warpedPosition = p + warp * (0.5 + 0.1 * float(i));
-        float phase = waveNumber * dot(direction, warpedPosition)
+        float amplitude = 0.010 * wavelength * nvs_waveFade(waveNumber, footprint);
+        float phase = waveNumber * dot(direction, p)
                     - t * (NVS_WAVE_CYCLES[i] / NVS_WAVE_CYCLES_PER_DAY);
         height += amplitude * sin(phase);
         gradient += amplitude * waveNumber * cos(phase) * direction;
