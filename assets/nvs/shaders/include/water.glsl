@@ -165,7 +165,14 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
     vec3 reflected = reflect(-V, N);
     vec3 skyReflection = nvs_reflectedSky(reflected, worldPos.xz, worldPos.y, horizon);
 
-    vec3 color = mix(below, skyReflection, fresnel);
+    // Above the surface, Fresnel blends the water column with the sky.
+    // Below the surface, the same geometric normal faces away from the viewer:
+    // clamping NoV to zero would therefore force Fresnel to 1 and turn the
+    // underside into a false sky mirror. The native pass has no underwater
+    // reflection buffer, so keep the underside refractive and let vanilla fog
+    // provide the distant underwater scene instead.
+    float reflectionWeight = fresnel * (1.0 - clamp(underwater, 0.0, 1.0));
+    vec3 color = mix(below, skyReflection, reflectionWeight);
 
     // Whitecaps: the crests of the same wave sum, broken up by the ripple so
     // they do not read as a regular pattern.
