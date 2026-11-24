@@ -16,17 +16,17 @@ Statuses used below:
 
 | Feature | Status | Where |
 |---|---|---|
-| Natural graded daytime sky | Done | `sky.fsh` mixes the game's sky colour and horizon colour along an elevation curve |
-| Atmospheric-looking horizon | Done | `NVS_SKY_HAZE_POWER` curve; converges exactly on `FogColor` at the rim |
+| Natural graded daytime sky | Done | `bus_sky.fsh` reconstructs the sky with `nvs_skyGradient` from `sky.glsl`, using the game's sky and fog colours |
+| Atmospheric-looking horizon | Done | `NVS_SKY_HAZE_POWER` curve in `sky.glsl`; converges exactly on `FogColor` at the rim |
 | No flat gradient | Done | elevation curve, plus a 4×4 ordered dither against 8-bit banding |
-| No hard horizon edge | Done | the gradient reaches the fog colour exactly where terrain fog reaches it |
-| No banding | Done | `nvs_dither` in `sky.fsh` and again in the post composite |
+| No hard horizon edge | Done | the post atmosphere pass blends distant terrain toward the same sky/fog gradient |
+| No banding | Done | `nvs_dither` in `bus_sky.fsh` and again in the post composite |
 | Sunrise / sunset colour transitions | Done | a warm band whose strength follows how warm `FogColor` already is, so noon is untouched and dusk is deepened |
 | Sun-anchored sunrise glow | Done | `position_color.vsh/.fsh` give vanilla's 18-vertex glow fan a radial gradient instead of one flat colour |
-| Sun disc with halo | Done | `position_tex.fsh` corona inside the sun's own quad, where angle is exact; fades to zero at the quad edge |
+| Sun disc with halo | Done | the sun direction is transferred from `position_tex` through the bus; `bus_sky.fsh` draws the disc/corona and `water.fsh` adds the reflected disc/glint |
 | Moon | Done | untouched body, plus a cool corona from the same program |
 | Moonlight | Done | `lightmap.fsh` — `SkyLightColor` is what the game sets for the moon |
-| Stars with natural distribution | Done | a procedural field in `sky.fsh` with per-star magnitude and colour temperature, plus per-star tint on the game's own star points in `stars.fsh` |
+| Stars with natural distribution | Done | a procedural field in `sky.glsl`/`bus_sky.fsh` with per-star magnitude and colour temperature, plus per-star tint on the game's own star points in `stars.fsh` |
 | Night sky with nebula-like depth | Done | fractal nebula, concentrated along a galactic band, gated on how dark the game's sky colour is |
 | Weather-driven sky change | Done | inherits `ColorModulator` and `FogColor`, which the game already darkens with rain; rain also fades the sun corona through `ColorModulator.a` |
 | Dimension-specific sky | Done | emerges from the colours the game supplies per dimension; the pack never branches on dimension |
@@ -55,7 +55,8 @@ Statuses used below:
 | Animated multi-scale waves with wave normals | Done | five directional components, position-only domain warp, screen-footprint filtering and a looping ripple, in `water.glsl` |
 | Fresnel reflection of the sky | Done | Schlick with water's `F0`; post pass uses the exact bus sky/fog colours and procedural sky gradient |
 | Fresnel reflection of clouds | Approximated | reflected ray intersects a fixed cloud deck and samples the shared procedural cloud field; cloud drift offset is not available in post |
-| Screen-space reflections | Done, untested | 24 coarse ray steps plus four refinements against the main depth buffer; off-screen rays fall back to sky |\n| Reflection of the sun | Done, untested | sun direction and rain brightness are transferred through the data bus; reflected disc, corona and wave glint are added |
+| Screen-space reflections | Done, untested | 24 coarse ray steps plus four refinements against the main depth buffer; off-screen rays fall back to sky |
+| Reflection of the sun | Done, untested | sun direction and rain brightness are transferred through the data bus; reflected disc, corona and wave glint are added |
 | Depth-dependent colour (shallow / deep) | Approximated | light from below is absorbed over the path length through the water, red first. The true depth of the water column is not available |
 | Underwater appearance | Done | the surface is desaturated and tinted when the camera is submerged |
 | Underwater fog | Done | the game's own water fog, with the pack's softer fog curve |
@@ -117,11 +118,11 @@ Statuses used below:
 
 | Feature | Status | Where |
 |---|---|---|
-| End portal | Preserved, unmodified | `rendertype_end_portal` is not replaced |
-| Beacon beam | Preserved, unmodified | `rendertype_beacon_beam` is not replaced |
-| Lightning | Preserved, unmodified | `rendertype_lightning` is not replaced |
-| Item and entity glint | Preserved, unmodified | `glint`, and `GLINT` inside `item` and `entity`, are not replaced |
-| Emissive entity paths | Preserved, unmodified | `EMISSIVE` variants of `entity` are not replaced |
+| End portal | Preserved, unmodified | vanilla portal shader retained with the reserved bus-column guard |
+| Beacon beam | Preserved, unmodified | vanilla beacon shader retained with the reserved bus-column guard |
+| Lightning | Preserved, unmodified | vanilla lightning shader retained with the reserved bus-column guard |
+| Item and entity glint | Preserved, unmodified | vanilla glint paths retained with the reserved bus-column guard |
+| Emissive entity paths | Preserved, unmodified | vanilla emissive entity paths retained with the reserved bus-column guard |
 | Improved Transparency (OIT) | Pipeline-preserved; water SSR unverified | native OIT branches remain intact, but the water marker is written only in the final non-accumulation terrain pass; test water with OIT both on and off |
 | Quality tiers | Done, as documented switches | `config.glsl` defines, plus deleting one JSON to remove all post-processing. Vanilla has no shader options menu |
 | Performance on Intel HD 5500 class hardware | Untested | 24+4 SSR budget, reduced cloud-shadow octaves and fixed 480×270 bloom target; runtime frame time still needs measurement |
