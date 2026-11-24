@@ -41,11 +41,15 @@ void main() {
         discard;
     }
     float density = nvs_cloudVolumeField(nvsCloudXZ, nvsCloudHeight, baseDensity);
-    if (density < NVS_CLOUD_CUTOFF) {
+    // Fade the last density band instead of cutting a hard silhouette at
+    // every native cloud-cell boundary. Keep a small discard margin for cost.
+    if (density < NVS_CLOUD_CUTOFF - 0.08) {
         discard;
     }
 
     vec4 color = vertexColor;
+    color.a *= smoothstep(NVS_CLOUD_CUTOFF - 0.08,
+                          NVS_CLOUD_CUTOFF + 0.14, density);
     #ifndef OIT_DEPTH_BOUNDS
     color.a *= 1.0f - linear_fog_value(vertexDistance, 0, FogCloudsEnd);
     #endif

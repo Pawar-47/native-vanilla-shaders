@@ -34,15 +34,15 @@
 // Cloud field octaves. 4 gives multiscale cumulus detail; 3 is cheaper, 5 is
 // smoother and slower. This also drives the cloud shadows on the terrain.
 #ifndef NVS_CLOUD_OCTAVES
-#define NVS_CLOUD_OCTAVES 4
+#define NVS_CLOUD_OCTAVES 3
 #endif
  // Vertical detail is limited to two 3D octaves: clouds cover little screen
 // area, but this keeps the extra volume breakup affordable on integrated GPUs.
 #ifndef NVS_CLOUD_VOLUME_OCTAVES
-#define NVS_CLOUD_VOLUME_OCTAVES 2
+#define NVS_CLOUD_VOLUME_OCTAVES 1
 #endif
 #ifndef NVS_CLOUD_VOLUME_STRENGTH
-#define NVS_CLOUD_VOLUME_STRENGTH 0.20
+#define NVS_CLOUD_VOLUME_STRENGTH 0.16
 #endif
 // Reflected clouds use a reduced octave budget because they are evaluated in
 // the full-resolution water post pass on the integrated-GPU target.
@@ -54,7 +54,7 @@
 #endif
 // World-space size of the largest cloud feature, in blocks.
 #ifndef NVS_CLOUD_SCALE
-#define NVS_CLOUD_SCALE 96.0
+#define NVS_CLOUD_SCALE 76.0
 #endif
 // Fragments whose cloud density is below this are discarded, which is what
 // gives the shapes their wispy, non-tiled edges. Raise for thinner clouds.
@@ -72,10 +72,10 @@
 // Cloud-shadow octave budget. Keep below visible-cloud quality to limit
 // per-fragment cost across large terrain surfaces.
 #ifndef NVS_CLOUD_SHADOW_OCTAVES
-#define NVS_CLOUD_SHADOW_OCTAVES 3
+#define NVS_CLOUD_SHADOW_OCTAVES 2
 #endif
 #ifndef NVS_CLOUD_SHADOW_DETAIL_OCTAVES
-#define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 2
+#define NVS_CLOUD_SHADOW_DETAIL_OCTAVES 1
 #endif
 // Density threshold and penumbra width for ground cloud shadows.
 #ifndef NVS_CLOUD_SHADOW_THRESHOLD
