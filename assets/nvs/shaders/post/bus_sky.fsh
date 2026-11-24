@@ -2,6 +2,7 @@
 #extension GL_ARB_separate_shader_objects : require
 
 #include <minecraft:globals.glsl>
+#include <minecraft:globals.glsl>
 #include <nvs:bus_read.glsl>
 #include <nvs:sky.glsl>
 #include <nvs:water.glsl>
