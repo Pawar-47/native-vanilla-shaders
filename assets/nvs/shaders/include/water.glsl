@@ -39,9 +39,8 @@ const int NVS_WAVE_COUNT = 3;
 // A single prevailing wind direction keeps a pond's wave trains coherent.
 // Different wavelengths add natural broad swells and smaller surface detail
 // without the visibly crossing, competing directions of the previous spectrum.
-const vec2 NVS_PREVAILING_WIND = normalize(vec2(0.94, 0.34));
 const vec2 NVS_WAVE_DIRECTIONS[3] = vec2[](
-    NVS_PREVAILING_WIND, NVS_PREVAILING_WIND, NVS_PREVAILING_WIND
+    vec2(0.94, 0.34), vec2(0.94, 0.34), vec2(0.94, 0.34)
 );
 const float NVS_WAVE_LENGTHS[3] = float[](27.0, 17.0, 10.5);
 const float NVS_WAVE_CYCLES[3] = float[](315.0, 430.0, 565.0);
