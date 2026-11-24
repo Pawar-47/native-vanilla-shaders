@@ -48,18 +48,33 @@ float nvs_waveFade(float waveNumber, float footprint) {
     return smoothstep(2.0, 6.0, 6.2831853 / (waveNumber * pixelScale));
 }
 
+// A slowly varying domain warp breaks up the long parallel sine bands. The
+// same position-only warp and amplitude field are used by height, slope and
+// foam, so the surface remains temporally stable and the crests stay aligned.
+// The warp derivative is deliberately omitted: at this scale it changes the
+// normal very little, while differentiating the noise would add substantial cost.
+vec3 nvs_waveDomain(vec2 p) {
+    vec2 low = p * 0.045;
+    vec2 warp = (vec2(nvs_valueNoise(low), nvs_valueNoise(low + 31.7)) - 0.5) * 14.0;
+    float variation = 0.55 + 0.90 * nvs_valueNoise(low + vec2(17.3, 9.1));
+    return vec3(p + warp, variation);
+}
+
 float nvs_waveHeight(vec2 p, float t, float footprint) {
+    vec3 domain = nvs_waveDomain(p);
+    vec2 waveP = domain.xy;
+    float variation = domain.z;
     float f0 = nvs_waveFade(0.62, footprint);
     float f1 = nvs_waveFade(1.17, footprint);
     float f2 = nvs_waveFade(2.31, footprint);
     float f3 = nvs_waveFade(0.86, footprint);
     float f4 = nvs_waveFade(1.72, footprint);
     float h = 0.0;
-    h += 0.050 * f0 * sin(dot(p, vec2(0.94, 0.34)) * 0.62 + t);
-    h += 0.026 * f1 * sin(dot(p, vec2(-0.42, 0.91)) * 1.17 + t * 2.0);
-    h += 0.012 * f2 * sin(dot(p, vec2(0.68, -0.73)) * 2.31 + t * 3.0);
-    h += 0.018 * f3 * sin(dot(p, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
-    h += 0.009 * f4 * sin(dot(p, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
+    h += 0.050 * variation * f0 * sin(dot(waveP, vec2(0.94, 0.34)) * 0.62 + t);
+    h += 0.026 * variation * f1 * sin(dot(waveP, vec2(-0.42, 0.91)) * 1.17 + t * 2.0);
+    h += 0.012 * variation * f2 * sin(dot(waveP, vec2(0.68, -0.73)) * 2.31 + t * 3.0);
+    h += 0.018 * variation * f3 * sin(dot(waveP, vec2(-0.91, -0.40)) * 0.86 + t * 5.0);
+    h += 0.009 * variation * f4 * sin(dot(waveP, vec2(0.18, -0.98)) * 1.72 + t * 7.0);
     return h;
 }
 
@@ -67,6 +82,9 @@ float nvs_waveHeight(vec2 p, float t, float footprint) {
 // noise ripple. The circular drift also closes after an integer number of
 // revolutions when GameTime wraps.
 vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
+    vec3 domain = nvs_waveDomain(p);
+    vec2 waveP = domain.xy;
+    float variation = domain.z;
     const vec2 d0 = vec2(0.94, 0.34);
     const vec2 d1 = vec2(-0.42, 0.91);
     const vec2 d2 = vec2(0.68, -0.73);
@@ -86,11 +104,11 @@ vec2 nvs_waveGradient(vec2 p, float t, float strength, float footprint) {
     float f4 = nvs_waveFade(k4, footprint);
 
     vec2 grad = vec2(0.0);
-    grad += (0.050 * k0) * cos(dot(p, d0) * k0 + t) * d0 * f0;
-    grad += (0.026 * k1) * cos(dot(p, d1) * k1 + t * 2.0) * d1 * f1;
-    grad += (0.012 * k2) * cos(dot(p, d2) * k2 + t * 3.0) * d2 * f2;
-    grad += (0.018 * k3) * cos(dot(p, d3) * k3 + t * 5.0) * d3 * f3;
-    grad += (0.009 * k4) * cos(dot(p, d4) * k4 + t * 7.0) * d4 * f4;
+    grad += (0.050 * variation * k0) * cos(dot(waveP, d0) * k0 + t) * d0 * f0;
+    grad += (0.026 * variation * k1) * cos(dot(waveP, d1) * k1 + t * 2.0) * d1 * f1;
+    grad += (0.012 * variation * k2) * cos(dot(waveP, d2) * k2 + t * 3.0) * d2 * f2;
+    grad += (0.018 * variation * k3) * cos(dot(waveP, d3) * k3 + t * 5.0) * d3 * f3;
+    grad += (0.009 * variation * k4) * cos(dot(waveP, d4) * k4 + t * 7.0) * d4 * f4;
 
     vec2 orbit = vec2(cos(t * 0.5), sin(t * 0.5)) * 4.0;
     vec2 rp = p * 0.55 + orbit;
@@ -116,11 +134,12 @@ vec3 nvs_waterNormal(vec2 p, float t, float strength) {
 // Foam follows the actual combined wave height, so its crests coincide with
 // the normal field rather than using five equally weighted, mismatched waves.
 float nvs_waterCrest(vec2 p, float t, float footprint) {
-    float totalAmplitude = 0.050 * nvs_waveFade(0.62, footprint)
+    float variation = nvs_waveDomain(p).z;
+    float totalAmplitude = variation * (0.050 * nvs_waveFade(0.62, footprint)
                          + 0.026 * nvs_waveFade(1.17, footprint)
                          + 0.012 * nvs_waveFade(2.31, footprint)
                          + 0.018 * nvs_waveFade(0.86, footprint)
-                         + 0.009 * nvs_waveFade(1.72, footprint);
+                         + 0.009 * nvs_waveFade(1.72, footprint));
     return clamp(0.5 + 0.5 * nvs_waveHeight(p, t, footprint) / max(totalAmplitude, 1e-5), 0.0, 1.0);
 }
 
