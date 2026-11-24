@@ -52,7 +52,7 @@ Statuses used below:
 | Feature | Status | Where |
 |---|---|---|
 | Not a tinted flat surface | Done | wave normals, Fresnel and a reflected sky replace the flat tint |
-| Animated multi-scale waves with wave normals | Done | five directional components, position-only domain warp, screen-footprint filtering and a looping ripple, in `water.glsl` |
+| Animated multi-scale waves with wave normals | Done | eight-wave gravity spectrum, position-only domain warp, screen-footprint filtering and a looping ripple, in `water.glsl` |
 | Fresnel reflection of the sky | Done | Schlick with water's `F0`; post pass uses the exact bus sky/fog colours and procedural sky gradient |
 | Fresnel reflection of clouds | Approximated | reflected ray intersects a fixed cloud deck and samples the shared procedural cloud field; cloud drift offset is not available in post |
 | Screen-space reflections | Done, untested | 24 coarse ray steps plus four refinements against the main depth buffer; off-screen rays fall back to sky |
