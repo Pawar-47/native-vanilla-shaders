@@ -63,7 +63,7 @@
 #ifndef NVS_WATER_WAVE_STRENGTH
 #define NVS_WATER_WAVE_STRENGTH 0.55
 #endif
-// Extra small-scale ripple on top of the three directional waves.
+// Extra small-scale ripple on top of the five directional waves.
 #ifndef NVS_WATER_RIPPLE
 #define NVS_WATER_RIPPLE 0.35
 #endif
