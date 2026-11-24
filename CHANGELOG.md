@@ -16,7 +16,7 @@ All notable changes to this pack. The pack version is independent of the Minecra
 - Added water surface markers, top/side classification and quantized side-face orientation.
 - Added screen-space reflections with a 24-step ray budget and four refinement steps, edge fading and procedural sky/cloud/sun fallback.
 - Added wave-driven refraction, Fresnel, distance fog, absorption and post-pass whitecaps.
-- Added five directional wave components, stable spatial domain warping, screen-footprint filtering and seamless day-wrap animation.
+- Added an eight-direction gravity-dispersed wave spectrum, stable spatial domain warping, screen-footprint filtering and seamless day-wrap animation.
 - Reduced reflected-cloud noise octaves for the integrated-GPU target and limited the water pass's expensive bus decode to tagged water pixels.
 
 **Clouds, lighting and post**
