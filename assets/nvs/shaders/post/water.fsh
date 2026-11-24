@@ -97,7 +97,7 @@ void main() {
 
     vec3 reflectedWorld = reflect(viewWorld, normal);
     if (top && reflectedWorld.y * normal.y < 0.0) reflectedWorld.y = -reflectedWorld.y;
-    vec3 reflection = nvs_reflectedSky(reflectedWorld, worldPosition.xz, worldPosition.y, bus.fogColor);
+    vec3 reflection = nvs_reflectedSky(reflectedWorld, worldPosition.xz, worldPosition.y, bus.skyColor, bus.fogColor);
     // The fallback sky needs the actual solar disc as well as the narrow
     // wave glint; otherwise off-screen sun reflections disappear at the
     // horizon and leave a flat patch where the sun should be.

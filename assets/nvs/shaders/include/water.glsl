@@ -148,10 +148,10 @@ float nvs_waterCrest(vec2 p, float t) {
 }
 
 // The sky in the direction of a reflection, including the cloud layer.
-// `horizon` is FogColor; the zenith is inferred from it, because this runs in
-// a program that does not receive the sky's own colour.
-vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 horizon) {
-    vec3 zenith = nvs_zenithFromHorizon(horizon);
+// Both colours come from the frame's data bus, so the reflection matches the
+// actual biome, dimension, weather and time-of-day sky rather than estimating
+// the zenith from the horizon.
+vec3 nvs_reflectedSky(vec3 reflected, vec2 worldXZ, float worldY, vec3 zenith, vec3 horizon) {
     vec3 sky = nvs_skyGradient(reflected, zenith, horizon);
 
     // Carry the procedural night sky into the reflection as well. Without this,
