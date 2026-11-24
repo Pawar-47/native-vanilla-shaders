@@ -512,7 +512,7 @@ def check_varyings(root, vanilla, report):
 # 5. the pack's own symbols
 # --------------------------------------------------------------------------
 SELF_FUNCTION_RE = re.compile(
-    r"^\s*(?:const\s+)?(?:void|float|int|bool|vec[234]|ivec[234]|mat[234])\s+(nvs_\w+)\s*\(",
+    r"^\s*(?:const\s+)?(?:void|float|int|bool|vec[234]|ivec[234]|mat[234]|[A-Za-z_]\w*)\s+(nvs_\w+)\s*\(",
     re.M,
 )
 MACRO_DEFINE_RE = re.compile(r"^\s*#\s*define\s+(NVS_\w+)", re.M)
