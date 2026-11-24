@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
-"""Compile every pack-owned core and post shader with glslangValidator.
+"""Compile pack-owned core and post shaders with glslangValidator.
 
-Minecraft 26.3 uses ShaderC and its own resource/include pipeline. This check is
-not a replacement for Minecraft runtime validation; it is an additional real
-GLSL parser/type-check pass that catches syntax, overload and stage-local errors
-that the repository's static checker cannot see.
+Minecraft 26.3 uses ShaderC and its own resource/include pipeline. This is an
+additional real GLSL parser/type-check pass, not a replacement for Minecraft
+runtime validation.
 """
 from pathlib import Path
 import argparse
-import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 
-INCLUDE_RE = re.compile(r'^\\s*#\\s*include\\s*[<"]([^>"]+)[>"]\\s*$', re.M)
+INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]\s*$', re.M)
 
 
 def find_vanilla(root: Path):
-    for child in (root / "reference" / "vanilla-stock").iterdir():
+    directory = root / "reference" / "vanilla-stock"
+    if not directory.is_dir():
+        return None
+    for child in directory.iterdir():
         if child.is_dir() and child.name.strip().lower() == "vanilla-stock":
             return child
     return None
@@ -51,22 +52,21 @@ def expand_includes(path: Path, root: Path, vanilla: Path, stack=()):
         spec = match.group(1)
         included = resolve_include(spec, root, vanilla)
         body = expand_includes(included, root, vanilla, stack + (resolved,))
-        return "\\n// begin include <%s>\\n%s\\n// end include <%s>\\n" % (spec, body, spec)
+        return "\n// begin include <%s>\n%s\n// end include <%s>\n" % (spec, body, spec)
 
     return INCLUDE_RE.sub(replace, source)
 
 
 def variants_for(path: Path):
-    name = path.name
-    if name in ("terrain.vsh", "terrain.fsh"):
+    if path.name in ("terrain.vsh", "terrain.fsh"):
         return [(), ("MULTIDRAW_TERRAIN",), ("OIT_ALPHA_ONLY",),
                 ("MULTIDRAW_TERRAIN", "OIT_ALPHA_ONLY")]
-    if name in ("clouds.fsh", "position_color.fsh"):
+    if path.name in ("clouds.fsh", "position_color.fsh"):
         return [(), ("OIT_ALPHA_ONLY",)]
     return [()]
 
 
-def compile_one(validator: str, source: str, stage: str, label: str, defines, tempdir: Path):
+def compile_one(validator, source, stage, label, defines, tempdir):
     suffix = ".vert" if stage == "vert" else ".frag"
     temporary = tempdir / (re.sub(r"[^A-Za-z0-9_.-]", "_", label) + suffix)
     temporary.write_text(source, encoding="utf-8")
@@ -127,7 +127,7 @@ def main():
             print("ERROR: %s: %s" % (path.relative_to(root), message))
         sys.exit(1)
     print("GLSL syntax/type check passed: %d shader-stage variants compiled." % compiled)
-    print("Note: this is glslang validation, not Minecraft 26.3 ShaderC or runtime validation.")
+    print("This is glslang validation, not Minecraft 26.3 ShaderC or runtime validation.")
 
 
 if __name__ == "__main__":
