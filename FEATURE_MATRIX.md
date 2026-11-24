@@ -37,7 +37,7 @@ Statuses used below:
 | Feature | Status | Where |
 |---|---|---|
 | Procedural multiscale cloud shapes | Done | `nvs_cloudField`: a smooth mass plus a ridged detail channel |
-| Depth from native cloud geometry | Done | the game's cloud boxes are kept; density and face orientation shade their top, underside and sides |
+| Depth from native cloud geometry | Done | the game's cloud boxes are kept; a 3D vertical density slice breaks up the top, underside and side faces |
 | Cumulus and wispy forms | Done | the two channels, mixed; `NVS_CLOUD_CUTOFF` controls how much is torn away |
 | Motion | Done | `CloudOffset` is already inside the cloud position, so the field travels with the clouds |
 | Altitude and scale | Done | `NVS_CLOUD_SCALE`, `NVS_CLOUD_HEIGHT` |

@@ -20,7 +20,7 @@ All notable changes to this pack. The pack version is independent of the Minecra
 - Reduced reflected-cloud noise octaves for the integrated-GPU target and limited the water pass's expensive bus decode to tagged water pixels.
 
 **Clouds, lighting and post**
-- Retained procedural cloud volumes, underside shading and shared cloud density for water reflections.
+- Added 3D vertical density breakup to the native cloud shell while retaining the shared 2D mass field for water reflections.
 - Retained cloud-shadow, lightmap, plant-sway, bloom, grading, sharpen, vignette and optional FXAA work.
 - Added tunable controls for SSR steps/growth, reflection/refraction distortion, reflected-cloud detail and atmosphere haze.
 
