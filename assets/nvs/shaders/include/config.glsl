@@ -96,12 +96,12 @@
 #endif
 // How much water absorbs the scene underneath, per block of path length.
 #ifndef NVS_WATER_ABSORB
-#define NVS_WATER_ABSORB 0.030
+#define NVS_WATER_ABSORB 0.040
 #endif
 // How strongly the post water pass veils bright riverbeds and seabeds.
 // Higher values make water read as deeper and less transparent.
 #ifndef NVS_WATER_DEPTH_VEIL
-#define NVS_WATER_DEPTH_VEIL 0.72
+#define NVS_WATER_DEPTH_VEIL 0.84
 #endif
 // Fresnel floor: the reflectance of water seen straight down.
 #ifndef NVS_WATER_F0
@@ -167,19 +167,19 @@
 // These are compile-time only in the sense that they affect the post programs;
 // they are constants in the shader, not in the JSON, so they need no rebuild.
 #ifndef NVS_POST_BLOOM
-#define NVS_POST_BLOOM 0.32
+#define NVS_POST_BLOOM 0.30
 #endif
 #ifndef NVS_POST_EXPOSURE
-#define NVS_POST_EXPOSURE 1.06
+#define NVS_POST_EXPOSURE 1.10
 #endif
 #ifndef NVS_POST_CONTRAST
-#define NVS_POST_CONTRAST 0.20
+#define NVS_POST_CONTRAST 0.26
 #endif
 #ifndef NVS_POST_SATURATION
-#define NVS_POST_SATURATION 1.08
+#define NVS_POST_SATURATION 1.15
 #endif
 #ifndef NVS_POST_WARMTH
-#define NVS_POST_WARMTH 0.035
+#define NVS_POST_WARMTH 0.025
 #endif
 #ifndef NVS_POST_VIGNETTE
 #define NVS_POST_VIGNETTE 0.075
@@ -189,7 +189,7 @@
 #endif
 // Luminance above which the highlight shoulder starts compressing.
 #ifndef NVS_POST_SHOULDER
-#define NVS_POST_SHOULDER 0.72
+#define NVS_POST_SHOULDER 0.76
 #endif
 
 // ------------------------------------------------------------- plants ------

@@ -12,6 +12,30 @@ uniform sampler2D DepthSampler;
 layout(location = 0) in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
+// Screen-space reflections can encounter thin weather particles in the scene
+// buffer. A one-pixel rain streak can otherwise be mirrored as a saturated
+// red/green/blue line across the water. Detect isolated chromatic highlights
+// and blend only those samples toward their local surroundings; broad scene
+// colours and ordinary reflections remain untouched.
+vec3 nvs_cleanReflectionSample(vec2 uv) {
+    vec2 texel = 1.0 / vec2(textureSize(InSampler, 0));
+    vec3 center = texture(InSampler, uv).rgb;
+    vec3 left = texture(InSampler, clamp(uv - vec2(texel.x * 1.5, 0.0), vec2(0.001), vec2(0.999))).rgb;
+    vec3 right = texture(InSampler, clamp(uv + vec2(texel.x * 1.5, 0.0), vec2(0.001), vec2(0.999))).rgb;
+    vec3 up = texture(InSampler, clamp(uv + vec2(0.0, texel.y * 1.5), vec2(0.001), vec2(0.999))).rgb;
+    vec3 down = texture(InSampler, clamp(uv - vec2(0.0, texel.y * 1.5), vec2(0.001), vec2(0.999))).rgb;
+    vec3 neighbours = (left + right + up + down) * 0.25;
+    float centerChroma = nvs_max3(center) - nvs_min3(center);
+    // Most reflected pixels are neutral; avoid the four neighbour reads unless
+    // the candidate is chromatic enough to plausibly be a coloured rain streak.
+    if (centerChroma < 0.22) return center;
+    float neighbourChroma = nvs_max3(neighbours) - nvs_min3(neighbours);
+    float chromaOutlier = smoothstep(0.12, 0.30, centerChroma - neighbourChroma);
+    float brightOutlier = smoothstep(0.035, 0.16, nvs_luma(center) - nvs_luma(neighbours));
+    float cleanup = chromaOutlier * brightOutlier * 0.88;
+    return mix(center, neighbours, cleanup);
+}
+
 vec3 nvs_screenReflection(NvsBus bus, vec3 origin, vec3 direction) {
     float stepLength = 0.3 + 0.01 * length(origin);
     vec3 previous = origin;
@@ -136,7 +160,9 @@ void main() {
         // That feedback reads as dark patches and unstable recursive mirrors.
         if (directHit.a > 0.9) {
             vec4 shiftedHit = inside ? texture(InSampler, uv) : vec4(0.0);
-            vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedHit.rgb : directHit.rgb;
+            vec3 directColor = nvs_cleanReflectionSample(hit.xy);
+            vec3 shiftedColor = inside ? nvs_cleanReflectionSample(uv) : directColor;
+            vec3 mirrored = inside && shiftedHit.a > 0.9 ? shiftedColor : directColor;
             reflection = mix(reflection, mirrored, hit.z);
         }
     }
@@ -155,13 +181,19 @@ void main() {
     vec3 refraction = under.a < 0.9 ? under.rgb : tagged.rgb;
     float NoV = clamp(dot(normal, -viewWorld), 0.0, 1.0);
     float path = 1.0 / max(NoV, 0.15);
-    vec3 absorption = vec3(0.72, 0.28, 0.14) * (0.72 + NVS_WATER_ABSORB * 12.0);
+    vec3 absorption = vec3(0.88, 0.40, 0.22) * (0.78 + NVS_WATER_ABSORB * 14.0);
     refraction *= mix(exp(-absorption * path), vec3(1.0), fogAmount);
-    // Dark teal water column: blend away bright bottom textures and the
-    // stock-looking luminous patterns while preserving some near-shore detail.
-    vec3 deepWater = vec3(0.018, 0.105, 0.135);
-    float depthVeil = mix(0.42, NVS_WATER_DEPTH_VEIL, smoothstep(0.12, 0.92, path));
-    refraction = mix(refraction, deepWater, depthVeil * (1.0 - fogAmount));
+    // A deeper blue-green water body suppresses the glowing, blocky vanilla
+    // seabed patterns even when the camera looks almost straight down. The
+    // stronger floor is intentional: only a restrained trace of the bottom
+    // remains in shallow water, while the surface reflection still gives life.
+    vec3 deepWater = vec3(0.008, 0.064, 0.092);
+    float depthVeil = mix(0.68, min(NVS_WATER_DEPTH_VEIL + 0.10, 0.94),
+                          smoothstep(0.12, 0.92, path));
+    float bottomGlow = smoothstep(0.18, 0.72, nvs_luma(refraction));
+    depthVeil *= mix(1.0, 1.08, bottomGlow);
+    refraction = mix(refraction, deepWater,
+                     min(depthVeil, 0.94) * (1.0 - fogAmount));
 
     float fresnel = NVS_WATER_F0 + (1.0 - NVS_WATER_F0) * pow(1.0 - clamp(dot(normalize(mix(faceNormal, normal, 0.25)), -viewWorld), 0.0, 1.0), 5.0);
     if (!top) fresnel *= 0.55;

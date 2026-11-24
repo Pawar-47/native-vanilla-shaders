@@ -55,8 +55,13 @@ void main() {
     // so it adds punch without moving either end.
     c = mix(c, c * c * (3.0 - 2.0 * c), NVS_POST_CONTRAST);
 
-    // A restrained warm film balance: amber highlights and neutral mids,
-    // without turning the whole world orange or crushing cool shadows.
+    // A restrained cinematic split tone: cool, clean shadows and warm amber
+    // highlights. This gives the world a mature film-like palette without
+    // pushing the entire image orange or making foliage look artificial.
+    float gradeLuma = nvs_luma(c);
+    vec3 shadowGrade = vec3(0.982, 0.997, 1.025);
+    vec3 highlightGrade = vec3(1.035, 1.012, 0.978);
+    c *= mix(shadowGrade, highlightGrade, smoothstep(0.24, 0.86, gradeLuma));
     c *= vec3(1.0 + NVS_POST_WARMTH, 1.0, 1.0 - NVS_POST_WARMTH * 0.72);
 
     float l = nvs_luma(c);

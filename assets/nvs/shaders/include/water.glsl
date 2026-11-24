@@ -36,11 +36,14 @@ float nvs_waveTime(float gameTime) {
 // crawling bands in reflections. Three directions are enough for calm lakes
 // and rivers; the footprint filter fades detail before it can alias.
 const int NVS_WAVE_COUNT = 3;
+// A single prevailing wind direction keeps a pond's wave trains coherent.
+// Different wavelengths add natural broad swells and smaller surface detail
+// without the visibly crossing, competing directions of the previous spectrum.
 const vec2 NVS_WAVE_DIRECTIONS[3] = vec2[](
-    vec2(1.0, 0.22), vec2(-0.38, 1.0), vec2(0.72, -0.68)
+    vec2(0.94, 0.34), vec2(0.94, 0.34), vec2(0.94, 0.34)
 );
-const float NVS_WAVE_LENGTHS[3] = float[](18.0, 11.5, 7.5);
-const float NVS_WAVE_CYCLES[3] = float[](390.0, 505.0, 635.0);
+const float NVS_WAVE_LENGTHS[3] = float[](27.0, 17.0, 10.5);
+const float NVS_WAVE_CYCLES[3] = float[](315.0, 430.0, 565.0);
 
 float nvs_waveFade(float waveNumber, float footprint) {
     float pixelScale = max(footprint, 1e-4);

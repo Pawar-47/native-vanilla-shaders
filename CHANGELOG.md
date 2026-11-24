@@ -45,3 +45,12 @@ The glslang pass is not Minecraft ShaderC, and no in-game rendering or performan
 - Removed final ordered dither and reduced bloom, saturation and sharpening to avoid coloured crawling around thin moving weather streaks.
 - Changed release automation to publish one fixed Beta 1 release only for the Beta 1 merge; ordinary commits no longer create a new release each time.
 - CI regenerates manifests before checking them on pull requests, then refreshes the committed hashes on main.
+
+
+### Beta 1 water and colour refinement — 2026-11-24
+
+- Changed the water spectrum to a single prevailing wind direction with layered wavelengths, so wave trains travel coherently instead of crossing from several directions.
+- Increased water-column absorption and the deep teal depth veil to suppress luminous, rectangular vanilla seabed patterns while retaining restrained shallow-water detail.
+- Added a reflection-sample cleanup filter for isolated high-chroma highlights, targeting thin coloured rain-particle streaks mirrored across the water.
+- Refined the global grade with brighter exposure, stronger midtone contrast, richer saturation, a gentler highlight shoulder and subtle cool-shadow / warm-highlight film toning.
+- Preserved the existing cloud design and low-end-oriented shader budgets.
