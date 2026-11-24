@@ -98,6 +98,14 @@
 #ifndef NVS_WATER_F0
 #define NVS_WATER_F0 0.02
 #endif
+// Wave-driven shift of the reflected image, in screen UV units per unit of tilt.
+#ifndef NVS_WATER_REFLECTION_RIPPLE
+#define NVS_WATER_REFLECTION_RIPPLE 0.04
+#endif
+// Refraction shift of the vanilla water/scene sample.
+#ifndef NVS_WATER_REFRACTION_STRENGTH
+#define NVS_WATER_REFRACTION_STRENGTH 0.03
+#endif
 // Brightness of the whitecaps on wave crests, 0 turns them off.
 #ifndef NVS_WATER_FOAM
 #define NVS_WATER_FOAM 0.07

@@ -118,7 +118,7 @@ void main() {
     vec3 rayDirection = normalize(reflect(normalize(viewPosition), viewFace));
     vec3 hit = nvs_screenReflection(bus, viewPosition + viewFace * 0.05, rayDirection);
     if (hit.z > 0.0) {
-        vec2 ripple = (viewNormal.xy - viewFace.xy) * 0.035;
+        vec2 ripple = (viewNormal.xy - viewFace.xy) * NVS_WATER_REFLECTION_RIPPLE;
         vec2 uv = hit.xy + ripple;
         bool inside = all(greaterThan(uv, vec2(0.0))) && all(lessThan(uv, vec2(1.0)));
         vec4 directHit = texture(InSampler, hit.xy);
@@ -136,7 +136,7 @@ void main() {
     vec3 distantSky = nvs_skyGradient(viewWorld, bus.skyColor, bus.fogColor);
     reflection = mix(reflection, distantSky, fogAmount);
 
-    vec2 distortion = (viewNormal.xy - viewFace.xy) * 0.018;
+    vec2 distortion = (viewNormal.xy - viewFace.xy) * NVS_WATER_REFRACTION_STRENGTH;
     vec2 shiftedUV = clamp(texCoord + distortion, vec2(0.001), vec2(0.999));
     vec4 under = texture(InSampler, shiftedUV);
     vec3 refraction = under.a < 0.9 ? under.rgb : tagged.rgb;
