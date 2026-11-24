@@ -41,9 +41,19 @@ float nvs_cloudField(vec2 worldXZ) {
 // night blue, rain grey) arrives separately in CloudInfo.CloudColor, set by the
 // game, which is why this stays correct at every hour.
 float nvs_cloudShade(float density, float upward) {
-    float form = mix(1.0 - NVS_CLOUD_SHADE, 1.05, clamp(upward, 0.0, 1.0));
+    float face = clamp(upward, 0.0, 1.0);
+    float form = mix(1.0 - NVS_CLOUD_SHADE, 1.05, face);
     float thickness = mix(0.80, 1.14, smoothstep(0.30, 0.88, density));
-    return form * thickness;
+
+    // Dense cloud cores absorb more skylight on their undersides, while thin
+    // upper edges scatter a little extra light. This adds volume without a
+    // guessed sun vector: 26.3's CloudColor still supplies the real day,
+    // sunset, night and weather tint.
+    float core = smoothstep(0.48, 0.92, density) * (1.0 - face) * 0.14;
+    float edge = (1.0 - smoothstep(NVS_CLOUD_CUTOFF, NVS_CLOUD_CUTOFF + 0.34, density))
+               * smoothstep(0.08, 0.82, face) * 0.11;
+
+    return max(form * thickness - core, 0.0) + edge;
 }
 
 // How much a ground fragment at this world XZ is shaded by the cloud above it.
