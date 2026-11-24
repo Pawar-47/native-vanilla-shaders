@@ -82,10 +82,16 @@ def oit_defines(coeff_count):
 
 
 def variants_for(path: Path, source: str):
-    variants = [()]
     if path.name == "rendertype_end_portal.fsh":
         return [("PORTAL_LAYERS=15",), ("PORTAL_LAYERS=16",)]
 
+    if path.name == "oit_composite.fsh":
+        # The composite runs only in the OIT pipeline. It samples the
+        # transmittance function; it is not itself an alpha/depth/accumulation
+        # pass, so those pass-specific defines would create duplicate outputs.
+        return [oit_defines(8), oit_defines(16)]
+
+    variants = [()]
     uses_oit = "minecraft:oit.glsl" in source or "OIT_ALPHA_ONLY" in source or "OIT_ACCUMULATE" in source
     if uses_oit:
         for count in (8, 16):
