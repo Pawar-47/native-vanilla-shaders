@@ -192,9 +192,15 @@ class Report:
 
 
 def find_vanilla(root):
-    for name in sorted(os.listdir(root)):
-        if name.strip().lower() == "vanilla-stock" and os.path.isdir(os.path.join(root, name)):
-            return os.path.join(root, name)
+    # The user-supplied archive is stored under reference/vanilla-stock/, and
+    # its extracted directory intentionally retains the source ZIP's trailing
+    # space. Also accept a top-level folder for older local checkouts.
+    for parent in (os.path.join(root, "reference", "vanilla-stock"), root):
+        if not os.path.isdir(parent):
+            continue
+        for name in sorted(os.listdir(parent)):
+            if name.strip().lower() == "vanilla-stock" and os.path.isdir(os.path.join(parent, name)):
+                return os.path.join(parent, name)
     return None
 
 
