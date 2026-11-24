@@ -24,7 +24,10 @@ void main() {
     // This program also draws the debug shapes, so the pattern is matched by
     // geometry and under a perspective projection, and anything that does not
     // match keeps a factor of exactly 1.
-    float radius = length(Position.xy);
-    bool looksLikeGlow = ProjMat[2][3] != 0.0 && gl_VertexIndex < 18 && (radius < 1.0 || abs(radius - 120.0) < 8.0);
+    // Measure from the fan's actual centre, not from the world origin.
+    // Its centre is at (0, 100), with the outer ring roughly 120 units away.
+    float radius = length(Position.xy - vec2(0.0, 100.0));
+    bool looksLikeGlow = ProjMat[2][3] != 0.0 && gl_VertexIndex < 18
+                      && (radius < 1.0 || abs(radius - 120.0) < 8.0);
     nvsGlowFalloff = looksLikeGlow ? clamp(1.0 - radius / 126.0, 0.0, 1.0) : 1.0;
 }
