@@ -233,7 +233,7 @@ def main(argv):
     mode = argv[1] if len(argv) > 1 else "--help"
     vanilla = find_vanilla()
     if vanilla is None:
-        print("error: no 'Vanilla-stock ' folder found next to the pack")
+        print("error: no extracted Vanilla-stock directory found under reference/vanilla-stock or next to the pack")
         return 2
 
     hashes, modified = build(vanilla)
