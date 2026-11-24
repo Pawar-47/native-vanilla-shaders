@@ -18,15 +18,16 @@ architecture genuinely cannot do.
 |---|---|
 | **Sky** | Graded sky from the horizon to the zenith, a warm sunrise and sunset band, a sun and moon corona, a night sky with a nebula and a procedural star field. Dithered, so it does not band. |
 | **Clouds** | The game's cloud volumes carved and shaded with a procedural multiscale field: cumulus masses, torn edges, lit tops, shaded undersides, and soft shadows on the ground. Nothing tiles. |
-| **Water** | Multi-scale wave normals, Fresnel, a reflected sky and cloud layer, depth-tinted absorption, whitecaps, and a distinct look from under the surface. The surface is no longer a flat tint. |
+| **Water** | Warped, pixel-filtered waves; Fresnel; screen-space reflections of visible terrain; distorted refraction; reflected sun disc/glint and procedural sky/cloud fallback; absorption and whitecaps. |
 | **Lighting** | A rewritten lightmap: sky and block light response curves, warm block light, deeper caves, and blacks that do not crush. All colours still come from the game. |
-| **Weather and fog** | Fog that fades in instead of starting at a line, rain that dims the sun, and dimension colouring that follows whatever sky the game produces. |
+| **Weather and fog** | Sky-coloured aerial perspective, soft world-edge haze, rain-aware sun reflections, and dimension colouring that follows the game's own sky/fog values. |
 | **Post** | Bloom, a highlight shoulder, contrast, saturation, sharpen, vignette and dither on the world, before the HUD. Optional FXAA as a separate effect. |
 | **Plants** | Cutout plants sway — only the ones the native vertex data can actually identify. |
 
-Ordinary gameplay paths are preserved, not replaced: the end portal, beacon
-beams, lightning, item glint, entity emissive and eyes pipelines, and the three
-Improved Transparency (OIT) passes all still work, unmodified in intent.
+Ordinary gameplay paths are preserved: the end portal, beacon beams, lightning,
+item glint, entity emissive and eyes pipelines retain their vanilla implementations.
+The OIT pipeline branches remain intact; water-marker completeness with Improved
+Transparency enabled is a known runtime test item (see [LIMITATIONS.md](LIMITATIONS.md)).
 
 ## Install
 
