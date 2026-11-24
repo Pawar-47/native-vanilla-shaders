@@ -127,15 +127,18 @@ Attribution for the documentation, as CC BY 4.0 requires:
 
 ## `Vanilla-stock /` — the vanilla 26.3 shader source
 
-Mojang's own shader source for Minecraft Java Edition 26.3, 89 files (63 under
-`core/`, 9 under `post/`, 17 under `include/`). It is the technical foundation: the
-pack preserves its interfaces, uniforms, samplers, vertex attributes, varyings,
-version declarations, conditional guards, its reversed-depth convention and its
-OIT paths, and overrides only the programs a feature actually needs.
+Mojang's shader source for Minecraft Java Edition 26.3 is retained as a
+user-supplied archive and extracted read-only reference under
+`reference/vanilla-stock/`. It is the technical foundation: the pack preserves
+its interfaces, uniforms, samplers, vertex attributes, varyings, version
+declarations, conditional guards, reversed-depth convention and OIT paths.
 
-Its files are Mojang's. The pack does not redistribute them; it replaces 15 of them
-with modified versions and adds 2 post-effect files, all listed in
-[modified-files.json](modified-files.json). Hashes in
+The reference archive and extracted source are present in the GitHub repository
+for development and CI, but are **excluded from the installable resource-pack
+ZIP**. The source remains Mojang's material and is subject to the Minecraft EULA
+and Usage Guidelines; this project does not claim ownership. Every replaced
+vanilla path and every added pack path is listed with hashes and reasons in
+[modified-files.json](modified-files.json); baseline hashes are in
 [vanilla-hashes.json](vanilla-hashes.json).
 
 ## `../Ref-Shader/MakeUp-UltraFast-9.6a` — not used
