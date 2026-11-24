@@ -156,10 +156,10 @@ void main() {
             float dR = texelFetch(DepthSampler, pxR, 0).r;
             float dD = texelFetch(DepthSampler, pxD, 0).r;
             float dU = texelFetch(DepthSampler, pxU, 0).r;
-            vec3 pL = nvs_busViewPosition(bus, (vec2(pxL) + 0.5) / vec2(size), max(dL, 1e-6));
-            vec3 pR = nvs_busViewPosition(bus, (vec2(pxR) + 0.5) / vec2(size), max(dR, 1e-6));
-            vec3 pD = nvs_busViewPosition(bus, (vec2(pxD) + 0.5) / vec2(size), max(dD, 1e-6));
-            vec3 pU = nvs_busViewPosition(bus, (vec2(pxU) + 0.5) / vec2(size), max(dU, 1e-6));
+            vec3 pL = nvs_busViewPosition(bus, (vec2(pxL) + 0.5) / vec2(size), max(dL > 0.0 ? dL : depth, 1e-6));
+            vec3 pR = nvs_busViewPosition(bus, (vec2(pxR) + 0.5) / vec2(size), max(dR > 0.0 ? dR : depth, 1e-6));
+            vec3 pD = nvs_busViewPosition(bus, (vec2(pxD) + 0.5) / vec2(size), max(dD > 0.0 ? dD : depth, 1e-6));
+            vec3 pU = nvs_busViewPosition(bus, (vec2(pxU) + 0.5) / vec2(size), max(dU > 0.0 ? dU : depth, 1e-6));
             vec3 dx = abs(dR - depth) < abs(dL - depth) ? pR - viewPosition : viewPosition - pL;
             vec3 dy = abs(dU - depth) < abs(dD - depth) ? pU - viewPosition : viewPosition - pD;
             vec3 normalView = normalize(cross(dx, dy));
