@@ -8,7 +8,6 @@
 struct NvsBus {
     bool present;
     mat4 projection;
-    mat4 inverseProjection;
     mat3 viewToWorld;
     bool zeroToOneDepth;
     vec3 skyColor;
@@ -51,7 +50,6 @@ NvsBus nvs_readBus(sampler2D source) {
         view[i / 3][i % 3] =
             nvs_bus_unpackFloat(nvs_busTexel(source, NVS_BUS_ROW_VIEW + i, fromBottom));
     }
-    bus.inverseProjection = inverse(bus.projection);
     bus.viewToWorld = transpose(view);
     bus.zeroToOneDepth = bus.projection[2][2] < 0.5;
     bus.skyColor = nvs_busTexel(source, NVS_BUS_ROW_SKY, fromBottom).rgb;
@@ -82,19 +80,41 @@ NvsBus nvs_readBus(sampler2D source) {
 }
 
 // Reconstruct a camera-relative view-space point from screen UV and depth.
+// ProjMat is the standard perspective matrix used by Minecraft's world
+// pipelines. Solving its Z/W rows and then its 2x2 XY block avoids a full 4x4
+// matrix inverse in every fragment of the full-resolution atmosphere pass.
+// The equations work for both OpenGL [-1,1] and Vulkan [0,1] depth ranges.
 vec3 nvs_busViewPosition(NvsBus bus, vec2 uv, float depth) {
-    float z = bus.zeroToOneDepth ? depth : depth * 2.0 - 1.0;
-    vec4 p = bus.inverseProjection * vec4(uv * 2.0 - 1.0, z, 1.0);
-    return p.xyz / p.w;
+    float ndcZ = bus.zeroToOneDepth ? depth : depth * 2.0 - 1.0;
+    float p22 = bus.projection[2][2];
+    float p23 = bus.projection[2][3];
+    float p32 = bus.projection[3][2];
+    float p33 = bus.projection[3][3];
+    float denominator = ndcZ * p23 - p22;
+    float viewZ = (p32 - ndcZ * p33) / (abs(denominator) > 1e-7 ? denominator : (denominator < 0.0 ? -1e-7 : 1e-7));
+    float clipW = p23 * viewZ + p33;
+
+    vec2 ndcXY = uv * 2.0 - 1.0;
+    vec2 rhs = ndcXY * clipW - vec2(
+        bus.projection[2][0] * viewZ + bus.projection[3][0],
+        bus.projection[2][1] * viewZ + bus.projection[3][1]
+    );
+    float a = bus.projection[0][0];
+    float b = bus.projection[1][0];
+    float c = bus.projection[0][1];
+    float d = bus.projection[1][1];
+    float determinant = a * d - b * c;
+    float safeDeterminant = abs(determinant) > 1e-7 ? determinant : (determinant < 0.0 ? -1e-7 : 1e-7);
+    vec2 viewXY = vec2(d * rhs.x - b * rhs.y, a * rhs.y - c * rhs.x) / safeDeterminant;
+    return vec3(viewXY, viewZ);
 }
 
 // Reconstruct a stable view ray from the far plane. Using a near-plane point
 // is incorrect because ProjMat includes view bobbing translation; the far-plane
 // direction is effectively translation-free.
 vec3 nvs_busViewDirection(NvsBus bus, vec2 uv) {
-    float farZ = bus.zeroToOneDepth ? 1e-6 : -0.999998;
-    vec4 p = bus.inverseProjection * vec4(uv * 2.0 - 1.0, farZ, 1.0);
-    return normalize(p.xyz / p.w);
+    float farDepth = bus.zeroToOneDepth ? 1e-6 : 1e-6;
+    return normalize(nvs_busViewPosition(bus, uv, farDepth));
 }
 
 vec3 nvs_busWorldDirection(NvsBus bus, vec2 uv) {
