@@ -143,8 +143,11 @@ vec3 nvs_shadeWater(vec3 baseColor, vec3 viewPos, vec3 worldPos, float gameTime,
                     vec3 horizon, float underwater) {
     float t = nvs_waveTime(gameTime);
 
-    vec3 V = normalize(-viewPos);
     float viewDistance = length(viewPos);
+    // A fragment exactly at the camera origin is a valid limiting case for
+    // normalize(), but GLSL leaves normalize(vec3(0)) undefined. Use the
+    // straight-up view direction at that singular point.
+    vec3 V = viewDistance > 1e-4 ? -viewPos / viewDistance : vec3(0.0, 1.0, 0.0);
 
     // Keep the near-field lively, but fade sub-pixel wave detail in the far
     // field. Without this, the high-frequency ripples alias into dark bands
